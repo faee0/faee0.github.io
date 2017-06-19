@@ -1,0 +1,885 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CFD,小白CFD之旅," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="但是怎样才能获得流体计算网格呢？“工欲善其事必先利其器”，画网格该用什么器呢？小白决定找黄师姐请教一番。 小白找到黄师姐的时候，黄师姐正在电脑上忙着。“黄师姐，我发现网格划分软件有好多种，究竟哪种才更适合于CFD网格划分呢？”，小白在实验室找到黄师姐并询问道。“现在市面上的确有很多网格划分软件，这对于新手们来说选择起来真的挺难的。”黄师姐放下鼠标说道。“那要怎么去选择呢？”小白问道。黄师姐谈起了她">
+<meta name="keywords" content="CFD,小白CFD之旅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【小白的CFD之旅】21：网格划分软件的选择">
+<meta property="og:url" content="bestcax.top/2016/04/21/xiaobai/【小白的CFD之旅】21：网格划分软件的选择/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="但是怎样才能获得流体计算网格呢？“工欲善其事必先利其器”，画网格该用什么器呢？小白决定找黄师姐请教一番。 小白找到黄师姐的时候，黄师姐正在电脑上忙着。“黄师姐，我发现网格划分软件有好多种，究竟哪种才更适合于CFD网格划分呢？”，小白在实验室找到黄师姐并询问道。“现在市面上的确有很多网格划分软件，这对于新手们来说选择起来真的挺难的。”黄师姐放下鼠标说道。“那要怎么去选择呢？”小白问道。黄师姐谈起了她">
+<meta property="og:updated_time" content="2017-06-18T09:03:03.567Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【小白的CFD之旅】21：网格划分软件的选择">
+<meta name="twitter:description" content="但是怎样才能获得流体计算网格呢？“工欲善其事必先利其器”，画网格该用什么器呢？小白决定找黄师姐请教一番。 小白找到黄师姐的时候，黄师姐正在电脑上忙着。“黄师姐，我发现网格划分软件有好多种，究竟哪种才更适合于CFD网格划分呢？”，小白在实验室找到黄师姐并询问道。“现在市面上的确有很多网格划分软件，这对于新手们来说选择起来真的挺难的。”黄师姐放下鼠标说道。“那要怎么去选择呢？”小白问道。黄师姐谈起了她">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2016/04/21/xiaobai/【小白的CFD之旅】21：网格划分软件的选择/"/>
+
+
+
+
+
+  <title>【小白的CFD之旅】21：网格划分软件的选择 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2016/04/21/xiaobai/【小白的CFD之旅】21：网格划分软件的选择/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【小白的CFD之旅】21：网格划分软件的选择</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-04-21T11:11:11+08:00">
+                2016-04-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/小白CFD之旅/" itemprop="url" rel="index">
+                    <span itemprop="name">小白CFD之旅</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>但是怎样才能获得流体计算网格呢？“工欲善其事必先利其器”，画网格该用什么器呢？小白决定找黄师姐请教一番。</p>
+<p>小白找到黄师姐的时候，黄师姐正在电脑上忙着。<br>“黄师姐，我发现网格划分软件有好多种，究竟哪种才更适合于CFD网格划分呢？”，小白在实验室找到黄师姐并询问道。<br>“现在市面上的确有很多网格划分软件，这对于新手们来说选择起来真的挺难的。”黄师姐放下鼠标说道。<br>“那要怎么去选择呢？”小白问道。<br>黄师姐谈起了她对于网格划分软件的选择策略</p>
+<h1 id="1-常见网格划分工具"><a href="#1-常见网格划分工具" class="headerlink" title="1 常见网格划分工具"></a>1 常见网格划分工具</h1><p>当前市面上有形形色色的网格生成软件，这里列举一些最常见的网格软件。</p>
+<ul>
+<li><p><strong>ANSYS ICEM CFD</strong><br>ICEM CFD如今是ANSYS软件中的一个前处理模块，在早些年（2002）ICEM CFD还不属于ANSYS，自从被ANSYS收归旗下之后，ANSYS就将其作为主打前处理软件对待，后来收购了CFX软件，ANSYS果断放弃了CFX原有的前处理模块（CFX-Build，一款以Patran为基础开发的CFD前处理模块），从CFX被收购后的第一个版本（CFX5.7)起，ICEM CFD就被作为CFX的御用前处理器。而在2005年ANSYS收购FLUENT后，ANSYS更是逐渐淡化GAMBIT作为FLUENT的前处理器作用，转而将ICEM CFD作为FLUENT的前处理器，同时在ANSYS14.5版本之后，将ICEM CFD作为Workbench中的模块（之前一直作为独立软件包）。如今ICEM CFD已经作为ANSYS CFD软件的前处理器。<br>总体来说，ICEM CFD是一款功能全面的CFD网格生成工具。其不仅支持block形式的六面体网格，还支持生成四面体，五面体(金字搭)，三棱柱，笛卡尔网格等形式的网格，足以应对任何复杂程度几何模型的网格生成工作。</p>
+</li>
+<li><p><strong>ANSYS Mesh</strong><br>这其实是ANSYS Workbench的网格模块，为ANSYS Worbench中的求解器（结构、电磁、流体等）提供网格。随着ANSYS版本的更新，该模块的网格生成功能也日益强大。据说该模块在不断的吸收GAMBIT、ICEM CFD及TGrid（都是ANSYS收购的软件）的网格生成算法，按照ANSYS的发展策略，可以预测将来ANSYS将会以此模块作为主打网格生成器。</p>
+</li>
+<li><p><strong>TGrid</strong><br>这是一个非结构网格生成器，原本属于FLUENT，在ANSYS收购FLUENT的时候被一起打包收购。据说该软件生成非结构网格能力超强，可以毫不费劲的生成千万级别的网格。目前该软件已经被集成进fluent软件，作为FLUENT Meshing模式。</p>
+</li>
+</ul>
+<ul>
+<li><strong>PointWise</strong><br>说起PointWise就不能不提Gridgen，Pointwise是Gridgen换了副面孔后的结构。Gridgen据说来源于通用动力公司开发F16战斗机时的遗留品，目前在CFD网格领域占有很大的比重。该软件提供了众多的网格操纵功能，在结构网格与非结构网格划分方面均提供了良好的性能，输入输出接口也相当丰富，能够支持绝大多数CAD文件格式，也支持绝大多数CFD求解器。对于打算长期从事CFD行业的人们来讲，PointWise是不错的选择。</li>
+</ul>
+<ul>
+<li><p><strong>GridPro</strong><br>GP是另一款CFD专用网格生成软件。该软件早期版本仅 能生成六面体网格，不过该软件新版本貌似可以生成四面体网格了，实用性也更高了。该软件采用类似icem CFD的block网格生成思路，先创建块，再将块与几何进行关联，之后在块上生成网格，并将块上的网格映射到几何上，形成最终的网格。</p>
+</li>
+<li><p><strong>ANSA</strong><br>ANSA是一款希腊人开发的软件，号称是操作最快的软件。打开软件就明白这软件快的理由:所有的功能按钮都是单级，省去了其他软件多级菜单的寻找时间，当然快了。单级按钮虽然操作方便，但有密集恐惧症的使用者肯定不会这么想。<br>ANSA的优势在于其面网格生成功能，因此尤其适合于汽车工业的有限元计算网格。对于CFD计算所需的体网格，虽然也可以生成，但更多的是利用ANSA生成初始面网格，再利用其它的体网格生成软件导入面网格，并生成体网格。</p>
+</li>
+</ul>
+<ul>
+<li><strong>HyperMesh</strong><br>HM的情况与ANSA非常相似，它们是直接的竞争对手，功能重合度99%，这里不再细数。<h1 id="3-如何选择"><a href="#3-如何选择" class="headerlink" title="3 如何选择"></a>3 如何选择</h1>其实上述的任何一款软件都能满足工程需要，但考虑到各软件的易用性及功能侧重点，针对自己的工作环境选择合适的软件及其组合，还是可以考虑的。<br>最基本的原则：<strong>能输出目标求解器支持的网格文件类型</strong>，除此以外还可以采用以下方案：</li>
+</ul>
+<ul>
+<li>单纯的CFD环境。可以考虑ANSYS ICEM CFD或POINTWISE。就学习成本来讲，这两款软件差不多。</li>
+</ul>
+<ul>
+<li>涉及多物理场计算。如果ANSYS系列软件，则建议使用ANSYS Mesh，可以同时划分流体网格和固体网格。</li>
+</ul>
+<ul>
+<li>比较流行的工程组合TGrid+ANSA及TGrid+Hypermesh，主要是利用ANSA及Hypermesh生成面网格，之后利用TGrid生成体网格。这种方式充分利用了两个软件各自的优势，但缺点是需要购买两款软件，成本比较高。</li>
+<li>免费的方案。不少人出于成本考虑，可能更希望找到一些免费的网格工具，这里推荐salome。这是一款基于opencascad的开源软件，同时具备几何建模及网格划分功能，是一款功能全面的前处理软件。</li>
+</ul>
+<h1 id="4-网格划分学习"><a href="#4-网格划分学习" class="headerlink" title="4  网格划分学习"></a>4  网格划分学习</h1><p>对于网格划分，重要的是练习，对于网格小白来讲，需要了解以下一些东西：</p>
+<ul>
+<li>网格生成的基本流程。虽然当前网格生成软件众多，但是实际上网格生成流程都差不多，无非是：【几何准备】—【尺寸控制】—【局部控制】—【网格生成】—【质量评价】—【网格修改】—【网格输出】</li>
+<li>评价网格好坏。对不同形式的网格，能快速评判其好坏，并配合软件对坏网格进行修补。</li>
+<li>网格疏密分布。需要根据所求解的问题，提前预测测物理量分布，在梯度大的区域分布更密的网格。有时求解器提供的网格自适应功能也能提供较好的网格划分思路。</li>
+<li>网格输出。通常情况下可输出为通用格式，如Fluent所支持的msh格式，可以被非常多的CFD软件所支持。</li>
+</ul>
+<hr>
+<p>####<font color="#FF0000"><center>郑重申明</center></font></p>
+<ul>
+<li><strong>本系列根据真实经历改编，如有雷同实属巧合，请勿人肉</strong></li>
+<li><strong>转载请务必保证文字完整</strong></li>
+</ul>
+<hr>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CFD/" rel="tag"># CFD</a>
+          
+            <a href="/tags/小白CFD之旅/" rel="tag"># 小白CFD之旅</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/20/xiaobai/【小白的CFD之旅】20：计算区域的构建/" rel="next" title="【小白的CFD之旅】20：计算区域的构建">
+                <i class="fa fa-chevron-left"></i> 【小白的CFD之旅】20：计算区域的构建
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/22/xiaobai/【小白的CFD之旅】22：好网格与坏网格/" rel="prev" title="【小白的CFD之旅】22：好网格与坏网格">
+                【小白的CFD之旅】22：好网格与坏网格 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-常见网格划分工具"><span class="nav-number">1.</span> <span class="nav-text">1 常见网格划分工具</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-如何选择"><span class="nav-number">2.</span> <span class="nav-text">3 如何选择</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-网格划分学习"><span class="nav-number">3.</span> <span class="nav-text">4  网格划分学习</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

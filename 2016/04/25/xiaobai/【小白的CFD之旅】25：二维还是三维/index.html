@@ -1,0 +1,848 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CFD,小白CFD之旅," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="小白最近逛图书馆，发现最近关于Fluent的书是越来越多了，而且还发现这些关于Fluent教材中的案例都大同小异。小白接受小牛师兄的建议，找了一本结构比较鲜明的书照着上面的案例就练了起来。不过当练习的案例多了，小白却发现了一个问题“在建立计算模型时，为什么有时候采用二维模型，而有时候又采用三维模型？二维模型和三维模型的差异在哪里？二维代替三维到底有没有问题？”带着这些问题，小白找到了小牛师兄。“师">
+<meta name="keywords" content="CFD,小白CFD之旅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【小白的CFD之旅】25：二维还是三维">
+<meta property="og:url" content="bestcax.top/2016/04/25/xiaobai/【小白的CFD之旅】25：二维还是三维/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="小白最近逛图书馆，发现最近关于Fluent的书是越来越多了，而且还发现这些关于Fluent教材中的案例都大同小异。小白接受小牛师兄的建议，找了一本结构比较鲜明的书照着上面的案例就练了起来。不过当练习的案例多了，小白却发现了一个问题“在建立计算模型时，为什么有时候采用二维模型，而有时候又采用三维模型？二维模型和三维模型的差异在哪里？二维代替三维到底有没有问题？”带着这些问题，小白找到了小牛师兄。“师">
+<meta property="og:updated_time" content="2017-06-18T09:03:03.569Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【小白的CFD之旅】25：二维还是三维">
+<meta name="twitter:description" content="小白最近逛图书馆，发现最近关于Fluent的书是越来越多了，而且还发现这些关于Fluent教材中的案例都大同小异。小白接受小牛师兄的建议，找了一本结构比较鲜明的书照着上面的案例就练了起来。不过当练习的案例多了，小白却发现了一个问题“在建立计算模型时，为什么有时候采用二维模型，而有时候又采用三维模型？二维模型和三维模型的差异在哪里？二维代替三维到底有没有问题？”带着这些问题，小白找到了小牛师兄。“师">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2016/04/25/xiaobai/【小白的CFD之旅】25：二维还是三维/"/>
+
+
+
+
+
+  <title>【小白的CFD之旅】25：二维还是三维 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2016/04/25/xiaobai/【小白的CFD之旅】25：二维还是三维/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【小白的CFD之旅】25：二维还是三维</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-04-25T11:11:11+08:00">
+                2016-04-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/小白CFD之旅/" itemprop="url" rel="index">
+                    <span itemprop="name">小白CFD之旅</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>小白最近逛图书馆，发现最近关于Fluent的书是越来越多了，而且还发现这些关于Fluent教材中的案例都大同小异。小白接受小牛师兄的建议，找了一本结构比较鲜明的书照着上面的案例就练了起来。不过当练习的案例多了，小白却发现了一个问题“在建立计算模型时，为什么有时候采用二维模型，而有时候又采用三维模型？二维模型和三维模型的差异在哪里？二维代替三维到底有没有问题？”带着这些问题，小白找到了小牛师兄。<br>“师兄，你说Fluent中计算的二维模型到底有没有意义呢？”小白问。<br>“怎么会没有意义呢，当然有意义啊，当你计算机性能不行的时候，你就会知道能算二维是一件多么有意义的事情了。”小牛师兄说。<br>“可是，现实世界中不可能存在二维的物体啊。”小白说。<br>“嗯，这倒是真的，现实世界的任何物体都是三维的，不存在没有厚度的面，也不存在没有截面积的线，更不存在没有体积的点，所有的这一切都是近似的。但是近似并不表示一定就不行，实际上在很多时候利用这些近似，可以获得不错的结果。”小牛师兄说。<br>“那什么时候可以利用这种简化呢？比如说用二维代替三维模型。”小白问。<br>“我们常说的以二维模型来近似模拟三维模型，只是针对某一维尺寸远小于另外两维的情况下。这时候需要注意的是，采用二维模型时无法考虑法向方向的物理信息，在进行二维几何模型计算过程中，常常将面法向方向简化为常数，即总是认为面几何体的厚度为定值（通常默认为1 m）。在CFD中，二维模型一般都为平面模型。”小牛师兄说。<br>“我在做案例的时候，碰到过很奇怪的问题。比如说计算一个管道内部流动，有的案例采用三维几何模型，如图1所示；有的案例用半个三维几何，如图2所示；有的案例采用四分之一模型，如图3所示；有的案例采用管道纵剖面几何（二维矩形），如图四所示；而有的案例又采用二维的半剖面几何（矩形），如图5所示。这个到底该怎么选呢？”小白问。</p>
+<p> “通常来说，采用全三维模型自然是不存在任何问题的，对于比较简单的几何模型强烈建议使用全三维模型，因为其能提供所有的信息。在流场对称的情况下可利用对称性采用半模型或四分之一模型，当然严格意义上的流场对称是不存在的，不过有时候这种简化是可以认可的。比如图2所示的模型，如果沿对称面法向方向没有外部力作用则可以使用，但如果有外部力（如重力等）沿法向方向，则不可使用。图3也是一样，对称面法向法向不允许有外部力存在。至于图4和图5的简化，则除了要求外部力方向不能沿面法向之外，还必须假设流场特性在任意方向截面分布一致。”小牛师兄说。</p>
+<h1 id="案例测试"><a href="#案例测试" class="headerlink" title="案例测试"></a>案例测试</h1><p>分别测试以上五种模型的差异。<br>计算模型为图1所示的直管道，截面直径10mm，长度100mm。入口面流速 0.1 m/s，出口采用静压 0 Pa。流体介质为水。雷诺数约为1000，采用层流计算。<br>计算模型分别采用上述的五种模型。</p>
+<h1 id="计算结果"><a href="#计算结果" class="headerlink" title="计算结果"></a>计算结果</h1><p>以下采用相同计算条件得到的速度云图分布（从左至右分别对应上图1-5模型）。</p>
+<p><strong>分析</strong>：从图中看出，五种不同模型计算得到的速度分布趋势基本保持一致，但是利用模型4计算得到的最大速度明显小于其他四种模型计算得到的结果。</p>
+<p>根据理论计算结果，充分发展的核心最大速度应为平均速度的2倍，即 0.2 m/s。</p>
+<h1 id="改进计算"><a href="#改进计算" class="headerlink" title="改进计算"></a>改进计算</h1><p>将计算区域延长，从当前的0.1m延长至0.4m重新计算。从上图可以看出，采用轴对称方式计算结果能够与3D模型相吻合，因此改进计算只采用两种平面模型。<br>下图为延长至0.4m后的两种模型计算结果，可以看到最大速度已经非常接近理论值 0.2m/s。而2D平面模型计算的最大值小于0.15m/s，距离理论值相去甚远。</p>
+<p> <strong>总结</strong>：对于类似直管流动问题，采用全3D模型，半3D模型、四分之一3D模型以及轴对称二维模型都可接受，但是2D平面模型是不可接受的。</p>
+<p><strong>原因分析</strong>：2D平面模型实际上是当做拉伸体而不是旋转体计算，拉伸厚度默认为1m。在计算过程中对于平面法向方向的考虑与真实的圆柱体不相符。</p>
+<p>#其他问题<br>实际上很多的模型都存在这样的限制，在使用2D平面模型时需要格外注意，其只适用于厚度相对于其他两个维度非常小的拉伸体的简化，对于回转体则不适用。<br>如下图中的弯管模型及弯道模型 。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CFD/" rel="tag"># CFD</a>
+          
+            <a href="/tags/小白CFD之旅/" rel="tag"># 小白CFD之旅</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/24/xiaobai/【小白的CFD之旅】24：稳态和瞬态/" rel="next" title="【小白的CFD之旅】24：稳态和瞬态">
+                <i class="fa fa-chevron-left"></i> 【小白的CFD之旅】24：稳态和瞬态
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/26/xiaobai/【小白的CFD之旅】26：何为收敛/" rel="prev" title="【小白的CFD之旅】26：何为收敛">
+                【小白的CFD之旅】26：何为收敛 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#案例测试"><span class="nav-number">1.</span> <span class="nav-text">案例测试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#计算结果"><span class="nav-number">2.</span> <span class="nav-text">计算结果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#改进计算"><span class="nav-number">3.</span> <span class="nav-text">改进计算</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

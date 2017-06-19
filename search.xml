@@ -1,0 +1,888 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title><![CDATA[Fluent UDF【16】：通用宏[1]]]></title>
+    <url>%2F2017%2F06%2F08%2Ffluent%20udf%2FFluent%20UDF%E3%80%9016%E3%80%91%EF%BC%9A%E9%80%9A%E7%94%A8%E5%AE%8F%5B1%5D%2F</url>
+    <content type="text"><![CDATA[有人留言说UDF专题好多内容是翻译自帮助文档，事实的确是这样的。UDF本没有太多需要介绍的内容，各位学习UDF的朋友们要养成查UDF文档的好习惯，没事儿多看看C语言，多动手练习。编程技能还是要靠不断地练习和总结，程序代码也要靠不断地修改和优化。从本期开始，UDF专题进入攻坚阶段。本期介绍UDF中的通用宏。 Fluent UDF提供了一些通用宏，用于控制Fluent在使用过程中的一些行为，一些比较常用的通用宏包括： DEFINE_ADJUST：用于操纵变量 DEFINE_DELTAT：用于调整时间步长 DEFINE_EXECUTE_AT_END：在迭代完成后执行操作 DEFINE_EXECUTE_AT_EXIT：在Fluent关闭时执行操作 DEFINE_EXECUTE_FROM_GUI：实现在用户自定义界面中执行操作 DEFINE_EXECUTE_ON_LOADING：加载UDF时执行一些操作 DEFINE_EXECUTE_AFTER_CASE/DATA：读取Case文件后执行操作 DEFINE_INIT：初始化 DEFINE_ON_DEMAND：异步执行一些操作 DEFINE_REPORT_DEFINITION_FN：为用户定义的报告返回值 DEFINE_RW_FILE：读写文件 DEFINE_RW_HDF_FILE：读写HDF文件 1 DEFINE_ADJUST宏可以利用DEFINE_ADJUST宏调整或控制一些不作为调用参数的变量。例如用户可以使用DEFINE_ADJUST修改流动参数（如速度、压力等），也可以计算某些标量在全域的积分量，甚至可以基于计算结果调整边界条件。DEFINE_ADJUST宏在每一个迭代步被执行，并且在每一个迭代中传输方程求解之前被调用。 宏形式：DEFINE_ADJUST(name , d) 宏参数：symbol name, Domain *d 返回值：无返回值 调用形式：解释或编译下面是一个简单的案例，其利用DEFINE_ADJUST宏在每一步迭代过程中计算区域内的湍流耗散率，计算结果显示在console中。1234567891011121314151617#include "udf.h"DEFINE_ADJUST(my_adjust,d)&#123; Thread *t; /* Integrate dissipation. */ real sum_diss=0.; cell_t c; thread_loop_c(t,d) &#123; begin_c_loop(c,t) &#123; sum_diss += C_D(c,t)* C_VOLUME(c,t); &#125; end_c_loop(c,t) &#125; printf("总耗散率: %g\n", sum_diss);&#125; DEFINE_ADJUST宏编译或解释后，可以通过User Defined标签页下的Function Hooks…工具按钮来加载。如下图所示。 选择此工具按钮后弹出UDF加载对话框，如下图所示。 选择Adjust后的Edit…按钮，弹出Adjust Functions对话框，如下图所示，选择列表框中的宏，选择Add按钮将其从左侧列表框中加载至右侧列表框，点击OK按钮确认操作并关闭对话框。 这样，DEFINE_ADJUST宏就被被挂载到Fluent中，在每一次迭代时都会调用。 2 DEFINE_DELTATDEFINE_DELTAT宏主要用于在瞬态求解过程中控制时间步长。需要注意的是：此宏只能用于Time Stepping Method为Adaptive时。若为默认的Fixed，则会出错。如下图所示。 宏形式：DEFINE_DELTAT(name , d) 宏参数：symbol name, Domain *d 返回值：real 调用形式：解释或编译 如下例程为调整时间步长，当计算时间小于0.5s时，采用时间步长0.1s，其他时刻时间步长采用0.2。 123456789101112#include "udf.h" DEFINE_DELTAT(mydeltat,d)&#123; real time_step; real flow_time = CURRENT_TIME; if (flow_time &lt; 0.5) time_step = 0.1; else time_step = 0.2; return time_step;&#125; 解释或编译UDF后，此宏的加载方式为： 选择Run Calculation树形节点后，选择Time Stepping Method为Adaptive。 点选按钮Settings…，如下图所示。 在弹出的设置对话框中，设置User-Defined Time Step为所编译的UDF，如下图所示。点击OK按钮挂载宏。 3 DEFINE_ON_DEMAND此宏由用户手动调用执行，而非Fluent自动调用。 宏形式：DEFINE_ON_DEMAND(name ) 宏参数：symbol name 返回值：没有任何返回值 调用形式：解释或编译 此宏的参数中并无任何Fluent传入的数据，因此如果是获取计算域中的数据，则需要利用Get_Domain先获取对应区域的Domain结构。 例如下面的实例计算了一个温度函数：$$f(T)= \frac{T-T_{min}}{T_{max}-T_{min}}$$并将值赋给UDM。 12345678910111213141516171819202122232425262728293031323334353637383940#include "udf.h" DEFINE_ON_DEMAND(on_demand_calc)&#123; Domain *d; real tavg = 0.; real tmax = 0.; real tmin = 0.; real temp,volume,vol_tot; Thread *t; cell_t c; d = Get_Domain(1); thread_loop_c(t,d) &#123; begin_c_loop(c,t) &#123; volume = C_VOLUME(c,t); temp = C_T(c,t); if (temp &lt; tmin || tmin == 0.) tmin = temp; if (temp &gt; tmax || tmax == 0.) tmax = temp; vol_tot += volume; tavg += temp*volume; &#125; end_c_loop(c,t) tavg /= vol_tot; printf("\n Tmin = %g Tmax = %g Tavg = %g\n",tmin,tmax,tavg); begin_c_loop(c,t) &#123; temp = C_T(c,t); C_UDMI(c,t,0) = (temp-tmin)/(tmax-tmin); &#125; end_c_loop(c,t) &#125;&#125; 此宏编译或解释后，可通过User Defined标签页下按钮Execute on Demand…加载，如下图所示。 加载UDF后如下图所示。 4 DEFINE_RW_FILE利用DEFINE_RW_FILE宏可以向case或data文件写入信息，或者从case和data文件中读取信息。 宏形式：DEFINE_RW_FILE(name,fp ) 宏参数：symbol name， FILE fp 返回值：没有任何返回值 调用形式：解释或编译 在宏中可以利用fscanf函数读取文件中的信息，也可以利用fprintf函数向文件写入信息。 如下例程可以向data文件中写入DEFINE_ADJUST宏调用的次数，同时从data文件中读取调用的次数。 12345678910111213141516171819#include "udf.h" int kount = 0; /* define global variable kount */ DEFINE_ADJUST(demo_calc,d)&#123; kount++; printf("kount = %d\n",kount);&#125;DEFINE_RW_FILE(writer,fp)&#123; printf("Writing UDF data to data file...\n"); fprintf(fp,"%d",kount); /* write out kount to data file */&#125;DEFINE_RW_FILE(reader,fp)&#123; printf("Reading UDF data from data file...\n"); fscanf(fp,"%d",&amp;kount); /* read kount from data file */&#125; 此宏的加载与DEFINE_ADJUST宏相同，也在User-Defined Function Hooks对话框中。 其它的通用宏下期再见。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【15】：在Fluent外部编译UDF]]></title>
+    <url>%2F2017%2F06%2F07%2Ffluent%20udf%2FFluent%20UDF%E3%80%9015%E3%80%91%EF%BC%9A%E5%9C%A8Fluent%E5%A4%96%E9%83%A8%E7%BC%96%E8%AF%91UDF%2F</url>
+    <content type="text"><![CDATA[前面提到可以在vs提供的命令行界面编译UDF。今天尝试了一下，发现了很多的问题。基本步骤: 准备UDF源文件。 创建目录结构 在case文件夹下创建libudf文件夹 在libudf文件夹中创建两个文件夹，分别命名为src及win64 在win64文件夹中创建文件夹2ddp 将UDF源文件拷贝到src文件夹中 将Fluent安装目录（如c:\ANSYS Inc\v180\fluent\fluent18.0.0\src\udf)下的user_nt.udf及makefile.udf文件拷贝到2ddp目录下 修改user_nt.udf文件的内容 修改makefile.udf文件名为makefile 启动visual studio的win64工具提示命令进入命令行界面，采用cd命令进入到2ddp目录 使用nmake命令进行编译按道理来说事情应该能够解决，然而事情没那么简单。出现了N多的错误。 错误1直接使用nmake后出现下图所示的错误。错误提示:resolve.exe不是内部或外部命令。用文本编辑器打开makefile文件，搜索resolve.exe。在第170行发现目标，如下图所示。发现此行没什么大的作用，这个resolve也不知道哪里来的，搜索了整个电脑硬盘也没找到。干脆去掉这一行。保存文件继续nmake编译。 错误2真是祸不单行，又出错了错误提示:sed不是内部或外部命令，也不是可运行的程序。搜索makefile文件，发现186行与190行用到了sed。sed命令在linux下很常用，主要用于代码内文本替换。这fluent不厚道啊，windows版本还用linux下的工具。搜索了一圈也没发现sed藏在哪里。不过有替代措施，上网下载一个windows下的sed试试先。windows版本的sed软件下载地址：https://sourceforge.net/projects/gnuwin32/files/sed/4.2.1/下载完毕后安装。安装完毕后修改makefile文件的这两行，如下图所示，将完整的sed路径添加进去。 再次执行nmake，完整通过。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【14】：向量操作宏]]></title>
+    <url>%2F2017%2F06%2F06%2Ffluent%20udf%2FFluent%20UDF%E3%80%9014%E3%80%91%EF%BC%9A%E5%90%91%E9%87%8F%E6%93%8D%E4%BD%9C%E5%AE%8F%2F</url>
+    <content type="text"><![CDATA[CFD计算中存在众多的向量，典型的如速度、角速度等。向量的运算要比标量运算复杂，UDF提供了众多的向量操作宏用于向量的运算。 对于这些向量操作宏，UDF头文件中对这些宏的名称进行了区分。如宏名称中包含v，则表示为向量，S表示为标量，D表示为向量的三个分量序列，在2D模型中，第三个分量被忽略。矢量函数不遵循括号、指数、乘法、除法、加法和减法（PEMDAS）的运算顺序约定。 取而代之的是利用下划线（_）符号将操作数分组成对，以便在成组之前对元素执行操作。 1 ND操作宏UDF中使用较多的ND操作宏包括：ND_ND、ND_SUM及ND_SET。 1.1 ND_ND宏ND_ND为常数，在2D模型中其值为2，在3D模型中其值为3。 注意：ND_ND宏的值不可以改变。如下语句ND_ND=1是错误的。在实际应用过程中，把ND_ND当做是数字。 如下语句定义了一个矩阵： 1real A[ND_ND][ND_ND]; 1.2 ND_SUM宏ND_SUM宏用于计算其参数的和。 如代码： 1ND_SUM(x,y,z); 在2D模型中，其等效于： 1x+y; 而在3D模型中，其等效于： 1x+y+z; 1.3 ND_SET宏ND_SET宏用于设置其参数。如： 1ND_SET(u,v,w,C_U(c,t),C_V(c,t),C_W(c,t)); 在2D模型中，其等效为： 12u = C_U(c,t);v = C_V(c,t); 在3D模型中，其等效为：123u = C_U(c,t);v = C_V(c,t);w = C_W(c,t); 2 NV宏NV宏与ND宏类似，只不过NV宏操作的是向量。 2.1 NV_V宏NV_V宏进行向量赋值操作。如代码： 1NV_V(a, = , x); 其等效于： 123a[0] = x[0];a[1] = x[1];a[2] = x[2]; 宏中间的操作符可以是+=，此时则换为： 123a[0] += x[0];a[1] += x[1];a[2] += x[2]; 2.2 NV_VV宏NV_VV宏能实现向量元素操作。如代码： 1NV_VV(a , = , x , + , y); 则其等效于： 12a[0] = x[0] + y[0];a[1] = x[1] + y[1]; 2.3 NV_V_VS宏此宏可用于向量与标量的乘积运算。如： 1NV_V_VS(a, = , x, + , y, *, 0.5); 等效于： 12a[0] = x[0] + y[0] * 0.5;a[1] = x[1] + y[1] * 0.5; 2.4 NV_VS_VS宏矢量与标量的混合运算。如： 1NV_VS_VS(a, =, x, *, 2.0, +, y, *, 0.5); 此语句等效于： 12a[0] = (x[0]*2.0) + (y[0]*0.5);a[1] = (x[1]*2.0) + (y[1]*0.5); 3 向量操作宏向量操作宏可用于向量的求模运算、点乘与叉乘运算。 3.1 NV_MAG及NV_MAG2这两个宏用于求取向量的模及模的平方。如宏NV_MAG示例： 1NV_MAG(x); 等效于： 122D中: sqrt(x[0]*x[0] + x[1]*x[1]);3D中: sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]); 而NV_MAG2则计算向量的模的平方。如： 1NV_MAG2(x); 等效于： 122D: (x[0]*x[0] + x[1]*x[1]);3D: (x[0]*x[0] + x[1]*x[1] + x[2]*x[2]); 3.2 NV_DOT宏NV_DO宏用于向量的点积。可以有多种用法，如下示例： 1234567891011ND_DOT(x, y, z, u, v, w); 2D: (x*u + y*v); 3D: (x*u + y*v + z*w); NV_DOT(x, u); 2D: (x[0]*u[0] + x[1]*u[1]); 3D: (x[0]*u[0] + x[1]*u[1] + x[2]*u[2]); NVD_DOT(x, u, v, w); 2D: (x[0]*u + x[1]*v); 3D: (x[0]*u + x[1]*v + x[2]*w); 3.3 向量叉乘向量叉乘比较麻烦。如下示例： 123456789101112131415161718192021222324ND_CROSS_X(x0,x1,x2,y0,y1,y2) 2D: 0.0 3D: (((x1)*(y2))-(y1)*(x2))) ND_CROSS_Y(x0,x1,x2,y0,y1,y2) 2D: 0.0 3D: (((x2)*(y0))-(y2)*(x0))) ND_CROSS_Z(x0,x1,x2,y0,y1,y2) 2D and 3D: (((x0)*(y1))-(y0)*(x1))) NV_CROSS_X(x,y) ND_CROSS_X(x[0],x[1],x[2],y[0],y[1],y[2]) NV_CROSS_Y(x,y) ND_CROSS_Y(x[0],x[1],x[2],y[0],y[1],y[2]) NV_CROSS_Z(x,y) ND_CROSS_Z(x[0],x[1],x[2],y[0],y[1],y[2]) NV_CROSS(a,x,y) a[0] = NV_CROSS_X(x,y); a[1] = NV_CROSS_Y(x,y); a[2] = NV_CROSS_Z(x,y); 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【13】：循环操作宏]]></title>
+    <url>%2F2017%2F06%2F05%2Ffluent%20udf%2FFluent%20UDF%E3%80%9013%E3%80%91%EF%BC%9A%E5%BE%AA%E7%8E%AF%E6%93%8D%E4%BD%9C%E5%AE%8F%2F</url>
+    <content type="text"><![CDATA[UDF使用过程中，经常要通过循环遍历的方式对数据进行操作，如设置边界条件时，需要给每一个边界网格面赋值，此时需要通过逐层循环的方式访问每一个边界网格面。Fluent UDF中提供了众多循环来实现此功能。这些宏包括： 区域中单元循环thread_loop_c 区域中网格面循环thread_loop_f 单元中单元循环begin...end_c_loop 面中面循环begin...end_f_loop 单元中面循环c_face_loop 单元中的节点循环c_node_loop 单元面中的节点循环f_node_loop 遍历区域中的网格单元利用thread_loop_c在指定domain中遍历所有的网格单元（cell）。使用方式非常简单，如下： 1234567Domain *domain;Thread *c_thread;thread_loop_c(c_thread,domain)&#123; /*对单元进行操作*/ ...&#125; 遍历区域中的网格面利用宏thread_loop_f来遍历domain中的所有网格面（face)。与遍历网格单元类似的使用。如： 123456Thread *f_thread;Domain *domain;thread_loop_f(f_thread,domain)&#123; /*对网格面进行操作*/&#125; 遍历网格单元集合中的所有单元使用宏begin_c_loop及end_c_loop对所给定的网格单元集合中的所有单元进行遍历。 使用方式： 1234567cell_t c;Thread *c_thread;begin_c_loop(c, c_thread)&#123; &#125;end_c_loop(c, c_thread) 例如下面程序计算c_thread中的所有单元的温度和： 12345begin_c_loop(c, c_thread)&#123; temp += C_T(c, c_thread);&#125;end_c_loop(c, c_thread) 遍历面集合中的所有面利用宏begin_f_loop与end_f_loop来遍历给定face集合中的所有网格面。 使用方式： 123456face_t f;Thread *f_thread;begin_f_loop(f, f_thread)&#123;&#125;end_f_loop(f, f_thread) 以下例程计算给定网格几何f_thread上的所有网格面上温度总和。 12345begin_f_loop(f, f_thread)&#123; temp += F_T(f, f_thread);&#125;end_f_loop(f, f_thread) 遍历一个网格单元上的所有面利用宏c_face_loop来实现遍历网格单元上的所有网格面。如： 12345678910cell_t c;Thread *t;face_t f;Thread *tf;int n;c_face_loop(c, t, n) /* loops over all faces of a cell */&#123; f = C_FACE(c,t,n); tf = C_FACE_THREAD(c,t,n);&#125; 遍历网格单元中的节点利用宏c_node_loop来实现遍历网格单元中的所有网格节点。 12345678cell_t c;Thread *t;int n;Node *node;c_node_loop(c,t,n)&#123; node = C_NODE(c,t,n);&#125; 遍历网格面中的所有节点利用宏f_node_loop来实现此目的。 12345678face_t f;Thread *t;int n;Node *node;f_node_loop(f,t,n)&#123; node = F_NODE(f,t,n);&#125; 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【12】：几个常用的数据宏]]></title>
+    <url>%2F2017%2F06%2F04%2Ffluent%20udf%2FFluent%20UDF%E3%80%9012%E3%80%91%EF%BC%9A%E5%87%A0%E4%B8%AA%E5%B8%B8%E7%94%A8%E7%9A%84%E6%95%B0%E6%8D%AE%E5%AE%8F%2F</url>
+    <content type="text"><![CDATA[除了前面提到的网格单元数据获取宏、网格面数据获取宏及节点数据获取宏外，在数据获取方面，还有几个非常常用的宏。编写UDF程序时，经常与这些宏打交道。这些宏包括： Loookup_Thread THREAD_ID Get_Domain F_PROFILE THREAD_SHADOW 1 获取指定区域的ThreadThread是UDF中一种非常重要的数据结构，有时常常需要获取某个边界的Thread进行其他操作，此时可以利用宏Lookup_Thread实现。 宏描述：Lookup_Thread(d,id) 宏参数：Domain *d, int id 返回值：Thread *t id值可以从边界条件面板中获取得到，如下图所示。 获取某个zone的ID之后，就可以对该区域进行操作了。下面的例程是获取ID为1的边界上各网格面中心节点坐标。 1234567891011121314#include "udf.h"DEFINE_ADJUST(print_f_centroids, domain)&#123; real FC[2]; face_t f; int ID = 1; Thread *thread = Lookup_Thread(domain, ID); begin_f_loop(f, thread) &#123; F_CENTROID(FC,f,thread); printf("x-coord = %f,y-coord = %f", FC[0], FC[1]); &#125; end_f_loop(f,thread)&#125; 2 获取区域ID获取区域的ID可以使用宏THREAD_ID来实现。 宏描述：THREAD_ID(t) 宏参数：Thread *t 返回值：返回相应Thread的对应ID值，int类型 调用形式： 1int zone_id = THREAD_ID(t); 3 获取区域指针获取区域指针可以通过宏Get_Domain来实现。 当区域的指针无法通过宏参数传递进来时，可以使用宏Get_Domain来获取指定id的区域的指针，利用DEFINE_ON_DEMAND宏中。 宏描述：Get_Domain(id) 宏参数：int id 返回值：Domain *d 注意：对于单相流，id值为1；对于多相流，id值为大于1的整数。 多相流中的id值可以在Phase对话框中查看，如下图所示。 下面是一个例程： 123456789DEFINE_ON_DEMAND(my_udf)&#123; Domain *mixture_domain; mixture_domain = Get_Domain(1); Domain *subdomain; subdomain = Get_Domain(2); ...&#125; 4 设置边界值设置边界值可以利用宏F_PROFILE来实现。 宏描述：F_PROFILE(f,t,i) 宏参数：face_t f, Thread *t, int i 返回值：void，此宏没有返回值 此宏后两个参数通过Fluent传入，第一个参数通过循环宏得到。如下例程： 123456789101112131415#include "udf.h" DEFINE_PROFILE(pressure_profile,t,i)&#123; real x[ND_ND]; real y; face_t f; begin_f_loop(f,t) &#123; F_CENTROID(x,f,t); y = x[1]; F_PROFILE(f,t,i) = 1.1e5 - y*y/(.0745*.0745)*0.1e5; &#125; end_f_loop(f,t)&#125; 5 获取影子面的Thread当一个面存在影子面时，可以利用宏THREAD_SHADOW获取该面的影子的Thread。 宏描述：THREAD_SHADOW(t) 宏参数：Thread *t 返回值：Thread *t 当宏参数所对应的面没有影子面时，此宏返回NULL。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【11】：单元数据访问宏]]></title>
+    <url>%2F2017%2F06%2F03%2Ffluent%20udf%2FFluent%20UDF%E3%80%9011%E3%80%91%EF%BC%9A%E5%8D%95%E5%85%83%E6%95%B0%E6%8D%AE%E8%AE%BF%E9%97%AE%E5%AE%8F%2F</url>
+    <content type="text"><![CDATA[自己选的主题，哭着也要更新完。 单元数据要比节点数据复杂得多。与节点数据仅仅存储节点坐标不同，单元数据中不仅包含单元中心节点等，还包含有各种物理量数据。单元数据访问宏返回网格单元内的信息。大部分的单元宏在头文件metric.h 中定义，这类的宏均以C_作为前缀。 1 C_CENTROID宏C_CENTROID用于获取网格单元中心坐标。 宏调用形式：C_CENTROID(x,c,t) 宏参数：real x[ND_ND], cell_t c, Thread *t 数据返回：以参数x传址调用返回 该宏以参数作为返回值，因此需要事先通过real x[ND_ND]定义参数x。程序片段如： 123456789101112131415&#123; cell_t c; real x[ND_ND]; real y; thread_loop_c(t,d) &#123; begin_c_loop_all(c,t) &#123; C_CENTROID(x,c,t); y = x[1]; ... &#125; &#125;&#125; 2 C_VOLUMEC_VOLUME宏用于获取网格单元体积。 宏调用形式：C_VOLUME(c,t) 宏参数：cell_t c, Thread *t 数据返回：返回real值 1234&#123; real vol; vol = C_VOLUME(c,t);&#125; 3 C_NNODESC_NNODES宏用于获取单元体内节点数量。 调用形式：C_NNODE(c,t) 参数：cell_t c, Thread *t 数据返回：返回int类型的节点数量 4 C_NFACESC_NNODES宏用于获取单元体内网格面的数量。 调用形式：C_NFACES(c,t) 参数：cell_t c, Thread *t 数据返回：返回int类型的网格面数量 5 物理量参数范围可以通过宏访问网格单元内的物理量参数，如获取密度、压力、速度等。这些宏在头文件mem.h中定义。 宏 参数 返回值 C_R(c,t) cell_t c, Thread *t real，密度 C_P(c,t) cell_t c, Thread *t real，压力 C_U(c,t) cell_t c, Thread *t real，u速度 C_V(c,t) cell_t c, Thread *t real，v速度 C_W(c,t) cell_t c, Thread *t real，w速度 C_T(c,t) cell_t c, Thread *t real，温度 C_H(c,t) cell_t c, Thread *t real，焓 C_K(c,t) cell_t c, Thread *t real，湍动能 C_NUT(c,t) cell_t c, Thread *t real，湍流粘度 C_D(c,t) cell_t c, Thread *t real，湍动能耗散率 C_O(c,t) cell_t c, Thread *t real，比耗散率 C_YI(c,t,i) cell_t c, Thread *t,int i real，组分质量分数 C_IGNITE(c,t) cell_t c, Thread *t real，点火质量分数 C_PREMIXC_T(c,t) cell t c, Thread *t 预混燃烧温度 C_STORAGE_R(c,t,nv) cell_t c, Thread *t, real nv 变量nv的值 6 梯度计算宏计算单元内部物理量的梯度的宏，通常以_G为后缀，如计算温度梯度C_T_G。 注意：梯度变量仅在相关变量被求解后才可用。 如：当定义了能量源项后，UDF中能够利用宏C_T_G访问单元温度，然而却不能使用C_U_G宏访问x方向速度梯度。主要 原因在于求解器为了考虑计算效率，在求解时从内存中去除了不被使用的数据。如果一定要保留这些梯度数据，可以使用TUI命令solve/set/expert，之后在系统提示Keep temporary solver memory from being freed?后输入yes。这样的话所有的梯度数据都会被保留，但是计算过程中会消耗更多的内存。 可以使用此方式调用梯度宏： 12/*返回x方向温度梯度*/real xtG = C_T_G(c,t)[0]; 梯度访问宏包括： 宏 参数 返回值 C_P_G(c,t) cell_t c, Thread *t 压力梯度向量 C_U_G(c,t) cell_t c, Thread *t u速度梯度向量 C_V_G(c,t) cell_t c, Thread *t v速度梯度向量 C_W_G(c,t) cell_t c, Thread *t w速度梯度向量 C_T_G(c,t) cell_t c, Thread *t 温度梯度向量 C_H_G(c,t) cell_t c, Thread *t 焓梯度向量 C_NUT_G(c,t) cell_t c, Thread *t 湍流粘度梯度向量 C_K_G(c,t) cell_t c, Thread *t 湍动能梯度向量 C_D_G(c,t) cell_t c, Thread *t 湍动能耗散率梯度向量 C_O_G(c,t) cell_t c, Thread *t 比耗散率梯度向量 C_YI_G(c,t,i) cell_t c, Thread *t,int i 组分质量分数梯度向量 注意： C_P_G只能用于压力基求解器。 C_YI_G只能用于密度基求解器，若要在压力基中使用此宏，则需要设置’species/save-gradients?为#t 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【10】：网格面数据访问宏]]></title>
+    <url>%2F2017%2F06%2F02%2Ffluent%20udf%2FFluent%20UDF%E3%80%9010%E3%80%91%EF%BC%9A%E7%BD%91%E6%A0%BC%E9%9D%A2%E6%95%B0%E6%8D%AE%E8%AE%BF%E9%97%AE%E5%AE%8F%2F</url>
+    <content type="text"><![CDATA[前面介绍了获取节点数据的宏。本文讲解一些关于面数据获取的宏。这些面相关宏定义在头文件metric.h及mem.h中，并且所有的宏均以F_作为前缀。 注意:面数据获取宏只能用于压力基求解器，并且一些与模型相关的宏，只在当模型被开启后才有效。 Fluent的数据以分层方式保存，如下图所示。最顶级为Domain，其下为Cell，再下为Face，最底层数据为Node。在访问过程中，也是从上往下逐层访问，采用循环遍历的方式。 1 F_CENTROID宏F_CENTROID宏用于网格面心坐标。 宏调用形式: F_CENTROID( x , f , t ) 宏参数: real x[ND_ND]，face_t f，Thread *t 参数值获取: 通过x数组获得此宏通过参数返回值，典型的传址调用。一个简单的示例: 12345678910111213&#123;/*定义数组接收坐标参数*/ real x[ND_ND]; real y; face_t f; begin_f_loop(f,t) &#123; F_CENTROID(x,f,t); y = x[1]; ... &#125; end_f_loop(f,t)&#125; 2 F_AREA宏F_AREA宏用于获取网格面的法向向量。在一些求通过某些面的物理量分量时非常有用。在ANSYS Fluent中，边界面的法向通常指向计算域的外部。对于内部面的法向方向，通常利用节点排序采用右手定则进行确定。 A[0]返回X方向投影面积。 宏调用形式: F_AREA(A , f , t ) 宏参数: real A[ND_ND]，face_t f，Thread *t 参数值获取: 通过A数组获得一个简单的片段:1234&#123; real NV_VEC(A); /*定义向量A*/ F_AREA(A, f, t);&#125; 注意:F_AREA宏通过传址调用返回值，参数A可以是数组A[ND_ND]，也可以是向量。如果定义为向量，后面可以很方便的利用向量运算(点积和叉积等)。 3 边界面的流动参数获取宏面参数访问宏的一个主要用途在于访问边界面信息。如获取边界速度、压力、温度等。如下表所示。 宏定义 参数类型 返回值 F_U(f,t) face_t f,Thread *t 返回u方向速度 F_V(f,t) face_t f,Thread *t 返回v方向速度 F_W(f,t) face_t f,Thread *t 返回w方向速度 F_T(f,t) face_t f,Thread *t 返回面上的温度 F_H(f,t) face_t f,Thread *t 返回面上的焓 F_K(f,t) face_t f,Thread *t 返回面上的湍动能 F_D(f,t) face_t f,Thread *t 返回面上的湍动能耗散率 F_YI(f,t,i) face_t f,Thread *t,int i 返回组分质量分数 这些宏的返回值均为real型。采用返回值的形式获取参数。如下代码片段:12real temperature;temperature = F_T(f,t); 需要注意，这些宏只有在激活了相应的模型后才有效。如获取湍动能参数宏F_K(f,t)，只有当激活了湍流模型后才可以使用。 4 可用于获取内部面参数的宏有一些宏既可以访问边界面上数据，也可以访问内部面上的数据。比较常用的宏为F_P及F_FLUX。 宏定义 参数类型 返回值 F_P(f,t) face_t f, Thread *t 返回面上压力值，real类型 F_Flux(f,t) face_t f, Thread *t 返回通过面的质量流量，real类型 与前面边界面参数宏使用方法类似。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【9】：节点数据访问宏]]></title>
+    <url>%2F2017%2F05%2F20%2Ffluent%20udf%2FFluent%20UDF%E3%80%909%E3%80%91%EF%BC%9A%E8%8A%82%E7%82%B9%E6%95%B0%E6%8D%AE%E8%AE%BF%E9%97%AE%E5%AE%8F%2F</url>
+    <content type="text"><![CDATA[1 辅助宏从今天开始，我们即将走入UDF的核心世界，仔细剖析每一个宏的使用方法以及使用过程中需要注意的内容。 前文提过，UDF程序编写的核心内容在于搞明白数据如何获取？数据如何转换？数据如何返回？Fluent提供了众多的辅助宏来实现这三个功能。主要包括： 数据访问。主要功能为获取求解器中的数据，如得到单元中的温度、压力、速度等物理量。 循环控制。主要提供遍历搜索功能。如设置边界条件数据，则需要利用循环控制宏遍历所有的边界面。 向量操作宏。主要提供一些向量运算操作。 输入输出宏。提供与外部数据交互的能力。 Scheme宏。主要用于GUI定制。 数据获取宏的内容很多，包括各种节点数据、网格单元数据、网格面数据、网格链接关系数据、索引数据、时间相关数据、物性数据等。本文描述其中的部分内容，剩余部分在后续文章中逐渐描述。 注意轴对称数据：当计算采用了轴对称模型或轴对称旋转模型时，需要注意利用数据获取宏得到的面数据（如利用宏F_AREA得到的截面面积）均指的是1弧长面积上的数据，如果要得到整个截面上的数据，则需要乘上2PI(可以利用宏M_PI) 2 节点数据访问宏节点宏获取节点信息，如获取节点x,y,z三方向坐标，或获取网格面上的节点数量。 获取节点位置信息 获取节点位置包括三个宏，它们在头文件metric.h中被定义。这些宏包括NODE_X，NODE_Y，NODE_Z： 宏 参数类型 返回值 NODE_X Node *node 返回node的x坐标，real类型 NODE_Y Node *node 返回node的y坐标，real类型 NODE_Z Node *node 返回node的z坐标，real类型 说明：此宏使用很简单，不过在使用之前需要定义变量Node *v，然后在循环体中利用宏F_NODE获取节点，之后直接应用宏NODE_X(v)获取节点v的x坐标。 如下程序片段取自DEFINE_GRID_MOTION宏： 123456789101112131415161718&#123; Node *v; int n; face_t f; Thread *tf = DT_THREAD(dt); begin_f_loop(f,tf) &#123; f_node_loop(f,tf,n) &#123; v=F_NODE(f,tf,n); if(NODE_X(v)&gt;0.2) &#123; ... &#125; &#125; &#125; end_f_loop(f,tf); &#125; 获取面上节点数量 宏F_NNODES可用来获取面上节点的数量信息，该宏在头文件mem.h中定义。 宏 参数类型 返回值 F_NNODES(f,t) face_t f,Thread *t 返回face上的节点数量，int类型 节点宏的使用非常简单，均采用直接返回值的形式进行调用。 此宏的使用更简单，直接在面循环体内调用即可，也可以在cell循环体内使用。 12345678910&#123; int number; face_t f; Thread *tf = DT_THREAD(dt); begin_f_loop(f,tf) &#123; number = F_NNODES(f,tf); &#125; end_f_loop(f,tf);&#125; 3 mem.h网格信息访问宏大多数放置在mem.h头文件中， 更多关于节点访问的宏可以在此文件中找到 。该文件位于Fluent安装目录下..\ANSYS Inc\v180\fluent\fluent18.0.0\src\storage文件夹中。该文件夹中放置了众多辅助宏定义的头文件，有很多在文档中没有解释的宏都可以在这里面找到，有兴趣的可以看看，不过千万不要被里面的内容给吓到。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【8】：编译型UDF]]></title>
+    <url>%2F2017%2F05%2F19%2Ffluent%20udf%2FFluent%20UDF%E3%80%908%E3%80%91%EF%BC%9A%E7%BC%96%E8%AF%91%E5%9E%8BUDF%2F</url>
+    <content type="text"><![CDATA[UDF除了可以以解释的方式外，其还可以以编译的方式被Fluent加载。解释型UDF只能使用部分C语言功能，而编译型UDF则可以全面使用C语言的所有功能。 1 编译型UDF介绍编译型UDF的构建方式与ANSYS Fluent可执行文件自身的构建方式相同。在代码构建过程中，其利用一个名为Makefile的脚本文件来调用C编译器构建一个目标代码库。该对象库与其编译过程中所使用的Fluent版本及计算机体系结构相关。因此，若改变了计算机操作系统或Fluent版本的话，UDF对象库必须重新构建。UDF的编译过程通常涉及到源代码的编译和加载两个步骤。 编译/构建过程需要一个或多个UDF的源文件（例如myudf.c），并将它们编译成对象文件（例如myudf.o或myudf.obj），之后将其构建成一个“共享库” （例如，libudf.dll）与目标文件。 如果使用GUI方式编译源文件，则当用户单击“Compiled UDF”对话框中的“Build”按钮时，将执行编译/构建过程。Fluent软件将自动为用户基于在该会话期间运行的ANSYS Fluent的体系结构和版本（例如，hpux11 / 2d）构建用户命名的共享库（例如libudf），并存储UDF对象文件。 如果使用TUI方式编译源文件，则首先必须设置共享库的目标文件夹，同时修改名为Makefile的脚本文件以指定源参数，然后执行Makefile文件实现源代码的编译与构建。使用TUI方式编译UDF具有允许从非ANSYS Fluent源派生的预编译对象文件链接到ANSYS Fluent（链接非ANSYS Fluent源文件预编译的对象文件）的诸多优点，这些功能用GUI编译无法实现。构建共享库（使用TUI或GUI）后，将UDF库加载到ANSYS Fluent中，然后再使用它。您可以使用“Compiled UDFs”对话框中的“Load”按钮来执行此操作。加载完成后，共享库中包含的所有已编译的UDF将在ANSYS Fluent的图形对话框中变为可见和可选。请注意，编译的UDF显示在ANSYS Fluent对话框中，相关联的UDF库名称由两个冒号（：:)分隔。例如，与名为libudf的共享库相关联的名为rrate的编译UDF将出现在ANSYS Fluent对话框中，如rrate :: libudf。此名称可以区分解释型UDF和编译型UDF。 如果在加载UDF库时写入您的Case文件，则库将与Case文件一起保存，并在之后读取该Case文件时自动加载。这种“动态加载”过程可以节省用户每次运行模拟时重新加载编译库的时间。 2 C编译器不管是使用GUI还是使用TUI方式编译UDF，都需要使用本机运行的操作系统以及C编译器。大多数的Linux操作系统上都已经集成了C编译器，但是如果是在Microsoft Windows系统上编译UDF，则在编译之前必须确保本机山刚已经安装了MicroSoft Visual Studio。 对于Linux机器，ANSYS Fluent支持任意符合ANSI标准的C编译器(如GCC)。在进行UDF编译之前，需要设置编译环境，这通常可以通过修改UDF.bat文件来实现。如下图所示。 3 GUI方式编译UDF利用GUI方式编译UDF源文件、构建共享库以及加载UDF库到Fluent中，可以采用以下步骤。注意:在Windows系统下编译UDF，必须预先安装Visual Studio。在安装Visual Studio时，确保选择安装c++语言，这样才会安装C编译器。 确保要编译的UDF源文件与cas和dat文件在同一工作路径下。 读取(或创建)case文件 打开Compiled UDFs对话框。可通过树形菜单Parameters &amp; Customization → User Defined Functions→Compiled...启动该对话框。 在Compiled UDF对话框中点击按钮Add...添加源文件和头文件 在Library Name后的文本框中输入共享库的名称，之后点击Build按钮构建共享库。其间会弹出如下图所示的提示对话框。可以选择无视，点击OK按钮继续。编译完成后会在TUI窗口出现如图所示的对话框。仔细检查提示信息，没有出现error则表示编译成功。图中出现有乱码，不知道是从Fluent哪个版本开始就出现这种情况。其实可以不用管。 点击Load按钮加载UDF如果没有错误的话，加载完housing会在TUI窗口中出现如下图所示的对话框，其中会显示UDF宏名称。如下图中所示的velocity和domainInit。4 TUI方式编译UDF除了可以利用图形界面编译UDF外，Fluent还提供了利用TUI命令的方式编译UDF。利用TUI方式进行编译，能够允许用户调用一些非Fluent源文件之外的库文件。使用TUI进行编译，通常首先需要创建好文件目录结构，之后编辑Makefile文件，利用makefile文件编译源文件。 windows系统与Linux系统的编译方式有些不同，这里主要描述Windows下的构建过程，linux系统后面再说。 4.1 创建文件目录结构在windows系统中编译UDF，需要两个文件makefile_nt.udf与user_nt.udf。特别重要的是在user_nt.udf文件中指定源文件编译参数。构建文件目录结构采用以下步骤： 在当前工作目录下，创建新的文件夹存储UDF库。（例如创建文件夹libudf） 在libudf文件夹下创建新的文件夹，命名为src 将所有UDF源文件放入src文件夹中 在libudf文件夹下创建架构文件夹。如64bit windows操作系统，则创建win64文件夹（路径libudf\win64）。 在架构文件（libudf\win64）下创建Fluent版本文件夹。如单精度2d版本则创建文件夹2d。一些版本信息如下表所示。 版本信息 文件夹名字 单精度2d 2d 当精度3d 3d 双精度2d 2ddp 双精度3d 3ddp 单精度并行2d 2d_node及2d_host 单精度并行3d 3d_node及3d_host 双精度并行2d 2ddp_node及2ddp_host 双精度并行3d 3ddp_node及3ddp_host 注意：在编译并行UDF时，需要创建两个版本文件夹。 从Fluent安装路径中（如c:\ANSYS Inc\v180\fluent\fluent18.0.0\src\udf)拷贝文件user_nt.udf到所有的版本子文件夹中（如libudf\win64\3d） 从Fluent安装路径中（如c:\ANSYS Inc\v180\fluent\fluent18.0.0\src\udf)拷贝文件makefile_nt.udf到所有的版本子文件夹中（如libudf\win64\3d），并改名为makefile 注意：若在Fluent外部编译UDF，则需要添加环境变量FLUENT_INC、FLUENT_ARCH到user_nt.udf文件中 Linux环境下的文件目录设置与此有些许差异。 4.2 编译文件当文件目录设置完毕并且所有文件已经放置到指定位置后，就可以利用TUI来编译及构建UDF共享库了。 在windows系统中，采用以下步骤： 修改user_nt.udf文件。修改文件中的三个参数：CSOURCES、HSOURCES、VERSION以及PARALLEL_NODE udf_nt.udf文件内容类似下图所示。 CSOURCES=：指定要编译的UDF源文件。在所有文件名前面加上前缀$(SRC)。（多个文件可以连着写，如`$(SRC)udfexample1.c $(SRC)udfexample2.c） HSOURCES=：指定要编译的UDF头文件。同样在所有文件名前面加上$(SRC)前缀。（多个文件可以连着写，如`$(SRC)udfexample1.h $(SRC)udfexample2.h） VERSION=：运行的求解器版本信息，与user_nt.udf文件所在文件夹保持一致。（(2d, 3d, 2ddp, 3ddp, 2d_host, 2d_node, 3d_host, 3d_node, 2ddp_host, 2ddp_node, 3ddp_host, or 3ddp_node)。 PARALLEL_NODE=指定并行通讯库。指定为None表示采用串行，其他并行包括：ibmmpi（利用IBM MPI并行）、intel(利用intel MPI并行)以及msmpi（利用微软MPI）。在并行计算中需要同时设置host及node文件夹下的user_nt.udf文件。 利用Visual Studio命令行界面进入每一个版本文件夹（如libudf\win64\2d），输入nmake执行编译操作。若编译存在问题，可以在修改源文件后通过执行nmake clean及nmake重新编译。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【7】：解释型UDF]]></title>
+    <url>%2F2017%2F05%2F18%2Ffluent%20udf%2FFluent%20UDF%E3%80%907%E3%80%91%EF%BC%9A%E8%A7%A3%E9%87%8A%E5%9E%8BUDF%2F</url>
+    <content type="text"><![CDATA[UDF宏有两种方式可以被Fluent所接受:编译和解释。其中有一些宏既可以被解释也可以被编译，而一些宏则只能被解释。有一些场合只接受编译后的UDF(如动网格中的一些宏)，而有些场合既可以接受编译的UDF，还能接受解释后的UDF。那么解释型的UDF与编译型的UDF到底存在何种差异？本文主要描述解释型UDF，而编译型UDF涉及到的问题更多，我们留到下次再说。 解释型UDF解释型UDF不需要额外的编译器，利用Fluent软件自身即可解释源代码。在解释过程中，UDF源代码被C预处理器解释成中间的，独立于计算机体系之外的机器代码。之后在调用UDF的过程中，这些被解释器生成的机器代码将在内部仿真器或解释器上被执行。当然，这种以解释的方式运行无可避免的会损失计算性能。但是以解释方式运行的UDF有个好处:其可以不加修改的在不同体系的计算机上、不同的操作系统以及不同的Fluent版本中运行。当UDF的计算性能很重要时，建议以编译的形式运行UDF。所有解释型UDF都可以以编译的方式被Fluent加载。在UDF被解释后保存cas文件，之后再打开cas文件时，UDF能够直接被加载，而无需重新解释。 解释型UDF的局限性解释型的最大优势是一次解释，到处可以执行，能够跨平台、跨架构、跨操作系统、跨版本。但是解释型UDF也存在其局限性。主要体现在: 无法使用goto语句 只支持ANSI-C语法 不支持直接数据结构引用(direct data structure references) 不支持局部结构声明 不支持联合体 不支持指向函数的指针 不支持函数数组在访问FLUENT求解器数据的方式上解释式UDF也有限制。解释式UDF不能直接访问存储在FLUENT结构中的数据。它们只能通过使用Fluent提供的宏间接地访问这些数据。另一方面，编译式UDF没有任何C编程语言或其它注意的求解器数据结构的限制。在Fluent中解释UDF在Fluent中解释UDF非常简单。通常可采用以下步骤: 确保UDF源文件与cas文件在同一目录下。需要说明的是，在网络式多机并行Fluent中，用户必须共享包含udf源文件、cas文件以及data文件的文件夹。具体共享方法为: 鼠标右键选择要共享的工作文件夹，选择弹出菜单Sharing and Security，并选择Share this folder。 右键选择模型树节点Parameters&amp;Customization→User Defined Functions，选择子菜单Interpreted..弹出如下图所示的对话框。 在对话框中选择按钮Browse…在弹出的文件选择对话框中选择UDF源文件。对话框中的其他参数一般情况下可保持默认设置。 点击按钮Interpret解释源文件源文件解释过程中，TUI窗口会有解释信息。若有错误的话，会出现错误信息。 加载解释后的UDF当源代码被解释后，在相应的GUI窗口中就可以看到被解释的UDF了，此时可以选择使用。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【6】：预处理命令]]></title>
+    <url>%2F2017%2F05%2F17%2Ffluent%20udf%2FFluent%20UDF%E3%80%906%E3%80%91%EF%BC%9A%E9%A2%84%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4%2F</url>
+    <content type="text"><![CDATA[今天要讲的内容是关于C语言的预处理。搞清楚了这个，就可以分析UDF中的各种头文件源代码，从此写UDF不求人。 1 关于预处理在UDF的各种头文件中(文件路径D:\Program Files\ANSYS Inc\v180\fluent\fluent18.0.0\src)，存在各种以#开头的语句，如下图中所示。这些以#开头的语句就是C语言的预处理命令。C语言的预处理工作由一个预处理程序来完成，任何C系统都有一个预处理程序，其负责处理源程序中的所有预处理命令，从而生成不含预处理命令的源程序。C语言的预处理目的是为了方便编程。 预处理命令以独立的预处理命令行的形式出现在源程序中，# 是其特殊的引导符号。如果源程序中某一行的第一个非空格符号是 # ,这就是一个预处理命令行。预处理命令的作用是要求预处理程序完成一些操作。 2 文件包含命令文件包含命令是以#include开始的行，其作用是把特定文件的内容复制到当前源文件中。其存在两种形式:12# include &lt;文件名&gt;# include "文件名" 两者的差异在于文件搜索方式的不同。第一种形式，预处理程序直接到系统指定的某些目录中去查找所需文件，目录指定方式由具体系统确定，通常指定几个系统目录。第二种形式，预处理程序现在源文件所在目录中查找，若没找到文件则再到系统指定的目录中去查找。文件包含命令的处理过程:首先查找所需文件，找到后就用该文件的内容取代这个包含命令行。替换进来的文件中若有预处理命令，也将被处理。 3 宏定义和宏替换以#define开始的行称为宏定义命令行。宏定义包含两种形式: 简单宏定义 带参数宏定义 3.1 简单宏定义简单宏定义的形式为:#define 宏名字 替代文本其中宏名字是任意标识符，替代文本可以是任意一段正文，其中可以包括程序中能出现的任何字符(包括空格等)，一直延续到本行结束。如果需要写多行的替代文本，可以在行末写一个反斜杠\，这将使下一行内容继续被当做替代文本。宏定义的作用就是为宏名字定义替代。如果一个宏名字的替代文本是数值或可以静态求值的表达式，当这个宏名字在程序某处出现，就相当于在那里写了这个数值或表达式。例如，如果进行了如下定义:1#define SLD static long double 伺候，宏名字SLD就代表static long double。若程序中出现:1SLD x=2.4, y=9.16; 经过预处理后，源代码被翻译为:1static long double x=2.4,y=9.16; 预处理并不检查宏定义中的替代文本是否为合法的C语言结构，也不检查替换之后的结果是否为正确的C语言程序段，其只是简单地完成文本替换工作。 3.2 带参数的宏定义带参数的宏定义形式为:#define 宏名字(参数列表) 替代正文使用带参宏时，不但要给出宏的名字，还要用类似函数实参的形式给出各宏参数的替代段，多个替代段之间用逗号分隔。这种形式也成为一个宏调用。对宏调用的替换分两部分进行:首先用实际替代段去替换宏定义的替代正文里出现的各个宏参数，然后把替换的结果(展开后的替代正文)代入程序里出现宏调用的为准，新年广场宏替换的最后结果。 例如，定义求两个数据中较小数，可定义宏:1#define min(A,B) ((A)&lt;(B)?(A):(B)) 若程序中出现如下语句:1z = min(x+y,x*y) 则宏展开后则为:1z = ((x+y)&lt;(x*y)?(x+y):(x*y)); 带参数的宏定义与函数看起来很类似，但实际上有很大的不同。切记宏定义只是简单的文本替换。 4 条件编译命令条件编译的作用是在源程序中划出一些片段，使预处理程序可根据条件保留或丢掉一段，或从几段中选择一段保留。实现条件编译的预处理命令有四个，分别是:1234#if#else#elif#endif 其中，#if和#elif命令以一个能静态求出整型值的表达式为参数。另外两个没有参数。条件编译命令的常见使用形式有三种: 形式一123#if 整形表达式…… /*代码片段，条件成立时保留*/#endif 形式二12345#if 整形表达式…… /*条件成立时保留*/#else…… /*条件不成立时保留*/#endif 形式三123456789#if 整形表达式…… /*条件成立时保留*/#elif 整形表达式…… /*elif部分，可以有多个*/#elif 整形表达式……#else…… /*条件都不成立时保留*/#endif 其中整形表达式是预处理条件，值为0表示条件不成立，否则条件成立。这里常用==,!=等做判断，例如判断宏定义的符号是不是等于某个值等。为了方便，C语言提供了一个特殊谓词defined，其使用形式有两种:12define 标识符define (标识符) 当标识符是有定义的宏名字时，define(标识符)将得到1，否则得到0。这种表达式常被作为条件编译的条件。此外还有两个预处理命令#ifdef和ifndef，他们相当于#if和#define混合的简写形式。12#ifdef 标识符 /*相当于#if define(标识符)*/#ifndef 标识符 /*相当于#if !define(标识符)*/ 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【4】：C语言]]></title>
+    <url>%2F2017%2F05%2F15%2Ffluent%20udf%2FFluent%20UDF%E3%80%904%E3%80%91%EF%BC%9AC%E8%AF%AD%E8%A8%80%2F</url>
+    <content type="text"><![CDATA[Fluent UDF利用的是C语言，本文简单介绍在UDF中经常会用到的C语言常识。本文部分内容来自UDF手册。 1 C语言中的注释C语言中的注释利用/*及*/来实现。例如:1/*这是一个注释*/ 注释也可以跨行实现，如:12/*这是一个跨行注释*/ 注意:在编写UDF的过程中，不能把DEFINE宏(如DEFINE_PROFILE)放置在注释中，否则会引起编译错误 2 基本数据类型Fluent UDF解释器支持的标准C数据类型包括: int。整形，存储形如1,2,3之类的整数。 long。长整形。存储数据与int类似，但范围更广。 float。浮点型。存储小数，如1.234等 double。双精度浮点型。与float类似。 char。字符型，如’a’,’b’,’c’等。Fluent UDF中还有real型，其实这是Fluent自定义的数据类型，在双精度求解器中，real类型与double类型相同，而在单精度求解器中，real类型等同于float类型。UDF自动进行转换，因此在需要浮点数时，可以全部采用real类型。 3 常数在C语言中可以利用#define来定义常数。需要注意的是，定义为常数类型后，该变量的值不能改变。如:123#define WALL_ID 5#define YMIN 0.0#define YMAX 0.4 这样定义完毕后，WALL_ID的值不能再发生改变，因此如下的语句会引发编译错误:1WALL_ID = WALL_ID +1 ; 4 变量变量用于存储数据。所有变量都包含类型、名称以及值，有时候还包含存储标记（如静态变量和外部变量）。C语言中所有的变量在使用之前都必须声明，这样C编译器才会知道该如何为此变量分配内存。 4.1 全局变量和局部变量C语言中的全局变量定义在函数的外部，该变量可以被源文件中所有的函数引用。全局变量如果未被声明为静态变量的话，还可以被外部函数引用。如下例中的全局变量声明：123456#include "udf.h"real volume; /*此处定义的是全局变量*/DEFINE_ADJUST(vol,domain)&#123; /*此处可以访问变量volume*/&#125; 局部变量一般定义在函数体内，其只在函数体内起作用，在函数体外无法被访问到。如下程序中的局部变量定义。123456789101112DEFINE_PROPERTY(cell_viscosity, cell, thread)&#123; real mu_lam; /*局部变量 */ real temp = C_T(cell, thread); /* 局部变量 */ if (temp &gt; 288.) mu_lam = 5.5e-3; else if (temp &gt; 286.) mu_lam = 143.2135 - 0.49725 * temp; else mu_lam = 1.; return mu_lam;&#125; 4.2 外部变量当在某个源文件中定义了一个未加static的全局变量后，若想在另一个源文件中调用此变量，此时可以使用外部变量声明来实现。采用如下声明：1extern real volume; 注意：extern声明只能用于编译型UDF中。以下是一个利用extern的案例。假设在源文件file1.c中定义了全局变量：123456#include "udf.h"real volume;DEFINE_ADJUST(compute_volume, domain)&#123; volume = ....&#125; 若其他的的源文件想要利用此全局变量volume， 此时可以创建头文件，并将变量volume声明为extern变量，如创建头文件extfile.h，写入内容：1extern real volume; 之后就可以在其他的源文件中使用此变量volume了，如在源文件file2.c中：123456789#include "udf.h"#include "extfile.h"DEFINE_SOURCE(heat_source,c,t,ds,eqn)&#123; real total_source = ...; real source; source = total_source/volume; return source;&#125; 温馨提示：外部变量使用起来很麻烦也很容易出错，如果对其不甚了解的话，建议不要使用。 ##4.3 静态变量静态变量（声明时添加static关键字）在用于局部变量或全局变量时具有不同的作用。局部变量被声明为static时，当函数返回后变量并不销毁，变量的值依旧被保留。全局变量被声明为static时，该变量能够被此源文件中的所有函数调用，但不能被其他源文件中的函数调用。实际上是变量被隐藏了。例如在文件mysource.c中有如下代码：12345678910111213141516171819202122#include "udf.h"static real abs_coeff = 1.0; /*静态全局变量*/ /* 此变量只能被本文件中的其他函数调用 */ DEFINE_SOURCE(energy_source, c, t, dS, eqn)&#123; real source; /* 局部变量*/ int P1 = ....; /* 局部变量*//*变量只能被当前函数调用，但在函数返回时变量并不释放 */ dS[eqn] = -16.* abs_coeff; source =-abs_coeff *(4.* SIGMA_SBC ); return source;&#125; DEFINE_SOURCE(p1_source, c, t, dS, eqn)&#123; real source; int P1 = ...; dS[eqn] = -abs_coeff; source = abs_coeff *(4.* SIGMA_SBC); return source;&#125; 更多关于static的描述可参见文章[www.cnblogs.com/stoneJin/archive/2011/09/21/2183313.html] (www.cnblogs.com/stoneJin/archive/2011/09/21/2183313.html)温馨提示：与全局变量类似，静态变量也尽量少用，容易造成不必要的麻烦。 5 用户自定义数据类型C语言允许用户自己定义数据类型，通过使用结构体及typedef关键字。如定义类型：1234567typedef struct list&#123; int a; real b; int c;&#125;mylist;mylist x,y,z; 上例定义了一个结构体类型mylist，并定义了三个结构体变量x,y,z。 6 强制转换在C语言中，有时需要对类型进行强制转换，如将浮点型强制转换为整形，如下例中。123int x =1;real y=3.1415926;int z=x+(int)y; 计算完毕后，z=4。 7 函数C语言中的函数执行独立的任务。函数能够被同一源文件中的其他函数调用，也可以由源文件之外的函数调用。函数定义包含函数名以及被传递给函数的零个或多个参数列表。函数包含一个包含在大括号内的主体，主体中包含执行任务的指令。 函数可以返回特定类型的值。函数返回特定数据类型的值（例如，实数），如果类型为void，则不返回任何值。 要确定DEFINE宏的返回数据类型，可查看udf.h文件中宏的相应#define语句。 8 数组C语言中数组变量定义为name[size]，其中name为数组变量的名称，size为数组中存储的单元数量。C语言中数组索引从0开始。123456int a[10], b[10][10];/*areal rad[5];a[0] = 1;rad[4] = 3.14159265;b[10][10] = 4; 9 指针指针是一种存储变量内存地址的变量。换句话说，指针是一个变量，这个变量指向另外一个变量的内存地址。指针变量的声明:1int *ip;/*定义指针变量ip*/ 定义了指针变量后，可以利用取址运算符将其他变量的地址赋予指针变量，如:12int *ip;ip =&amp;a; 也可以为指针变量赋值，如:1*ip =4; 当指针作为函数的参数，此时为传址调用，在函数体内修改指针参数的值，会改变调用函数时传递的参数的值。此功能可以实现一个函数返回多个值。如下的C程序:1234567891011121314151617181920#include &lt;stdio.h&gt;int add(int *a,int b)&#123; int sum = 0; sum = *a + b; *a = 5; return sum;&#125; int main() &#123; int *ip; int a = 1; int b = 2; int sum = 0; ip = &amp;a; sum = add(ip,b); printf("sum=%d,a=%d\n",sum,a); return 0;&#125; 输出结果:1sum=3,a=5 传递的参数值被函数体内的程序改变。 10 流程控制C语言中可以用逻辑判断和循环来进行流程控制。 10.1 if语句if语句用于逻辑判断。可写成:1234if(逻辑判断表达式)&#123; 语句块;&#125; 例如:12345if(q!=1)&#123; a=0; b=1;&#125; 若逻辑判断存在多个分支，可以采用if-else结构。如:1234567891011121314if(x&lt;0)&#123; y = x/50;&#125;else(x&gt;=0 &amp;&amp; x&lt;3)&#123; x=-x; y = x/25;&#125;else&#123; x= 0; y = 0;&#125; 10.2 for循环for语句常用于循环表达。123456int i,j,n&lt;=10;for(i=1;i&lt;n;i++)&#123; j = i*i; printf("%d%d\n",i,j)&#125; 11 操作符常用的代数操作符:12345678= 赋值操作+ 加法计算- 减法计算* 乘法运算/ 除法运算% 求模运算++ 累加-- 累减 常用的逻辑操作符:123456 &lt; 小于&lt;= 小于等于 &gt; 大于 &gt;= 大于等于 == 等于 != 不等于 12 C库函数常用的三角函数:12345678910double acos (double x);double asin (double x);double atan (double x);double atan2 (double x, double y);double cos (double x);double sin (double x);double tan (double x);double cosh (double x);double sinh (double x);double tanh (double x); 常用的数学函数:12345678double sqrt (double x);double pow(double x, double y);double exp (double x);double log (double x);double log10 (double x);double fabs (double x);double ceil (double x);double floor (double x); 一些常用的标准输入输出函数:12345FILE *fopen(char *filename, char *mode);int fclose(FILE *fp);int printf(char *format,...);int fscanf(FILE *fp, char *format,...);int fscanf(FILE *fp, char *format,...); 更多的内容可参阅C语言教程。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【3】：环境配置]]></title>
+    <url>%2F2017%2F05%2F14%2Ffluent%20udf%2FFluent%20UDF%E3%80%903%E3%80%91%EF%BC%9A%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%2F</url>
+    <content type="text"><![CDATA[windows操作系统下UDF的编译需要借助Visual Studio中的C编译器。因此若要想编译UDF，则必须事先配置好编译环境。 Visual StudioVisual Stuido(后面简称VS)是微软开发的一款程序设计IDE，可以用于windows环境下计算机软件的开发。以下内容来自百度百科：Microsoft Visual Studio（简称VS）是美国微软公司的开发工具包系列产品。VS是一个基本完整的开发工具集，它包括了整个软件生命周期中所需要的大部分工具，如UML工具、代码管控工具、集成开发环境(IDE)等等。所写的目标代码适用于微软支持的所有平台，包括Microsoft Windows、Windows Mobile、Windows CE、.NET Framework、.NET Compact Framework和Microsoft Silverlight 及Windows Phone。Visual Studio各版本列表： 名称 内部版本 发布日期 visual studio 4.0 1995-04 visual studio 97 5.0 1997-02 visual studio 6.0 6.0 1998-06 visual studio.Net 2002 7.0 2002-02 visual studio.Net 2003 8.0 2003-04 visual studio 2005 8.0 2005-11 visual studio 2008 9.0 2007-11 visual studio 2010 10.0 2010-04 visual studio 2012 RTM 11.0 2012-08 visual studio 2013 12.0 2013-10 visual studio 2015 14.0 2014-11 visual studio 2015 RTM 14.0 2015-07 visual studio 2017 15.0 2017-03 经常有小伙伴询问与Fluent搭配的Visual Studio版本，其实并不存在什么版本搭配的问题，一般情况下只要VS能够正常安装及使用，通过环境设置后都可以作为UDF的编译器。Fluent12.0之后的版本推荐使用VS2005之后的版本。推荐VS2010版本，我Fluent 18.0搭配使用的是VS2015版本，从未发现编译器方面的问题。 udf.bat文件12.0之后版本的Fluent环境变量配置依赖于UDF.bat文件。如下图所示。通过勾选选项Set up Compilation Environment for UDF，之后设置udf.bat文件即可完成配置。这里来看看udf.bat文件的内容。打开udf.bat文件可以看到其实该文件是一个设置环境变量的工作。最重要的是下面几行，我这里以visual studio 2015为例。 设置visual studio的安装路径通常在udf.bat文件中只需要修改这一行就可以了。我将visual studio 2015的安装路径赋值给MSVC_DEFAULT，如图直接修改就行。分析该批处理文件，意思是若能在该文件路径下找到vcvarsall.bat文件，则设置MSCV值为MSVC_DEFAULT，否则转到msvc_env140。一般情况下只要在安装Visual Studio的时候选择了安装C++的话，这文件都会存在。真正实现c文件编译的工作是在vcvarsall.bat文件中指定的。该文件中的内容不要动。 总结UDF编译环境配置其实非常简单，只需要修改UDF.bat文件即可，实际上只需要将本机Visual Studio的安装路径写进去就可以了。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【2】：学习途径]]></title>
+    <url>%2F2017%2F05%2F13%2Ffluent%20udf%2FFluent%20UDF%E3%80%902%E3%80%91%EF%BC%9A%E5%AD%A6%E4%B9%A0%E9%80%94%E5%BE%84%2F</url>
+    <content type="text"><![CDATA[要怎样做才能做到无畏惧编写任何UDF程序？估计很多与UDF打交道的人都会问到这个问题。面对UDF文档中那众多的宏描述，小伙伴们是不是感觉到茫然无措，不知从何入手。有时候读别人写好的程序感觉并不难，然而自己写的时候总是感觉不对劲。我们今天就来聊聊UDF到底该怎么学。 关于C语言Fluent UDF使用C语言，因此要想熟练使用UDF的话，掌握基本的C语言是很有必要的。市面上C语言的书籍很多，其中有很多的经典教材。然而几乎每一本C语言的书籍都很厚，里面涉及的内容非常的多，如果不是专门搞程序设计的话，想要精通C语言，势必需要花费大量的时间。推荐看一些经典的C语言教材。如下面这本。其实UDF只是利用了C语言很少的一部分，我们利用UDF，只需要掌握C语言的最核心的内容，包括: 基本语法:语法重要性自然不用多说。UDF采用C语言进行编写，自然必须符合C语言基本语法习惯，否则解释和编译都难以通过。C语言的语法很多，可以找一本经典C语言书籍，照着写一两个程序基本就熟悉了。 控制结构:包括逻辑控制、循环控制等。虽然说UDF中的控制形式有特别的宏来完成，然而掌握C语言的控制结构更有助于理解UDF中的各种稀奇古怪的循环结构。 数组与指针:这个需要重点理解，在UDF中有很多的内置变量类型是数组或指针，不理解的话后面写程序会抓破脑袋。指针也是C语言的特色。 函数与宏:搞清楚C语言函数传值调用与传址调用的区别。尤其是搞明白传址调用，在UDF宏中，好多的传址调用。弄清楚C语言宏定义的方式，这个稍加注意就能够看懂。其他的也没什么需要去关注的了。关于UDF代码编写UDF文件可以用任何文本编辑器编写，记事本、写字板都可以。当然如果想要有语法高亮效果的话，可以找一些专业的编辑器。像免费的Notepad++，Atom等，还有其他的要钱的软件如ultraEdit，EditPlus、Sublime text等，都是非常不错的选择。该如何编写呢？Fluent提供了大量的UDF宏，单单帮助文档里头就有好几百个，当然如果你记忆力超群能够把这些宏的用法全都记住，自然是很不错的。但是大多数人估计是记不住的，幸好UDF手册写得很详细，各种宏的用途及其程序实例都很齐全。因此在实际的代码编写过程中，最简单的做法是根据UDF手册中各种程序实例改写自己的程序代码。UDF的数据操作UDF的本质工作还是操纵数据，这是所有计算机程序的共性。那么问题来了。操纵什么数据？数据从哪里来？数据修改之后往哪里去？很多人觉得UDF难写，其实是没搞清楚上面的三个问题。 操纵什么数据？这个是最难的，需要些什么数据，这个问不了别人，只有自己才清楚。这里要说的是，当你把要修改的模型数据拿出来之后，需要将其转化为用基本物理量进行表达。我们可以通过查询UDF手册，看看那些数据获取宏能够得到哪些数据。 数据从哪里来？有一些数据是通过宏直接获取得到，我们姑且将其称之为基础数据，如要获取压力，单元的压力可以用C_P宏获取，面压力可以用F_P获取。而有些数据则没办法直接通过宏得到，此时我们需要利用基础数据进行代数运算来得到这些值。 数据往哪里去？操纵完毕的数据自然是要返回给Fluent。令人迷惑的是返回的形式，有些宏采用显式方式返回，例如在DEFINE_PROFILE宏中，采用F_PROFILE宏返回数据给Fluent。而有些宏则没有这些显式的返回形式。此时要仔细查阅UDF手册中关于宏的描述。还有一些传址调用也能返回数据。其实只要搞清楚了这三个问题，UDF并不是什么很难的东西。总结对于UDF程序的编写工作，总的来说需要注意: UDF手册是最主要的参考文档。 UDF的核心工作在于数据处理。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【1】：简介]]></title>
+    <url>%2F2017%2F05%2F12%2Ffluent%20udf%2FFluent%20UDF%E3%80%901%E3%80%91%EF%BC%9A%E7%AE%80%E4%BB%8B%2F</url>
+    <content type="text"><![CDATA[前面基本完成了动网格专题的发布，不过还是有一些内容并没有更新进去，比如说in-cylinder、接触检测、2.5D网格重构等。不过这些都是小技巧，写起来挺麻烦，以后有时间再通过案例视频的方式讲解好了。从今天开始最近一段时间准备发布Fluent UDF的一些内容。 关于UDFUDF并不是什么神秘的东西，然而在地球人的眼中，凡是与编程相关的工作，总是认为有点儿高大上罢了。其实UDF程序的编写绝对只是个体力活儿。 Fluent是一个通用软件。所谓的通用软件，意思就是说啥事儿都能做。能做流动，能做传热，能做化学反应，能做多相流，貌似与NS相关的内容都能做。然而，无所不能往往也意味着不甚精通。软件为了满足其通用性，无疑在各种参数的选取上偏于保守，比如说各种求解算法、各种模型参数，为了保证其收敛性和鲁棒性，必然会存在舍弃精度的做法。因此，通用的软件常常难以满足高级人士的计算需求。 作为商用软件，Fluent自然不愿意损失这些高级用户，因此软件给高级用户开了一扇窗口，允许用户根据自己的需求对软件进行一定程度的定制。因此就有了我们这里所说的UDF。 UDF（User Defined Functions，用户自定义功能），采用C语言进行编写，可以采用编译或解释的方式加载到Fluent中，利用UDF可以对Fluent计算过程中的一些模型参数或计算流程进行控制。 从哪儿开始？要使用UDF，该如何入手？ Fluent帮助文档中提供了较为详尽的UDF使用方法，包含了绝大多数宏的使用描述（其实还有一部分宏并没有出现在文档中，亲们可以通过研读代码中的注释来使用这些用，见udf.h文件）。在编写UDF的过程中，UDF手册是必不可少的文档。 实际上UDF的应用过程是这样的： 发现需要使用UDF。Fluent毕竟是一款成熟的商用软件，大多数情况下，利用GUI就能够满足我们的计算要求。只有当我们确信Fluent的GUI并不具备某项功能，而利用UDF可以满足此要求时，才开始着手编写UDF。记住：能用GUI实现的功能，就不要用UDF去做。人家Fluent说了，不对UDF的正确性负责，他们只负责UDF与Fluent的通讯功能。能不能用UDF实现某项功能，需要翻越Fluent帮助文档。 编写UDF文件。这部分工作应该是UDF的核心工作。作为一个计算机程序，UDF同样有输入和输出。在翻越UDF手册的时候，搞清楚宏文件中哪些参数是输入，哪些参数是输出。最简单的方式就是直接套用UDF手册中的示例程序，在其基础基础上进行修改。 配置UDF环境。这部分工作实际上相当的简单。只不过在windows环境下需要安装Visual Studio，在Linux环境下需要配置GCC。需要注意在安装Visual Studio的时候一定要选择安装C++，否则不会安装c编译器。 在Fluent中加载UDF。加载的方式可以是解释，也可以是编译。通常解释型的程序调用要比编译型的慢，因此一些计算密集的场合，建议使用编译型。 需要的C语言知识编写UDF使用的是C语言，我们是不是需要先学习C语言？ 了解C语言是必要的，但并不需要非常精通C语言。UDF宏的编写实际上只是应用了C语言很少的一部分，但是对C语言的越熟悉，当然写起UDF来自然要更轻松一些。如果对C语言一无所知的话，至少需要看看以下的内容： C语言的语法结构。包括变量定义方式、条件结构、循环结构、函数定义等。 C语言的数据结构。最需要了解是数组和指针。另外还需要了解函数参数传值与传址，否则很多的UDF宏你都搞不清楚数据怎么就能传递给Fluent。 这些基础知识后面会介绍。 要坚信UDF并没有想象中那么难，其实也没有想象中的那么高大上。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【18】：Overset实例]]></title>
+    <url>%2F2017%2F05%2F11%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%9018%E3%80%91%EF%BC%9AOverset%E5%AE%9E%E4%BE%8B%2F</url>
+    <content type="text"><![CDATA[重叠网格在Fluent中仍然是新生儿，目前还存在诸多限制。比如说物理模型方面的限制，求解算法方面的限制等。小伙伴们目前可以将其当做玩具，但Fluent更新得这么快，重叠网格技术其实又比较成熟，谁也难保哪一天Fluent突然发力将其加强呢。本次以一个简单的案例来描述在Fluent中应用重叠网格解决大位移的动网格问题。运动效果如图所示。 #案例几何本案例仅为演示重叠网格的设置方法。案例几何如图所示。计算区域中包含有三个区域:一个背景区域以及两个前景区域。背景区域为长度150mm，宽度80mm的矩形。如图所示。前景区域为两个body，如下图所示。两个区域的旋转中心分别为[50,40],[90,40]。旋转速度均为1rad/s，不过方向相反。 网格模型利用Mesh划分网格。打开Mesh模块后，如果模型树中Connections节点下有内容，则需要将该节点下的所有子节点删除掉。这里采用均匀尺寸布置网格。生成的网格如下图所示。网格生成完毕后，注意边界的命名，尤其是overset边界(图中前景区域中的圆边界)。 Fluent设置 先检查Boundary Conditions列表中的两个overset边界，确保其类型为overset。 创建overset interfaceFluent中鼠标右键选择模型树节点Ovserset Interface，选择弹出菜单New...在弹出的对话框中设置overset Interface名称为cp，选择Background Zones为前面命名的background，选择Component Zones下的comp1及comp2(前面命名的两个前景区域)。点击Create创建interface。 指定区域运动 本案例中两个前景区域都需要指定运动。 对于comp1区域，指定其旋转中心坐标为（0.05,0.04），旋转角速度-1 rad/s。如下图所示。 对于comp2区域，设置旋转中心坐标（0.09,0.04），旋转角速度1 rad/s，如下图所示。 其他的设置就和常规的流体设置没什么不同。 视频操作]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【17】：overset网格]]></title>
+    <url>%2F2017%2F05%2F08%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%9017%E3%80%91%EF%BC%9Aoverset%E7%BD%91%E6%A0%BC%2F</url>
+    <content type="text"><![CDATA[overset网格(重叠网格)技术其实并不是Fluent专有的，确切的说，是Fluent在比较新的版本中才添加的方法，用于处理的动网格处理。在一些成熟的商用CFD软件中，重叠网格技术已经被当做了解决动网格问题的主要方法。重叠网格技术原理上还是比较复杂的，但是在实际应用中要比网格重构简单得多，而且也不会担心出现出现负体积的情况。 简单介绍重叠网格在使用过程中需要使用两套网格，如下图所示。图中包含了背景网格（background mesh）以及一个前景网格（图中的component mesh)，在重叠网格中，可以同时包含几个前景网格。重叠网格技术采用数学方法处理这两套网格，得到最终的计算网格。如上两幅图在计算过程中的实际模型分别如下图所示。实际上在使用重叠网格过程中，这些技术细节都不用考虑，我们需要关注的是运动部件运动的定义，在这里是定义运动区域的运动，应用之前运动区域定义的方式就可以解决了。 应用方式 网格模型准备首先当然要准备两套网格。网格的准备可以是在任何前处理软件中（如ICEM CFD、Mesh等），但是需要注意的是网格组装过程中，需要保证两个区域的相对位置正确，而且尽可能保证区域运动过程中重叠位置网格尺寸相当。建议在mesh中划分网格，当然ICEM CFD中也是没有问题的。 运动定义不管是平动、转动还是不规则运动，在重叠网格中，都是将运动指定给前景网格区域。因此可以利用Profile文件或DEFINE_ZONE_MOTION定义运动。局限性重叠网格在Fluent中还属于新玩意儿，目前存在很多的局限性。这些局限性包括： 重叠区域中不能包含有固体网格域。如果计算域中存在固体域，则需要将其从重叠系统中分离开。 前景网格区域不能包含有不一致的interface 前景网格区域中不能包含有周期边界 背景网格区域中不能包含有overset边界 前景网格边界不能与coupled壁面重叠 重叠网格与动网格的remeshing或Layering不兼容 在有重叠网格的区域，不能使用FMG初始化 不能使用FAS多层网格模型 无法激活Implicit residual smoothing方法 兼容性目前Fluent最新版本中的重叠网格已经比较成熟，能够与绝大多数模型相兼容。 压力基求解器 平面2D以及3D流动中使用绝对速度格式 支持Cell-base、Green-Gauss以及Least-Squares梯度方法 所有的压力插值格式 一阶及二阶空间格式 压力速度耦合算法中的耦合格式 伪瞬态方法 密度基求解器 平面2D以及3D流动中使用绝对速度格式 可压缩流动 支持Cell-base、Green-Gauss以及Least-Squares梯度方法 所有的对流通量类型(Roe-FDS、AUSM以及低扩散Roe-FDS) 一阶及二阶空间格式 压力速度耦合算法中的耦合格式 伪瞬态方法 k-epsilon以及标准k-omega湍流模型 使用一阶瞬态格式的动网格及滑移网格 所有的AMG模型 内部边界(包括exhaust fan、inlet vent、intake fan、outlet invent、fan、porous-jump以及radiator)只能出现在非overset区域 支持hybrid及standard初始化 重叠网格可以支持任意类型的网格，包括自适应网格 使用重叠网格采用以下流程: 修改前景网格的边界类型为**overset**。 创建背景网格与前景网格的interface。 设置前景网格区域的运动其他的就没什么好设置的了，让区域动起来吧。so easy, just try!]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【16】：6DOF]]></title>
+    <url>%2F2017%2F05%2F06%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%9016%E3%80%91%EF%BC%9A6DOF%2F</url>
+    <content type="text"><![CDATA[6DOF模型主要用于模拟计算域中的刚体在受到流体作用后的轨迹及姿态，属于典型的被动型动网格问题。 主动运动与被动运动我们把运动状态已知的动网格问题称之为主动运动。如子弹以速度1000m/s运动，此时运动轨迹可以通过速度直接积分计算得到。但流体中运动的物体，在受到流体作用力时，我们往往很难明确知道其运动速度或运动轨迹，而实际工程中，物体的运动速度及运动姿态反过来又会影响到物体的受力状态，随之影响到其运动速度和运动轨迹，是一个双向耦合的问题，难以用速度进行明确的表达，此类问题常常称之为被动运动。如水中运动的船只，其运动速度和运动姿态受水的作用力影响，且其运动速度及运动姿态又影响到水的作用力。 被动运动的解决方法通常有两种解决方式: 利用UDF将被动运动转化为主动运动。即利用牛顿定律先获取物体所受到的力及力矩，之后利用得到的力或力矩计算得到当前的加速度和角加速度，进而得到当前的速度及角速度，再积分得到其运动轨迹和运动姿态。在每一个时间步内进行计算，实时更新物体的速度和角速度。 直接使用6DOF模型。在UDF中指定物体的质量、转动惯量等物理参数，软件自动计算每一个时间步内物体的运动速度及加速度。实际上6DOF模型用得更为广泛，几乎所有的主流CFD软件都又6DOF模型(一些软件中的叫法可能有点不一样，但使用方法是一样的)。激活6DOF模型6DOF模型的激活非常简单，只需要在Dynamic Mesh中激活选项6DOF，之后在相应的对话框中设置参数即可。如下图所示。之后在定义运动区域过程中，定义相应的部件运动为6DOF即可。如下图所示。6DOF参数6DOF模型需要在图形窗口中指定的参数很少，更多的是利用UDF指定部件的几何属性。在新版本的Fluent软件中，可以利用对话框定义模型的几何参数，如质量和转动惯量等。如图所示。但这里只能定义非常简单的几何属性，对于复杂的模型，利用对话框显然是不够的，此时可以使用UDF宏来实现。6DOF宏6DOF模型涉及到的UDF宏相对简单。只有一个DEFINE_SDOF_PROPERTIES宏。该宏的描述:1DEFINE_SDOF_PROPERTIES(name,properties,dt,time,dtime) 其中参数列表:name:自定义的宏名。properties:属性数组，存储各种几何属性，如质量、转动惯量等。dt:一个存储动网格属性的结构指针，由Fluent传入，通常不用管它。其类型为Dynamic_Thread *。time:当前时间。dtime:时间步长。实际上是要在宏文件中指定properties数组。properties数组包含了很多的属性，详细属性可参阅UDF手册。如下图所示。如下UDF宏定义了一个质量为800kg，x方向转动惯量为200 kg.m2，y方向和z方向转动惯量为100 kg.m2的部件。123456789#include "udf.h"DEFINE_SDOF_PROPERTIES(stage, prop, dt, time, dtime)&#123; prop[SDOF_MASS] = 800.0; prop[SDOF_IXX] = 200.0; prop[SDOF_IYY] = 100.0; prop[SDOF_IZZ] = 100.0; printf ("\nstage: updated 6DOF properties");&#125; 几何参数如何获取实际上很多的CAD软件都能够计算几何体的转动惯量。这里以solidworks为例。在solidworks中创建如图所示的圆盘，底面位于XY面上，底面半径0.1m，高度0.01m，底面圆心位于几何原点。在solidworks的评估标签页中选择质量属性按钮。弹出如下图所示的对话框，其中包含了几何属性的输出报告，然而密度需要修改。选择选项按钮，在新弹出的对话框中选择使用自定义设定，之后修改材料属性中的密度。如下图所示。点击确定按钮后返回之前的报告对话框，可以看到数据被更新。图中红色部分即为转动惯量。对于2D模型，则需要按实际尺寸建立三维模型来得到其转动惯量，默认厚度值为1米。其实测量的方法还有很多，这里就不一一举例了。]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【15】：Remeshing]]></title>
+    <url>%2F2017%2F04%2F28%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%9015%E3%80%91%EF%BC%9ARemeshing%2F</url>
+    <content type="text"><![CDATA[Fluent动网格中的Remeshing网格重构是最终极的网格更新方式。不管边界运动幅度有多大，都可以采用Remshing方法解决网格更新的问题。 基本思路Fluent的Remeshing思路比较简单。在边界运动过程中，程序不断检测计算域中的网格质量，并标记低质量网格。在动网格更新过程中，对标记的网格重新进行划分。 激活RemeshingRemeshing方法的激活很简单。在动网格设置中选择Remeshing选项，并在弹出的对话框中设置相应的参数即可。如下图所示。除了激活Remeshing选项之外，在定义动网格区域的时候，还需要特别指定Remeshing参数。如下图所示，在设置变形边界时，需要指定最小网格尺寸、最大网格尺寸以及最大网格歪斜率等参数。 Remeshing参数Remeshing方法需要设置的选项及参数较多，不太容易控制。 Remeshing Methods如下图所示。Fluent提供了三种基础的Remeshing方法:Local Cell、Local Face以及Region Face。根据不同的场合，Fluent还提供了2.5D以及Cutcell zone方法。 Local Cell Remeshing此方法标记超过用户指定的歪斜率或尺寸阈值的内部网格，并且局部重新划分这些网格单元。这里的歪斜率及网格尺寸阈值包括全局的以及局部的。其中全局阈值在Remshing面板中设置，而局部参数在Deforming面板中设置。分别如下图所示。 此方法在3D模型中重构体网格，在2D模型中则重构的是面网格。 Local Face此方法仅用于3D重构，虽然在2D模型中也可以选择，但实际上在2D中并不起作用。该方法重构变形边界面上的网格。可以想象，在2D模型中变形面通常都是线，没法重构的不是？ Region Face Remeshing此方法主要用于重构与运动边界相邻接的变形边界。此方法主要设计用于气缸运动问题，然而也可以用于其他的场合。在使用此模型的过程中，需要明确定义尺寸阈值，若没有定义局部参数，则全局参数也不会起作用。 Cutcell zone此方法主要用于3D笛卡尔网格的重构，在运动区域中不能含有多面体网格。如果是周期性边界发生重构，则无法保证重构的网格继续保持节点一致。 2.5D2.5D方法只用于以拉伸形式形成的网格中。在实际重构过程中，重构的是网格面，而体网格则通过拉伸方式进行重构。在设置动网格区域时，往往只需要设置一个面的变形即可。 Sizing Function尺寸函数说起来比较复杂，但实际工程应用过程中，我们只需要激活On，并点击按钮Use Defaults就能应付绝大多数的问题了。如下图所示。 Size Remeshing Interval此参数控制网格重构的频率，默认值为5。当参数值较大时，重构间隔受歪斜率控制；当此参数值较小时，重构间隔受歪斜率及网格尺寸共同控制。对于时间步长较大的问题，通常取该参数为1。]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【14】：Layering]]></title>
+    <url>%2F2017%2F04%2F24%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%9014%E3%80%91%EF%BC%9ALayering%2F</url>
+    <content type="text"><![CDATA[Layering是Fluent动网格技术中用于处理拉伸体网格变形的一种非常有效的方法。与光顺方法不同，Layering方法可以处理网格拓扑的变化（如网格节点的增加或删除），因此在Layering方法可以用于变形幅度非常大的场合。 Fluent中的Layering在Fluent中激活Layering方法非常简单，只需在动网格设置中激活选项Layering即可。如下图所示。Layering方法需要设置的参数较少，如下图所示。有两种Layering方法： Height Based：基于网格高度。 Ratio Based：基于网格高度比率。两种方法均包含两个参数： Split Factor：分裂因子。控制网格分裂。 Collapse Factor：坍塌因子。控制网格合并。 基本原理Layering方法的基本原理很简单，即检测运动边界相连的网格高度，通过设定高度阈值来决定网格是被分裂还是合并。通过设定分裂因子及坍塌因子，并设置一个网格高度值作为参照，即可在边界运动过程中，控制边界相邻网格的合并或分裂。如下图所示，当下方边界运动时，Layering方法计算网格高度以决定是否进行网格的坍塌和分裂。 利用在刚体运动定义的Cell Height来计算网格节点间距，如下图所示。设此参数值为h0，则计算方法为：$$h \ge h_0 \cdot (1+\alpha)，网格分裂 \h \le h_0 \cdot \beta ，网格合并$$其中，$\alpha$为分裂因子split factor，$\beta$为坍塌因子collapse factor。 适用性虽然Layering方法能够保证网格拓扑改变后的质量，但其应用领域存在较大的局限性。 与运动边界相邻的网格必须是三棱柱或六面体（2D中为四边形）网格 运动壁面必须是独立的，如下图所示的情形，则必须使用interface。 在存有悬挂节点的网格区域（如笛卡尔网格）无法使用Layering方法。]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【13】：网格光顺总结及实例]]></title>
+    <url>%2F2017%2F04%2F22%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%9013%E3%80%91%EF%BC%9A%E7%BD%91%E6%A0%BC%E5%85%89%E9%A1%BA%E6%80%BB%E7%BB%93%E5%8F%8A%E5%AE%9E%E4%BE%8B%2F</url>
+    <content type="text"><![CDATA[光顺(Smoothing)方法是最基本的网格节点更新方法。Fluent提供了三种光顺方法: Spring弹簧光顺 Diffusion扩散光顺 Linearly Elastic Solid光顺三种方法比较|比较项|弹簧光顺|扩散光顺|线弹性光顺||—|—|—|—||计算量|小|适中|大||网格质量|较差|较好|最好||网格适应|所有类型|所有类型|不适用多面体及笛卡尔网格| 三种方法参数 光顺方法 参数 弹簧光顺 设置spring constant factor，取值范围0-1 扩散光顺 设置diffusion parameter，取值范围0~2 线弹性光顺 设置Poisson&#39;s Ratio，取值-1.0~0.5 注意事项 在Fluent动网格中，光顺方法通常与Remeshing方法同时使用。 光顺方法无法改变网格拓扑结构，因此只适用于小幅度的运动。大幅度运动可能会形成负体积。当网格运动幅度很大时，考虑使用Remeshing或Layering方法。 更多关于光顺的内容，可参阅下方视频。]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【12】：扩散光顺]]></title>
+    <url>%2F2017%2F04%2F20%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%9012%E3%80%91%EF%BC%9A%E6%89%A9%E6%95%A3%E5%85%89%E9%A1%BA%2F</url>
+    <content type="text"><![CDATA[扩散光顺是Fluent提供的另外一种常用的网格光顺方法。其基本原理是通过求解扩散方程得到网格节点的运动位移。 扩散光顺基本计算扩散光顺通过求解 以下扩散方程来设置网格的节点位置。$$\nabla \cdot (\gamma \nabla \vec{u})=0$$其中，u为网格的运动速度。求解出运动速度后，可以很容易获得网格节点在下一个时间步长的位置。$$\vec{x}_{new}=\vec{x}_{old}+\vec{u}\Delta t$$式中， γ为扩散系数。Fluent提供两种计算扩散系数的方法。 Boundary distant：基于网格节点与边界zhi的距离来计算扩散系数。 $$\gamma = \frac{1}{d^\alpha}$$ 式中d为正则化后的网格节点与边界之间的距离。 cell volume：基于网格体积计算扩散系数。 $$\gamma = \frac{1}{V^\alpha }$$ 式中，v为网格正则化体积。 参数$\alpha$即扩散光顺设置面板中的Diffusion Parameter，如下图所示。此参数取值$\alpha \ge 0$。 扩散光顺参数设置扩散光顺需要设置的参数只有Diffusion Parameter，亦即前面公式中的$\alpha$。 该参数取值范围为0~2。当取值为0时，扩散系数$\gamma=1$，则计算域中网格为均匀扩散。提高此参数值可以使得距离运动边界较远区域吸收更多的位移。对于旋转边界运动，建议初始扩散参数取1.5。 注意：扩散光顺比弹簧光顺的计算量要大，但通常能够获得比弹簧光顺更好的网格质量（特别是对于非四面体/非三角形网格区域）。与弹簧光顺一样，扩散光顺也更适合于平移运动，对于旋转运动边界则很容易出现负体积。 Linearly Elastic Solid光顺线弹性实体光顺方法是新版本Fluent中添加的。此方法则是通过借鉴弹性力学中的平衡方程来计算节点位移。具体计算方法可参阅Fluent UserGuid的10.6.2.1.3节。 该方法只有一个参数需要设置：Poisson’s Ratio。泊松比的取值方位为-1.0~0.5。默认参数为0.45。 此方法的计算量比扩散光顺更大，但是能够提供比扩散光顺更好的网格质量。此方法支持二维的三角形和四边形网格，三维模型中的四面体、六面体、三棱柱以及五面体网格，但是不能用于变形网格区域中包含有多面体或悬挂节点的网格。在包含有多面体或悬挂节点的网格区域，建议使用扩散光顺。 光顺案例]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【11】：弹簧光顺]]></title>
+    <url>%2F2017%2F04%2F18%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%9011%E3%80%91%EF%BC%9A%E5%BC%B9%E7%B0%A7%E5%85%89%E9%A1%BA%2F</url>
+    <content type="text"><![CDATA[动网格除了前面讲了很多的关于运动指定之外，另一个重要主题则为网格的更新。在部件运动之后，不可避免的会造成网格形状的变化，如若不对网格加以控制，在持续运动的过程中，则可能造成网格极度变形、歪曲率过大，甚至产生负体积。因此必须对发生变形的网格进行矫正。Fluent主要提供了三种方式控制网格: Smoothing Layering Remeshing本文关注Fluent中的Smoothing方法。启用Smoothing方法Smoothing方法的启用非常简单，只需要在Dynamic Mesh中激活Smoothing选项即可，如图所示。之后可进入Setting...菜单项中进行参数设置。Smoothing设置面板Smoothing参数比较多，如图所示。其包含三种光顺方法: Spring/Laplace/Boudary Layer Diffusion Linearly Elastic Solid通常选择: 小幅度的网格运动，使用smoothing方法，此方法计算量较小 大幅度的网格运动，建议使用Diffusion方法，此方法可以提供较好的网格质量 对于存在旋转运动的边界，可以使用Linearly Elastic Solid方法，此方法计算量最大，但能够提供更好的网格质量。 弹簧光顺弹簧光顺(Spring)是最基础的光顺方法，也是Fluent默认使用的光顺方法。该方法的基本思路是将网格节点之间的连接线近似为弹簧，通过计算节点之间力平衡方程得到各节点光顺后的位置。$$\vec{F_{i}}=\sum_{j}^{n_i}{k_{ij}(\Delta\vec{x}_j-\Delta\vec{x}_i)}$$ 式中$\Delta \vec{x}_i$及$\Delta \vec{x}_j$分别为节点i与节点j的位移。$n_i$为与节点i相连的节点数量；$k_{ij}$为节点i与节点j之间的弹簧刚度。 弹簧刚度可定义为：$$k_{ij} = \frac{k_{fac}}{\sqrt{|\vec{x}_i-\vec{x}_j|}}$$式中$k_{fac}$为Spring Constant Factor，是一个需要用户输入的值。 当弹簧力达到平衡时，可计算得到：$$\Delta \vec{x}_i^{m+1}=\frac{\sum_{j}^{n_i}{k_{ij}\Delta \vec{x}_j^m}}{\sum_{j}^{n_i}{k_{ij}}}$$其中，m为迭代次数。 当节点i的位移计算得到之后，即可更新网格位置：$$\vec{x}_{i}^{n+1}=\vec{x}_i^n+\Delta \vec{x}_i^{converged}$$ 需要设置的参数包括: Spring Constant Factor:弹簧常数因子。该参数控制了扩散阻尼，参数取值范围0~1，默认值为1。此参数越小，表示网格之间的阻尼越小，网格运动更容易扩散到更远的节点。当边界运动较为剧烈时，可适当减小此数值。 Convergence Tolerance:收敛精度。计算网格节点运动采用的是迭代法，这个迭代容差控制了迭代精度。默认值为0.001，通常不需要修改。 Number of Iterations:迭代次数。当迭代次数达到此设定值，停止迭代计算。默认值为20，通常不需要修改。这三个参数决定了弹簧光顺过程中网格节点的运动方式。Elements方式决定了更新的网格类型: Tri in Tri Zones:只光顺三角形或四面体网格 Tri in Mixed Zones:光顺混合区域中的三角形或四面体网格 要点对于弹簧光顺方法： 光顺方法并不会改变网格拓扑关系。意思是说，不管部件如何运动，网格节点之间的链接关系不会发生改变，网格的数量也不会变化。因此光顺方法只适合于小幅度的运动。 可通过调整设置参数Spring Contant Factor来控制网格节点的运动幅度。当边界运动幅度很大时，可适当降低该参数值，从而利用更多的网格节点运动来消减边界运动造成的网格影响。 光顺方法只要适用于三角形或四面体网格，虽然Fluent宣称smoothing方法可以用于所有网格，但其实在其他类型的网格上，smoothing并不会得到好的结果。]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【10】：区域运动案例]]></title>
+    <url>%2F2017%2F04%2F17%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%9010%E3%80%91%EF%BC%9A%E5%8C%BA%E5%9F%9F%E8%BF%90%E5%8A%A8%E6%A1%88%E4%BE%8B%2F</url>
+    <content type="text"><![CDATA[本案例主要描述如何在Fluent中处理包含了公转和自转的复合运动。涉及到的内容包括： 多区域模型创建 滑移网格设置 区域运动UDF宏DEFINE_ZONE_MOTION 案例描述案例几何如图所示。 其中红色区域为静止区域，绿色区域绕圆心以角速度1 rad/s旋转，蓝色区域随绿色区域绕圆心旋转的同时，自身还保持 -2 rad/s的速度转动。 建模及网格本案例采用2D几何模型，采用DM进行模型创建，应用布尔运算创建多个计算区域。 采用三角形网格划分，需要注意的是在创建网格过程中，给两对interface进行边界命名。网格划分工作在Mesh模块中进行。 详细建模过程可观看后方视频。 UDF本案例区域运动采用滑移网格解决。其中蓝色区域相对于绿色区域的运动采用相对运动，而蓝色区域自转运动采用UDF宏DEFINE_ZONE_MOTION进行指定。 此UDF可以采用解释或编译的方式加载。 宏文件内容如图所示。关于宏的解释参阅后方视频。 区域运动指定注意：在设置区域为Mesh Motion之前，设置计算类型为瞬态Transient。 红色区域 红色区域为静止区域，保持默认即可。 绿色区域 指定绿色区域角速度为1 rad/s。如图所示。 蓝色区域 指定蓝色区域相对绿色区域运动，并利用UDF指定其运动。 视频操作]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【9】：区域运动]]></title>
+    <url>%2F2017%2F04%2F15%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%909%E3%80%91%EF%BC%9A%E5%8C%BA%E5%9F%9F%E8%BF%90%E5%8A%A8%2F</url>
+    <content type="text"><![CDATA[本文所述的区域运动并非动网格中的运动域，而是指在多参考系（MRF）或滑移网格中所涉及到的区域的运动。 在滑移网格中指定区域运动时，除了能够指定绝对运动外，还能指定某一区域与其他区域间的相对运动，如图所示。 区域运动的指定，除了可以采用Profile文件外，还可以利用UDF宏DEFINE_TRANSIENT_PROFILE及DEFINE_ZONE_MOTION。这两个宏均可采用解释及编译形式加载。 DEFINE_TRANSIENT_PROFILE此宏主要用于替代Profile文件，指定网格区域随时间变化规律。 该UDF宏的形式为： DEFINE_TRANSIENT_PROFILE(name,current_time) 其中： name：自定义的宏的名称 current_time：当前时间 在宏文件中，用户需要显式返回值。 简单的示例： 若将宏中的rotation指定给某一角速度分量，如omega_x，则该宏等同于PROFILE文件： 需要注意的是，一个UDF宏只能指定一个速度分量。若需要指定多个速度分量的话，则需要写多个宏。宏的加载如下图所示。此宏即可表示旋转，也可以用于平移。 DEFINE_ZONE_MOTIONFluent中还可以利用DEFINE_ZONE_MOTION宏定义区域的运动。该宏的形式： DEFINE_ZONE_MOTION(name,omega,axis,origin,velocity,time,dtime) 其中参数： name：symbol name。UDF名称，用户自己定义。 omega：real *omega。旋转角速度指针，默认值为0。 axis：real axis[3]。旋转轴向量数组。在2D平面模型中，默认值为（0 0 0）；对于2D轴对称模型，默认值为（1 0 0） origin：real origin[3]。旋转轴原点。默认值（0 0 0） velocity：real velocity[3]。平移速度向量，默认值为（0 0 0） time：real time。当前时间 dtime：real dtime。当前时间步长 在利用此UDF时，只有name是用户指定的，其他的参数均为Fluent传入然后在宏中进行修改。。 对于前面同时存在自转和公转的案例，可以利用UDF宏DEFINE_ZONE_MOTION：]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【8】：网格节点运动案例]]></title>
+    <url>%2F2017%2F04%2F12%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%908%E3%80%91%EF%BC%9A%E7%BD%91%E6%A0%BC%E8%8A%82%E7%82%B9%E8%BF%90%E5%8A%A8%E6%A1%88%E4%BE%8B%2F</url>
+    <content type="text"><![CDATA[Fluent动网格中的DEFINE_GRID_MOTION宏允许用户定义网格节点的运动。本案例演示采用DEFINE_GRID_MOTION宏指定边界节点的运动。 案例动网格效果如图所示。 案例描述本案例几何模型如图所示。 如图所示的同心圆柱体，内圆柱面进行扩张与收缩运动。其脉动位移可表达为：$$\Delta r = v\cdot \Delta t$$其中v为径向速度，这里指定为：$$v=2sin(12.56t)$$可得内圆节点每个时间步坐标为：$$x^{n+1}=x^{n}+\Delta r \cdot cos \theta \y^{n+1}=y^{n}+\Delta r \cdot sin \theta$$角度$$\theta = atan \frac{y}{x}$$内圆几何半径为1 m，外圆半径为 2 m。 几何及网格模型在ICEM CFD中创建几何模型并划分网格，并将内圆面命名为inner，外圆面命名为outer。如图所示。 UDF本案例UDF如图所示。 动网格设置采用Layering网格更新，参数可采用默认设置。 设置inner边界运动类型为user-defined，并加载udf。如下图所示。]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【7】：网格节点运动]]></title>
+    <url>%2F2017%2F04%2F11%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%907%E3%80%91%EF%BC%9A%E7%BD%91%E6%A0%BC%E8%8A%82%E7%82%B9%E8%BF%90%E5%8A%A8%2F</url>
+    <content type="text"><![CDATA[在动网格中，对于那些既包含了运动也包含了变形的区域，可以通过UDF来指定区域中每一个节点的位置。这给了用户最大的自由度来指定网格的运动。在其他的动网格技术中（如重叠网格）则很难做到这一点。定义网格节点的位置是通过UDF宏DEFINE_GRID_MOTION来实现的。 步骤可以通过以下步骤来指定既包含刚体运动又包含变形的区域： 从Zone Names列表项中选择运动区域 选择Type为User-Defined 在Motion Attributes中，选择UDF函数。此时的UDF用的是DEFINE_GRID_MOTION宏。 宏的描述DEFINE_GRID_MOTION ( name , d , dt , time , dtime) 参数： name：自定义宏的名称，symbol name。 d：指向区域的指针，Domain *d。 dt：指向存储动网格属性的结构体指针，Dynamic_Thread *dt。 time：当前时间，real time。 dtime：时间步长。 宏中包含了5个参数：name，d，dt，time，dtime。其中name为用户自定义，而d，dt，time以及dtim均由Fluent传入。 示例文件以下示例宏文件表达了一个简支梁的弯曲。 123456789101112131415161718192021222324252627282930313233343536373839404142434445/********************************************** node motion based on simple beam deflection equation compiled UDF*********************************************/#include "udf.h" DEFINE_GRID_MOTION(beam,domain,dt,time,dtime)&#123; Thread *tf = DT_THREAD(dt); face_t f; Node *v; real NV_VEC(omega), NV_VEC(axis), NV_VEC(dx); real NV_VEC(origin), NV_VEC(rvec); real sign; int n; /* set deforming flag on adjacent cell zone */ SET_DEFORMING_THREAD_FLAG(THREAD_T0(tf)); sign = -5.0 * sin (26.178 * time); Message ("time = %f, omega = %f\n", time, sign); NV_S(omega, =, 0.0); NV_D(axis, =, 0.0, 1.0, 0.0); NV_D(origin, =, 0.0, 0.0, 0.152); begin_f_loop(f,tf) &#123; f_node_loop(f,tf,n) &#123; v = F_NODE(f,tf,n); /* update node if x position is greater than 0.02 and that the current node has not been previously visited when looping through previous faces */ if (NODE_X(v) &gt; 0.020 &amp;&amp; NODE_POS_NEED_UPDATE (v)) &#123; /* indicate that node position has been update so that it’s not updated more than once */ NODE_POS_UPDATED(v); omega[1] = sign * pow (NODE_X(v)/0.230, 0.5); NV_VV(rvec, =, NODE_COORD(v), -, origin); NV_CROSS(dx, omega, rvec); NV_S(dx, *=, dtime); NV_V(NODE_COORD(v), +=, dx); &#125; &#125; &#125; end_f_loop(f,tf);&#125; 下次会演示这个宏的效果。]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【6】：部件变形案例]]></title>
+    <url>%2F2017%2F04%2F09%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%906%E3%80%91%EF%BC%9A%E9%83%A8%E4%BB%B6%E5%8F%98%E5%BD%A2%E6%A1%88%E4%BE%8B%2F</url>
+    <content type="text"><![CDATA[本案例描述使用动网格过程中处理边界变形的问题。 案例描述本案例几何为一个抛物线旋转成型的几何体。如图所示。 其中上壁面刚体运动引起抛物面变形。刚体运动方程为：$$v=\left{ \begin{array}{c} \begin{matrix} -0.3t&amp; ,t&lt;=1\\end{matrix}\ \begin{matrix} 0.3t-0.6&amp; ,1]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【5】：部件变形]]></title>
+    <url>%2F2017%2F04%2F09%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%905%E3%80%91%EF%BC%9A%E9%83%A8%E4%BB%B6%E5%8F%98%E5%BD%A2%2F</url>
+    <content type="text"><![CDATA[在动网格中关于部件运动除了指定刚体运动外，有时还需要指定某些边界的变形，这种情况经常会遇到，尤其是与运动部件存在相连接边界的情况下，如下图中边界1运动导致与之相连的边界2和边界3发生变形。 Fluent中预制了三种变形方式： faceted plane cylinder 除此以外，Fluent还允许用户通过UDF宏DEFINE_GEOM自定义边界变形。 faceted选择此类型的变形，则意味着对边界的变形不加控制，变形边界的形状取决于刚体运动。 此方式不需要定义变形参数。 plane 定义几何变形方式为plane意味着该几何上的所有的节点，只能在此平面内运动。 平面的定义采用点和法线方式定义。如图所示。 cylinder 采用cylinder方式，则意味着该几何上的所有节点在变形过程中，只能在所定义的圆柱面上运动。 定义 圆柱面采用的参数包括：圆柱半径、轴上的一个点的坐标以及轴的方向矢量。其中轴的方向矢量（图中的cylinder axis）同时还定义了圆柱的高。 user-defined用户自定义方式则是采用UDF宏DEFINE_GEOM进行定义。 此宏的结构很简单，定义形式为： DEFINE_GEOM(name ,d , dt, position) 其中： name：为UDF名称，用户自己取名字。 d：一个指向区域的指针，由Fluent传入。类型为Domain *d dt：一个存储动网格属性的结构体指针，由Fluent传入。类型为Dynamic_Thread *dt position：存储网格节点位置的数组指针。类型为real *position。 在此宏中，除了name是用户指定的之外，其他参数均为Fluent传入，用户通过更改position指针数据来将新的网格节点位置返回至fluent。 UDF实例 下列UDF定义了一个绕Z轴旋转的抛物面变形体。 除了利用Profile进行运动指定之外，Fluent中还可以使用UDF宏来指定部件的运动。其中用于运动指定的宏主要有三个： DEFINE_CG_MOTION DEFINE_GEOM DEFINE_GRID_MOTION 今天主要看第一个UDF宏DEFINE_CG_MOTION。 用途DEFINE_CG_MOTION宏主要用于描述刚体的运动。所谓“刚体”，指的是在运动过程中部件几何形状不会发生任何改变，只是其质心位置发生改变。 在定义刚体的运动时，通常以速度方式进行显式定义。 形式DEFINE_CG_MOTION宏的结构很简单。 1DEFINE_CG_MOTION(name,dt,vel,omega,time,dtime) 其中： name：为宏的名称，可以随意定义 dt：一个指针Dynamic_Thread *dt，存储动网格属性，通常不需要用户干预。 vel：平动速度，为一个数组，其中vel[0]为x方向速度，vel[1]为y方向速度，vel[2]为z方向速度。 omega：转动速度，omega[0]为x方向角速度，omega[1]为y方向角速度，omega[2]为z方向角速度。 time：当前时间。 dtime：时间步长。 DEFINE_CG_MOTION宏实际上是要返回数据vel或omega。__ 实例实例1：利用DEFINE_CG_MOTION宏定义速度：$$u_x = 2 sin(3t)$$可以写成： 12345#include "udf.h"DEFINE_CG_MOTION(velocity,dt,vel,omega,time,dtime)&#123; vel[0] = 2* sin(3*time);&#125; 很简单，对不对？ 再来个复杂点的例子。 实例2：已知作用在部件上的力F，计算部件在力F作用下的运动。 可以采用牛顿第二定律：$$\int_{t_0}^{t}{dv}=\int_{t_0}^{t}{(F/m)}dt$$ 则速度可写为：$$v_t = v_{t-\Delta t}+(F/m)\Delta t$$ 可写UDF宏为： 1234567891011121314151617181920212223242526272829303132333435363738394041424344/************************************************************* 1-degree of freedom equation of motion (x-direction)* compiled UDF************************************************************/#include "udf.h" static real v_prev = 0.0;static real time_prev = 0.0; DEFINE_CG_MOTION(piston,dt,vel,omega,time,dtime)&#123; Thread *t; face_t f; real NV_VEC(A); real force_x, dv; /* reset velocities */ NV_S(vel, =, 0.0); NV_S(omega, =, 0.0); if (!Data_Valid_P()) return; /* get the thread pointer for which this motion is defined */ t = DT_THREAD(dt); /* compute pressure force on body by looping through all faces */ force_x = 0.0; begin_f_loop(f,t) &#123; F_AREA(A,f,t); force_x += F_P(f,t) * A[0]; &#125; end_f_loop(f,t) /* compute change in velocity, dv = F*dt/mass */ dv = dtime * force_x / 50.0; /* motion UDFs can be called multiple times and should not cause false velocity updates */ if (time &gt; (time_prev + EPSILON)) &#123; v_prev += dv; time_prev = time; &#125; Message("time = %f, x_vel = %f, x_force = %f\n", time, v_prev, force_x); /* set x-component of velocity */ vel[0] = v_prev;&#125;]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+        <tag>部件变形</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【4】：DEFINE_CG_MOTION宏实例]]></title>
+    <url>%2F2017%2F04%2F07%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%904%E3%80%91%EF%BC%9ADEFINE_CG_MOTION%E5%AE%8F%E5%AE%9E%E4%BE%8B%2F</url>
+    <content type="text"><![CDATA[DEFINE_CG_MOTION宏通常用于定义刚体部件的运动。本文以一个简单的案例描述DEFINE_CG_MOTION的使用方法。 案例描述本次计算的案例如图所示。在计算域中有一个刚体块（图中的小正方形），其运动速度为：$$u_x = 0.1sin(6.8t)$$由速度方程可知其运动周期为1s。 计算域空间长度0.1m，宽度0.03m，刚体块位于计算域中心，其边长为0.01m。采用Design Modeler创建几何模型。 网格采用三角形网格，网格尺寸1mm。 UDFUDF可写成： 12345#include "udf.h"DEFINE_CG_MOTION(velocity,dt,vel,omega,time,dtime)&#123; vel[0] = 0.1* sin(6.28*time);&#125; 动网格激活smoothing与Remeshing。 其中smoothing参数保持默认设置。 Remeshing参数如下图所示。 视频操作]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【3】：DEFINE_CG_MOTION宏]]></title>
+    <url>%2F2017%2F04%2F04%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%903%E3%80%91%EF%BC%9ADEFINE_CG_MOTION%E5%AE%8F%2F</url>
+    <content type="text"><![CDATA[除了利用Profile进行运动指定之外，Fluent中还可以使用UDF宏来指定部件的运动。其中用于运动指定的宏主要有三个： DEFINE_CG_MOTION DEFINE_GEOM DEFINE_GRID_MOTION 今天主要看第一个UDF宏DEFINE_CG_MOTION。 用途DEFINE_CG_MOTION宏主要用于描述刚体的运动。所谓“刚体”，指的是在运动过程中部件几何形状不会发生任何改变，只是其质心位置发生改变。 在定义刚体的运动时，通常以速度方式进行显式定义。 形式DEFINE_CG_MOTION宏的结构很简单。 1DEFINE_CG_MOTION(name,dt,vel,omega,time,dtime) 其中： name：为宏的名称，可以随意定义 dt：一个指针Dynamic_Thread *dt，存储动网格属性，通常不需要用户干预。 vel：平动速度，为一个数组，其中vel[0]为x方向速度，vel[1]为y方向速度，vel[2]为z方向速度。 omega：转动速度，omega[0]为x方向角速度，omega[1]为y方向角速度，omega[2]为z方向角速度。 time：当前时间。 dtime：时间步长。 DEFINE_CG_MOTION宏实际上是要返回数据vel或omega。__ 实例实例1：利用DEFINE_CG_MOTION宏定义速度：$$u_x = 2 sin(3t)$$可以写成： 12345#include "udf.h"DEFINE_CG_MOTION(velocity,dt,vel,omega,time,dtime)&#123; vel[0] = 2* sin(3*time); &#125; 很简单，对不对？ 再来个复杂点的例子。 实例2：已知作用在部件上的力F，计算部件在力F作用下的运动。 可以采用牛顿第二定律：$$\int_{t_0}^{t}{dv}=\int_{t_0}^{t}{(F/m)}dt$$ 则速度可写为：$$v_t = v_{t-\Delta t}+(F/m)\Delta t$$ 可写UDF宏为： 1234567891011121314151617181920212223242526272829303132333435363738394041424344/************************************************************* 1-degree of freedom equation of motion (x-direction)* compiled UDF************************************************************/#include "udf.h" static real v_prev = 0.0;static real time_prev = 0.0; DEFINE_CG_MOTION(piston,dt,vel,omega,time,dtime)&#123; Thread *t; face_t f; real NV_VEC(A); real force_x, dv; /* reset velocities */ NV_S(vel, =, 0.0); NV_S(omega, =, 0.0); if (!Data_Valid_P()) return; /* get the thread pointer for which this motion is defined */ t = DT_THREAD(dt); /* compute pressure force on body by looping through all faces */ force_x = 0.0; begin_f_loop(f,t) &#123; F_AREA(A,f,t); force_x += F_P(f,t) * A[0]; &#125; end_f_loop(f,t) /* compute change in velocity, dv = F*dt/mass */ dv = dtime * force_x / 50.0; /* motion UDFs can be called multiple times and should not cause false velocity updates */ if (time &gt; (time_prev + EPSILON)) &#123; v_prev += dv; time_prev = time; &#125; Message("time = %f, x_vel = %f, x_force = %f\n", time, v_prev, force_x); /* set x-component of velocity */ vel[0] = v_prev;&#125;]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【2】：Profile文件]]></title>
+    <url>%2F2017%2F04%2F03%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%902%E3%80%91%EF%BC%9AProfile%E6%96%87%E4%BB%B6%2F</url>
+    <content type="text"><![CDATA[动网格中一个重要任务是部件运动方式的指定。在动网格中指定部件的运动，往往将部件的运动方式指定为其加速度、速度或位移与时间的相关关系，本文主要讲述如何在Fluent中利用瞬态Profile文件指定部件的运动方式。 在Fluent中指定部件运动主要有两种方式：Profile与UDF宏。当运动方程已知时，利用UDF宏指定运动非常方便，然而当需要指定的运动并无任何函数关系时（比如说通过传感器监测得到的速度-时间、加速度-时间曲线），此时利用Profile文件进行运动表述则较为方便。 Profile文件有三种表述方式： 标准形式 表格形式 CSV格式 需要注意的是：在Fluent中的Profile文件所指定的边界运动均是与时间相关的。只有在动网格中指定了in-cylinder方法时，profile文件才可以指定为角度的函数。关于in-cylinder方法，我们在后面再进行详细描述。 标准瞬态Profile文件标准瞬态Profile文件可表述为以下格式： 12345678((profile-name transient n periodic?)(field_name_1 a1 a2 a3 ... an)(field_name_2 b1 b2 b3 ... bn)...(field_name_r r1 r2 r3 ... rn)) 文件中： profile-name：自定义的 profile名，必须全部为小写字母，且要求小于64个字符 field_name：各种场变量，但必须有一行time，且时间变量数据为升序排列 transient：为瞬态profile关键字，需要保留 n：每一个场变量拥有的数据个数 periodic?：表示是否使用时间周期profile，若为1则使用周期，写0或省略则表示不使用周期。 一个典型的Profile文件示例： 1234((sampleprofile transient 3 0) (time 1 2 3 ) (u 10 20 30 )) 标准Profile注意的问题： profile中所有的物理量均需要使用国际单位制，软件并不会进行转换 必须有一行为time，可以是任意一行。但如果采用in-cylinder方法，则必须有一行为angle profile名必须为小写字母，且不能包含有空格或其他标点符号 标准形式Profile文件可以通过菜单File →Read →Profile…读取 表格形式瞬态Profile文件表格形式的profile文件与标准形式类似，表述为以下形式： 12345678910profile-name n_field n_data periodic?field-name-1 field-name-2 field-name-3 .... field-name-n_field v-1-1 v-2-1... ... ... ... v-n_field-1 v-1-2 v-2-2... ... ... ... v-n_field-2.....v-1-n_data v-2-n_data ... ... ... ... v-n_field-n_data 一个典型示例： 12345sampletabprofile 2 3 0time u 2 3 01 102 203 30 表格形式profile文件需要注意的问题： profile中所有的物理量均需要使用国际单位制，软件并不会进行转换 第一个field_name必须为time。但如果采用in-cylinder方法，则必须为angle profile名必须为小写字母，且不能包含有空格或其他标点符号 标准形式Profile文件可以通过TUI命令file →read-transient-table读取 CSV格式瞬态文件CSV文件是以逗号隔开的数据文件，可以使用excel打开。 在描述运动过程时，通常采用瞬态csv文件。 瞬态CSV文件形式如下： 1234567[Name]transient-temperature[Data]time,temperature1.1,3001.2,3501.3,400 文件可以采用文本文件编辑，保存后修改文件扩展名为CSV。 上例中的Name与Data是关键字，不可修改。 time和terperature为变量名，分别为时间和温度。数据列表采用逗号隔开。 注意：标准形式Profile文件可以通过菜单File →Read →Profile…读取。 profile文件中的物理量能用profile表示的物理量很多，在动网格中常用的如：表示位置的变量x,y,z；表示速度的变量v_x,v_y,v_z；表示角速度的变量omega_x,omega_y,omega_z；表示时间的变量time。 时间步长需要注意的是，profile中的数据采用的是线性插值，因此计算过程中采用的时间步长需要低于profile数据时间步长，否则会造成数据信息丢失，尤其是在曲线有曲率存在的位置。 如下图所示，蓝色线条为大时间步长下得到的值，可以看到在曲率位置并未严格遵守profile指定的规律。 一个案例如果要表示运动函数：$$v_x=2sin(3t)+5$$时间区间为[0,20]，时间步长为0.5s，如果要利用profile来表达，则可以采用如下步骤： step 1：利用excel编辑公式计算数据（这里括号内假设计算得到的是度，将其转化为弧度） step 2：如果采用标准profile文件，需要转置保存数据 之后将文件保存到文本文件中，并添加其他所需的结构信息。如图所示。 之后将文件保存为扩展名为prof即可。 若采用表格形式profile文件，则直接保存到文本文件并添加其他的结构信息。 若采用CSV格式，则需要在Excel文件中添加文本信息并保存为CSV格式。 保存后用文本编辑器打开csv文件。 需要去掉数据信息后的逗号，如上图中前三行行末尾的逗号。去掉完毕后保存csv文件即可。]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent动网格【1】：概述]]></title>
+    <url>%2F2017%2F04%2F02%2FFluent%20DynamicMesh%2FFluent%E5%8A%A8%E7%BD%91%E6%A0%BC%E3%80%901%E3%80%91%EF%BC%9A%E6%A6%82%E8%BF%B0%2F</url>
+    <content type="text"><![CDATA[最近总有小伙伴向我询问Fluent中的动网格问题，因此决定做一期关于Fluent动网格技术的内容。 动网格技术在流体仿真中很特殊，应用也很广。生活中能够碰到形形色色的包含有部件运动的问题，比如说我现在想要出门，那么开门的一瞬间，门的运动会影响到房间内部的空气流动，这就是一个典型的动网格问题。在工程中，动网格应用也非常的广泛，如依靠转子运动而工作的泵和压缩机、依靠旋翼旋转而飞行的直升机、随海浪起伏的船只、内燃机缸内活塞运动等等。 CFD中才有动网格为什么只有搞CFD的人才会提动网格这个事儿？固体结构仿真中并不会有动网格的提法。因为在结构计算中，网格节点的运动位移是要求解计算的基本物理量，而模型边界上的位移则可以直接作为载荷条件输入。结构仿真计算基于拉格朗日坐标系， 每一个网格节点都具有转动和(或)平动自由度，因此节点运动是理所当然的事情。 然而流体计算基于欧拉坐标系，在欧拉坐标系中，计算空间与网格节点保持固定，因此在利用CFD计算流体问题时，要考虑区域中部件的变形或运动，则需要通过特殊的手段来解决。 CFD中运动的解决方案当前很多的CFD软件都有针对边界或区域运动的解决方案。 商业CFD软件中用得比较多的方法包括： 方法一：针对区域运动的单参考系、多参考系及混合平面模型 方法二：针对区域运动的滑移网格 方法三：针对边界运动及区域运动的动网格 其中方法一为稳态模型，采用的是动参考系模型，在计算过程中，网格实际上并不运动。滑移网格方法中，网格的确是在运动，然而滑移网格只能解决区域运动问题，对于只有区域内各边界以不同规则运动的情况则无能为力。而这些问题都可以采用动网格技术来实现。动网格最接近真实物理状态。 其实还有一种情况，比如说在CFD中可以设定壁面是运动的还是静止的，可以设定运动壁面的平动速度或转动速度。但这仅仅只是边界条件的设定罢了，并未涉及到区域或边界的真实运动，网格也不会产生任何变化。 动网格包含的内容动网格(Dynamic Mesh)通常包含两个方面的内容：运动方式描述以及网格的处理。 运动方式的描述在CFD中由于速度是可以求解的量，因此在定义物体部件的运动时常用速度进行表达。 主要有两种类型： 显式定义。直接给定运动部件的运动速度。可以是常数，也可以是与时间相关的函数。 隐式定义。无法直接获得速度，但是速度可以通过牛顿定律计算得到。 对于可以显示定义的运动方式，我们可以称之为主动运动；而无法直接得到速度的运动方式，可以称之为被动运动。对于被动运动，目前很多主流的CFD求解器都提供了6DOF模型进行解决。 网格的处理部件的运动势必会影响原始网格，当运动量较大时，可能会导致网格退化，甚至产生负体积。 目前成熟的CFD软件对于动网格中网格的处理主要分为两个阵营： 采用网格重构。当部件产生运动后，程序检测部件运动对于初始网格的影响，并对运动后的网格进行重新划分，以确保网格质量能够满足要求。 采用重叠网格。重叠网格基本原理很简单，采用两套网格，一套为背景网格，一套为前景网格。部件运动过程中，程序不断的检测背景网格与前景网格的重合区域，并计算交接界面。重叠网格有点儿类似于区域运动，只不过这个区域是叠加在背景网格上而已。 Fluent中的动网格Fluent中动网格功能非常齐全，对于部件的运动，Fluent提供了Profile及UDF宏来进行定义，只要运动规律能够用数学语言描述，软件可以定义任意复杂程度的运动。 对于网格的处理，Fluent以网格重构（Remeshing）见长，同时还包含了网格光顺方法及动态铺层方法，以应对不同的应用场合。同时在新版本的Fluent中，还加入了Overset重叠网格，对于复杂运动的网格处理提供了更为强大的功能。 在被动运动方面，Fluent可以利用UDF将被动运动转化为主动运动，也可以利用6DOF模型。同时还针对发动机缸内运动提供了in-cylinder运动描述。除此之外，Fluent还提供了接触检测功能以应对边界运动过程中发生的接触问题。 在后续的文章中，我们将会逐步的剖析Fluent处理动网格所采用的方法。]]></content>
+      <categories>
+        <category>Fluent动网格</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>动网格</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[验证案例9：同心管内自然对流.md]]></title>
+    <url>%2F2017%2F02%2F10%2Ffluent%20validation%2F%E9%AA%8C%E8%AF%81%E6%A1%88%E4%BE%8B9%EF%BC%9A%E5%90%8C%E5%BF%83%E7%AE%A1%E5%86%85%E8%87%AA%E7%84%B6%E5%AF%B9%E6%B5%81%2F</url>
+    <content type="text"><![CDATA[案例概述 参考文献：T.H. Kuehn, R.J. Goldstein, “An Experimental Study of Natural Convection Heat Transfer in Concentric and Eccentric Horizontal Cylindrical Annuli”, Journal of Heat Transfer, Vol 100, pp. 635-640, 1978. 求解器：ANSYS Fluent 物理模型：传热、自然对流 案例描述案例几何如图所示。两个同心圆管，其中内管半径17.8 mm，温度373K，外管半径46.25 mm，温度327 K。 两管道间的环形空间内介质粘度2.081e-5 kg/m-s，比热1008 J/kg-K，热传导系数0.02967 W/m-K，密度考虑为不可压缩理想气体。研究管道竖直轴线上速度分布（图中的Top与Bottom） 详细操作过程参阅后面的视频操作。 # 验证结果]]></content>
+      <categories>
+        <category>Fluent验证</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>validation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[验证案例8：旋转腔内速度分布.md]]></title>
+    <url>%2F2017%2F02%2F09%2Ffluent%20validation%2F%E9%AA%8C%E8%AF%81%E6%A1%88%E4%BE%8B8%EF%BC%9A%E6%97%8B%E8%BD%AC%E8%85%94%E5%86%85%E9%80%9F%E5%BA%A6%E5%88%86%E5%B8%83%2F</url>
+    <content type="text"><![CDATA[案例概要 参考资料：J.A. Michelsen. “Modeling of Laminar Incompressible Rotating Fluid Flow”. AFM 86-05., Ph.D. thesis. Department of Fluid Mechanics, Technical University of Denmark. 1986. 求解器：ANSYS Fluent 物理模型：层流流动、旋转参考系 案例描述本案例几何如图所示。 圆柱形封闭腔体底面半径1m，高度1m，其顶盖以角速度1rad/s旋转。腔体中介质密度1 kg/m3，动力粘度0.000556 kg/m-s，计算分析半径0.6m圆柱面上径向速度分布。 验证]]></content>
+      <categories>
+        <category>Fluent验证</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>validation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[验证案例7：管道中的非牛顿流动.md]]></title>
+    <url>%2F2017%2F02%2F08%2Ffluent%20validation%2F%E9%AA%8C%E8%AF%81%E6%A1%88%E4%BE%8B7%EF%BC%9A%E7%AE%A1%E9%81%93%E4%B8%AD%E7%9A%84%E9%9D%9E%E7%89%9B%E9%A1%BF%E6%B5%81%E5%8A%A8%2F</url>
+    <content type="text"><![CDATA[案例概述参考资料:W.F. Hughes and J.A. Brighton. Schaum’s Outline of Theory and Problems of Fluid Dynamics. McGraw-Hill Book Co., Inc., New York, NY. 1991. 求解器:ANSYS Fluent 模型:稳态层流流动，幂率流体 模型描述本案例描述的模型如图所示。 其中管道长度0.1m，直径 0.0025 m，入口为平均速度2m/s的完全发展层流速度边界，管道出口为静压为0的压力出口。流经管道中的介质密度 1000 kg/m3，动力粘度为幂率流体。$$\eta = k \gamma^{n-1}H(T)$$其中，k=10，n=0.4 验证采用文献W.F. Hughes and J.A. Brighton. Schaum’s Outline of Theory and Problems of Fluid Dynamics. McGraw-Hill Book Co., Inc., New York, NY. 1991.中的结果进行验证。 文献中得到管道流动压降为60.52 kPa，计算得到管道压降为59.8kPa。详细操作过程见下方视频。 #视频操作]]></content>
+      <categories>
+        <category>Fluent验证</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>validation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[验证案例6：管道中的多组分流动.md]]></title>
+    <url>%2F2017%2F02%2F07%2Ffluent%20validation%2F%E9%AA%8C%E8%AF%81%E6%A1%88%E4%BE%8B6%EF%BC%9A%E7%AE%A1%E9%81%93%E4%B8%AD%E7%9A%84%E5%A4%9A%E7%BB%84%E5%88%86%E6%B5%81%E5%8A%A8%2F</url>
+    <content type="text"><![CDATA[案例概述参考资料：W.M. Kays and M.E. Crawford. Convective Heat and Mass Transfer. 3rd Edition. McGraw-Hill Book Co., Inc., New York, NY. 126-134. 1993. 求解器：ANSYS Fluent 物理模型：层流模型、组分输运模型 案例描述如图所示的管道系统，管道直径0.005m，管长0.1 m。 本案例验证从inlet及wall边界向系统中注入气体后的混合过程。 两种组分气体的物性分别为： 组分A 密度：1 kg/m3 动力粘度：1e-5 kg/m-s 扩散系数：1.43e-5 m2/s 组分B 密度：1 kg/m3 动力粘度：1e-5 kg/m-s 扩散系数：1.43e-5 m2/s inlet边界入口为充分发展层流速度边界，平均速度为1 m/s，其中inlet入口全为组分A，而Wall入口边界全为组分B。计算轴心线上组分质量分布。 验证数据验证数据来自参考资料。如表所示为轴向X界面组分A平均质量分数。 轴向位置 组分A的质量分数 0.01 0.8225 0.02 0.7308 0.03 0.6593 0.04 0.5992 0.05 0.5469 0.06 0.5006 0.07 0.4589 0.08 0.4212 0.09 0.3869 0.10 0.3555 计算结果1、组分A分布 2、各界面组分A的平均质量分数 视频操作https://imgcache.qq.com/tencentvideo_v1/playerv3/TPout.swf?max_age=86400&amp;v=20161117&amp;vid=o0389vid2wy&amp;auto=0 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent验证</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>validation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[验证案例5：管道中的泊肃叶流动.md]]></title>
+    <url>%2F2017%2F02%2F06%2Ffluent%20validation%2F%E9%AA%8C%E8%AF%81%E6%A1%88%E4%BE%8B5%EF%BC%9A%E7%AE%A1%E9%81%93%E4%B8%AD%E7%9A%84%E6%B3%8A%E8%82%83%E5%8F%B6%E6%B5%81%E5%8A%A8%2F</url>
+    <content type="text"><![CDATA[案例描述本案例计算管道内部泊肃叶流动压降。案例几何如图所示。 管道半径0.00125m，长度0.1m，内部介质密度1 kg/m3，粘度1e-5 kg/m-s。管内入口流动为充分发展层流，平均速度为2 m/s。 前期准备充分发展层流边界需要编辑UDF文件。 充分发展速度表达式为：$$u=2u_m (1-\frac{r^2}{R^2})$$ 12345678910111213141516#include "udf.h"#DEFINE Ua 2#DEFIEN R 0.00125DEFINE_PROFILE(inlet_velocity,t, i)&#123; real x[ND_ND]; real y; face_t f; begin_f_loop(f,t) &#123; F_CENTROID(x,f,t); y=x[1]; F_PROFILE(f,t,i) = 2* Ua *(1- y * y / (R*R)); &#125; end_f_loop(f,t) &#125; 验证解验证解析解来自F. M. White. Fluid Mechanics(7nd ed)，p357。 本案例雷诺数为：$$Re= \frac{\rho u D}{\mu} = \frac{1\times 2 \times 0.0025}{1e-5} = 500$$泊肃叶流动摩擦系数：$$f=\frac{64}{Re} = \frac{64}{500} =0.128$$可得压降：$$\Delta p = \rho f\frac{L}{D} \frac{v^2}{2}= 1\times 0.128 \times \frac{0.1}{0.0025}\times \frac{2^2}{2} = 10.24 Pa$$ 计算结果1、速度分布 速度分布如图所示。 2、压降计算 进出口总压统计如图所示。 可以看到入口总压12.89Pa，出口总压2.68Pa，则系统总压降10.21 Pa。 操作视频 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent验证</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>validation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[验证案例4：压力梯度下的平面库艾特流动.md]]></title>
+    <url>%2F2017%2F02%2F05%2Ffluent%20validation%2F%E9%AA%8C%E8%AF%81%E6%A1%88%E4%BE%8B4%EF%BC%9A%E5%8E%8B%E5%8A%9B%E6%A2%AF%E5%BA%A6%E4%B8%8B%E7%9A%84%E5%B9%B3%E9%9D%A2%E5%BA%93%E8%89%BE%E7%89%B9%E6%B5%81%E5%8A%A8%2F</url>
+    <content type="text"><![CDATA[本案例验证存在压力梯度情况下的库艾特流动。 案例描述本案例模拟两个平行板之间的粘性流动。其中底板保持静止不动，顶板以恒定速度3 m/s移动。沿板平行方向压力梯度为-12 Pa/m。如图所示。 计算模型采用2D周期模型，长1.5m，宽1 m。介质参数：密度1kg/m3，动力粘度1 kg/m-s。边界条件： 顶板：壁面边界，速度沿X方向 3 m/s 底板：固定壁面边界 左右周期边界： 压降-12 Pa/m 模型验证解析解来自B.R. Munson, T.H. Okiishi, W.W. Huebsch, Fundamentals of Fluid Mechanics, 7th Edition，P324（可以在这里找https://pan.baidu.com/s/1qYtuNhE）。 $$u= U \frac{y}{b}+\frac{1}{2\mu}(\frac{\partial p}{\partial x})(y^2-by)$$其中，U为顶板移动速度，本案例为3m/s；b为平板间距，本案例中为1 m。代入本案例中的计算条件，可得到速度表达式：$$u = 3y - 6(y^2-y) = -6y^2+9y$$ 结果比较计算结果如下图所示。可以看出Fluent计算值与解析值非常吻合。 视频操作 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent验证</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>validation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[验证案例3：管道中湍流流动压降.md]]></title>
+    <url>%2F2017%2F02%2F04%2Ffluent%20validation%2F%E9%AA%8C%E8%AF%81%E6%A1%88%E4%BE%8B3%EF%BC%9A%E7%AE%A1%E9%81%93%E4%B8%AD%E6%B9%8D%E6%B5%81%E6%B5%81%E5%8A%A8%E5%8E%8B%E9%99%8D%2F</url>
+    <content type="text"><![CDATA[本案例验证布拉休斯方程。 案例描述本案例计算空气流经光滑的水平管道，管道长度2m，半径0.002 m，空气密度1.225 kg/m3，粘度1.7894e-5 kg/m-s，管道入口速度50 m/s，出口压力 0 Pa。计算管道的压降。 案例验证流经管道的雷诺数：$$Re= \frac{\rho u D}{\mu} = \frac{1.225 \times 50 \times 0.004}{1.7894\times 10^{-5}} = 13691$$为湍流流动，采用布拉休斯公式计算摩擦系数（F. M. White. Fluid Mechanics(7nd ed). P366页）： $$ f=0.316 \times Re^{-1/4}=0.316\times 13691^{-1/4}=0.0292131$$则压力降：$$\Delta p=\rho f\frac{L}{D}\frac{v^2}{2}=1.225\times 0.0292131\times \frac{2}{0.004}\times \frac{50^2}{2}=22366.31$$ 建立模型采用轴对称模型。入口采用速度边界，50m/s；出口为压力出口，静压 0Pa；采用稳态求解。湍流模型采用SST k-omega模型， 为保证Y+=1，采用Y+计算器可得第一层网格高度约为5e-6m，径向采用32层网格节点，轴向网格尺寸0.0005m。详细建模过程可查看视频操作。 计算结果 程序输出进出口总压分别为24229.674 Pa及1612.5659Pa，则系统总压降为22616 Pa 相对误差为1.1%，加密网格可以进一步提高计算精度。 操作视频 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent验证</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>validation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[验证案例2：通过均匀热通量管道的层流流动.md]]></title>
+    <url>%2F2017%2F02%2F03%2Ffluent%20validation%2F%E9%AA%8C%E8%AF%81%E6%A1%88%E4%BE%8B2%EF%BC%9A%E9%80%9A%E8%BF%87%E5%9D%87%E5%8C%80%E7%83%AD%E9%80%9A%E9%87%8F%E7%AE%A1%E9%81%93%E7%9A%84%E5%B1%82%E6%B5%81%E6%B5%81%E5%8A%A8%2F</url>
+    <content type="text"><![CDATA[测试用例模拟仿真水银通过具有均匀热通量壁面的圆形管道内的层流流动。在管道入口处为充分发展湍流速度分布。利用Fluent计算管道压降及出口中心点位置温度，并与解析解进行比较。本案例采用二维轴对称模型计算。 几何模型 几何模型如图所示，管道半径为0.0025 m，管道长度0.1 m。 介质参数 流体介质为水银 密度：13529 kg/m3 粘度：0.001523 kg/m-s 比热：139.3 J/kg-K 边界条件 入口条件为充分发展速度，平均速度0.005m/s 入口温度：300K 壁面热通量：5000 W/m^2 解析计算方式1、压降计算理论值来自 Theodore L. Bergman, Adrienne S. Lavine, Frank P. Incropera, David P. DeWitt. Fundamentals of Heat and Mass Transfer [7ed.]. P523，(https://pan.baidu.com/s/1geRm1zH) 其中给出了充分发展速度表达式及水头损失表达式。分别为：$$u=2u_{m}(1-\frac{r^2}{R^2})$$$$\Delta p=\frac{32 \mu Lu_m}{d^2} $$式中$u_m$为平均流速，$\mu$为流体动力粘度，$d$为管道直径。 2、传热计算理论值来自Fundamentals of Heat and Mass Transfer [7ed.]. P530，给出：$$T_m(x)=T_{m,i}+\frac{q_s^{‘’} \pi d}{\dot{m}c_p}x$$式中$T_{m,i}$为入口处平均温度，$\dot{m}$为流体质量流量，$d$为管道直径。 数值计算采用2D轴对称模型进行计算。 详细建模过程见后面视频操作。一些计算结果。1、速度分布速度分布如下图所示，满足充分发展速度分布。 2、入口速度入口速度分布如下图所示，符合所预想的抛物线分布。 3、压降及出口温度与解析解比较 理论值 计算值 相对误差 $\Delta p$ 0.97472 0.974505 -0.02% T 342.4496 342.1116 -0.10% 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent验证</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>validation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[验证案例1：库艾特流动.md]]></title>
+    <url>%2F2017%2F02%2F02%2Ffluent%20validation%2F%E9%AA%8C%E8%AF%81%E6%A1%88%E4%BE%8B1%EF%BC%9A%E5%BA%93%E8%89%BE%E7%89%B9%E6%B5%81%E5%8A%A8%2F</url>
+    <content type="text"><![CDATA[ANSYS提供了非常多的验证案例，我们可以通过这些验证案例提供的数据来练习软件。 测试案例描述本案例研究两个同心圆柱体之间的层流流动。几何如图所示。内筒以恒定速度旋转带动流体运动，外筒保持静止。本案例可以采用二维几何建模。 图中几何尺寸为: 内圆柱半径17.8mm 外圆柱半径46.28mm 流体介质属性为: 密度1kg/m3 粘度0.0002 kg/m-s 内筒旋转角速度1 rad/s。 建模考虑采用稳态层流计算。并与理论值进行比较（理论值来自F. M. White. Fluid Mechanics(7nd ed). P275，共享地址：https://pan.baidu.com/s/1bpaiecv) 。$$u=\omega_i r_i \frac{r_o/r-r/r_o}{r_o/r_i-r_i/r_o}$$ 式中，$\omega_i$为内部圆柱旋转角速度；$r_i$为内部圆柱半径； $r_o$为外部圆柱半径；$r$为面上点到圆形的距离。 #计算结果1、速度云图 2、计算值与理论值比较 操作视频 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent验证</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>validation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[hexo博客[4]：mathjax的问题]]></title>
+    <url>%2F2017%2F01%2F04%2Fhexo%20Blog%2Fhexo%E5%8D%9A%E5%AE%A2-4-%EF%BC%9Amathjax%E7%9A%84%E9%97%AE%E9%A2%98%2F</url>
+    <content type="text"><![CDATA[参考http://shomy.top/2016/10/22/hexo-markdown-mathjax/ 1 问题我们平时使用markdown写文档的时候，免不了会碰到数学公式，好在有强大的Mathjax,可以解析网页上的数学公式，与hexo的结合也很简单，可以手动加入js，或者直接使用hexo-math插件.大部分情况下都是可以的，但是Markdwon本身的特殊符号与Latex中的符号会出现冲突的时候: —的转义，在markdown中，_是斜体，但是在latex中，却有下标的意思，就会出现问题。 \的换行，在markdown中，\会被转义为\,这样也会影响影响mathjax对公式中的\进行渲染 2 原因hexo默认使用marked.js去解析我们写的markdown，比如一些符号，\_代表斜体，会被处理为\&lt;em\&gt;标签，比如x\_i在开始被渲染的时候，处理为x&lt;em&gt;i&lt;/em&gt;，这个时候mathjax就无法渲染成下标了。很多符号都有这个问题，比如粗体*,也是无法在mathjax渲染出来的，好在有替代的乘法等,包括\同理。所以说到底，是hexo使用的markdown引擎的锅，因为很多其它引擎在这方面处理的很好。 3 解决方法在网上查了一写资料，总结为如下的方法。 3.1 手动escape这个方法最直接，需要转义我就转义。比如我需要在公式中写下标符号，那就修改写法写为: $x\_i$；需要换行就使用\\,即可。很明显，这种方式虽然可以解决问题通用性很差,比如想迁移到其它地方，就无法识别了，因为大部分的markdown引擎是没有这个问题的。 3.2 更换Hexo的markdown引擎这个是最重的方法，直接换发动机,就是把hexo默认的渲染markdown的引擎换掉。查到了有如下几个插件可以使用: hexo-renderer-pandoc, 很强大的解析器，Pandoc的语法完全没有上述问题。 hexo-renderer-kramed,或者hexo-renderer-marked,这两个差不多，第一个fork了第二个，改了一部分bug，但是还是有部分问题。 下面说一下如何使用pandoc渲染。 首先安装Pandoc，官网提供了Ubuntu的deb安装包，按照官网教程就可以安装完成。 就是卸载hexo默认的markd,再安装新的:12npm uninstall hexo-renderer-marked --savenpm install hexo-renderer-pandoc --save 如果决定要换的话，还是更换为Pandoc吧，虽然比较笨重，需要首先安装Pandoc, 不过的确可以完美解决上述的不兼容问题，另外它的语法与markdown有些微的差异，需要注意。 3.3 修改Hexo渲染源码这个方法是我目前使用的，相对来说，通用性较高的一种方式。思路就是修改hexo的渲染源码:nodes_modules/lib/marked/lib/marked.js: 去掉\的额外转义 将em标签对应的符号中，去掉\_,因为markdown中有*可以表示斜体，_就去掉了。 具体思路参考了使Marked.js与MathJax共存, 打开E:\work\blog\node_modules\marked\lib:第一步: 找到下面的代码: 1escape: /^\\([\\`*&#123;&#125;\[\]()# +\-.!_&gt;])/, 改为: 1escape: /^\\([`*&#123;&#125;\[\]()# +\-.!_&gt;])/, 这样就会去掉\的转义了。第二步: 找到em的符号: 1em: /^\b_((?:[^_]|__)+?)_\b|^\*((?:\*\*|[\s\S])+?)\*(?!\*)/, 改为: 1em:/^\*((?:\*\*|[\s\S])+?)\*(?!\*)/, 去掉_的斜体含义,这样就解决了。为什么说通用性很高，因为我们没有修改文章的内容，可以放到别的引擎下也会顺利渲染。]]></content>
+      <categories>
+        <category>博客配置</category>
+      </categories>
+      <tags>
+        <tag>hexo博客</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[hexo博客[3]：主题配置]]></title>
+    <url>%2F2017%2F01%2F03%2Fhexo%20Blog%2Fhexo%E5%8D%9A%E5%AE%A2-3-%EF%BC%9A%E4%B8%BB%E9%A2%98%E9%85%8D%E7%BD%AE%2F</url>
+    <content type="text"><![CDATA[hexo虽然搭配好了也可以进行工作，但是hexo默认的landscape主题并不是我的菜，感觉不够简洁。hexo的主题挺多，也也非常多的漂亮主题，见网站：https://hexo.io/themes/。 准备选用NexT主题，该主题拥有良好的中文文档，其主页地址：https://github.com/iissnan/hexo-theme-next。 1 主题安装可以采用命令安装。在bolg目录下启动git bash，输入命令： 1$ git clone https://github.com/iissnan/hexo-theme-next themes/next 命令执行后会从网上下载主题文件到当前目录，视网速而定会持续一段时间。 安装完毕后可以修改全局根目录下的_config.yml文件。 123# Extensions## Themes: https://hexo.io/themes/theme: next 2 主题配置主题官方文档已经把配置方法讲得非常详细，文档地址：http://theme-next.iissnan.com/theme-settings.html这里添加一些官方文档未涉及的配置。]]></content>
+      <categories>
+        <category>博客配置</category>
+      </categories>
+      <tags>
+        <tag>hexo博客</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[hexo博客[2]：空间及环境配置]]></title>
+    <url>%2F2017%2F01%2F02%2Fhexo%20Blog%2Fhexo%E5%8D%9A%E5%AE%A2-2-%EF%BC%9A%E7%A9%BA%E9%97%B4%E5%8F%8A%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%2F</url>
+    <content type="text"><![CDATA[光有hexo肯定是不够的，我们写的文章还需要放在网络上才行，因此还需要找网络空间放置hexo，总不能放在硬盘里吧。网络空间很多，收费的不收费的都有。收费的像各种云空间，百度云、腾讯云神马的都可以。免费的也不少，比较出名的像github空间，大部分玩计算机程序的应该都听说过。不过很遗憾的是github是国外的服务器，在国内访问可能比较慢。好在国内也有替代的，比较出名的像coding。下面以coding为例，描述如何申请空间，并部署hexo到空间中，最终使我们写的博客文章能够在网络上显示。 申请空间进入coding网站（网址是https://coding.net/），选择左上角的**注册**按钮，在弹出的对话框中注册一个用户。如下图所示。注册完毕后系统会发送一封激活邮件，激活后就可以了。 激活并登陆网站后，在首页选择创建新项目按钮，如下图所示。 如下图所示进行设置。注意选择公开，博客文件夹名称可以随便取，我这里取名blog。点击创建项目按钮。 在新的页面中选择Pages服务标签页，选择下方部署来源为master分支，点击保存按钮。 如图所示，注意图中两个箭头位置，一个为本博客的访问地址，另一个箭头指向保存下来，后面配置hexo的时候要用。我们的博客访问地址是http://bestcfd.coding.me/blog，不过现在还无法访问，因为里头什么都没有。 空间申请到此完毕。下一步配置hexo环境。 hexo环境配置hexo环境配置主要针对_config.yml文件。该文件位于前面创建的blog文件夹中，可以用文本编辑器编辑此文件。建议用notepad++、sublime text等有高亮显示的文本编辑器查看此文件。该文件中需要修改的内容并不多。我这里简单的配置一下。123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172# Hexo Configuration## Docs: http://hexo.io/docs/configuration.html## Source: https://github.com/hexojs/hexo/ # Sitetitle: CFD仿真之道 ##站点标题subtitle: 一个讨论CFD仿真的博客##站点副标题description: ##站点描述author: 胡坤 ##作者language: zh-CN ##语言包，需要主题自带才可设置。设置简体中文填入 zh-CNtimezone: # URL## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'url: http://bestcfd.coding.me/blog ##站点域名root: /blog/permalink: :year/:month/:day/:title/ ##文章永久链接格式，可添加.html后缀，如 :title.htmlpermalink_defaults: # Directorysource_dir: sourcepublic_dir: publictag_dir: tagsarchive_dir: archivescategory_dir: categoriescode_dir: downloads/codei18n_dir: :langskip_render: # Writingnew_post_name: :title.md # File name of new postsdefault_layout: posttitlecase: false # Transform title into titlecaseexternal_link: true # Open external links in new tabfilename_case: 0render_drafts: falsepost_asset_folder: falserelative_link: falsefuture: truehighlight: enable: true line_number: true tab_replace: # Category &amp; Tagdefault_category: uncategorizedcategory_map:tag_map: # Date / Time format## Hexo uses Moment.js to parse and display date## You can customize the date format as defined in## http://momentjs.com/docs/#/displaying/format/date_format: YYYY-MM-DDtime_format: HH:mm:ss # Pagination## Set per_page to 0 to disable paginationper_page: 10pagination_dir: page # Extensions## Plugins: http://hexo.io/plugins/## Themes: http://hexo.io/themes/theme: landscape ##当前主题名称 # Deployment## Docs: http://hexo.io/docs/deployment.htmldeploy: type: git repo: https://git.coding.net/bestcfd/blog.git branch: master 最为重要的配置为：1234deploy: type: git repo: https://git.coding.net/bestcfd/blog.git branch: master 这里的repo就是前面提醒记住的箭头指向位置。 hexo的一些常用命令hexo的命令极简单，安装后只需要记住四个常用的即可。执行命令需要Git当前处于blog文件夹根目录下。 new创建新的博客文件 1hexo new &quot;第一篇文章&quot; clean 清除缓存文件 (db.json) 和已生成的静态文件 (public)。 1hexo clean generate 生成静态文件。 1hexo g deploy 部署网站。部署网站前，需要预先生成静态文件。 1hexo d 在使用hexo d命令之前，需要执行命令：1npm install hexo-deployer-git --save 测试一下 在blog目录下启动git bash 命令中输入hexo new &quot;第一篇博客&quot; 打开此文件（路径为E:\work\blog\source_posts\第一篇博客.md），随便编辑点儿内容，如下图所示。 输入命令hexo clean 输入命令hexo g 输入命令hexo d在输入hexo d命令后，可能会出现如下图所示的错误提示。 在命令行中输入如下图所示的命令。（引号中的内容可以随便输入） 继续输入hexo d，此时会弹出输入用户名和密码的对话框。将注册时所用的用户名和密码输入进去。如下图所示，文件push成功。可以打开空间提供的网站查看（如我刚才申请的地址http://bestcfd.coding.me/blog/），如下图所示。博客框架已经基本成型。下一步是要进行美化。]]></content>
+      <categories>
+        <category>博客配置</category>
+      </categories>
+      <tags>
+        <tag>hexo博客</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[hexo博客[1]：软件安装]]></title>
+    <url>%2F2017%2F01%2F01%2Fhexo%20Blog%2Fhexo%E5%8D%9A%E5%AE%A2-1-%EF%BC%9A%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%2F</url>
+    <content type="text"><![CDATA[最近我的新浪博客被新浪没有任何理由的直接关闭了，虽然最近写的文章都放到微信公众号，很少再往博客里面写，然而博客还是需要的，公众号里的历史文章读起来还是不那么方便，而且有时候公众号文章还需需要有原文地址的（比如说文中有链接的时候）。吃一堑长一智，跌倒了一次自然不能在同一个地方再次跌倒。既然已经被新浪坑过一次，自然不能再找个和新浪差不多的博客了。还是把之前的hexo博客利用起来好了。然而祸不单行的是，之前配置好的hexo博客，在更换系统时不小心被删掉了，所有的配置文件都丢失了。真是悲剧。hexo的配置过程还是比较复杂的，好在之前配置过一次，这一次配置就轻松多了。不过还是有必要把配置过程记录下来，万一以后又要配置呢。网上关于hexo配置的文章很多，不过都比较零散，我这里还是把整理一下，方便下次配置。不过还是希望没有下次。 以下配置内容参考自http://www.isetsuna.com/hexo/introduction/ 安装基础软件hexo的安装及运行建立在Node.js及Git的基础之上。因此在安装使用hexo之前先要安装Node.js及Git。 这两个软件的安装都很简单，通常默认安装即可。 Node.js安装非常简单，一路Next即可。 Git安装建议勾选Git Bash Here，方便以后的操作。其他一路Next即可。安装完毕后打开windows命令行窗口，输入命令：12node --versiongit version 如图所示，若有版本号提示的话，表示已经安装成功。 安装hexohexo可以通过命令形式安装。安装步骤包括： 新建文件夹，例如命名为blog 进入blog文件夹，右键点击空白处，选择菜单Git Bash Here 在弹出的命令行窗口中输入命令：1npm install hexo-cli -g 如果npm半天没反应，可以输入命令npm install -g cnpm –registry=http://r.cnpmjs.org，之后用cnpm代替npm。 初始化blog文件夹。输入命令：1hexo init 此过程涉及到从网上下载文件，因此可能会持续较长时间。 安装依赖项和插件。输入命令： 1npm install 启动服务器进行本地预览。输入命令： 1hexo s 在浏览器地址栏中输入http://localhost:4000。若能看到博客页面，表示已经安装完毕。]]></content>
+      <categories>
+        <category>博客配置</category>
+      </categories>
+      <tags>
+        <tag>hexo博客</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Fluent UDF【5】：第一个UDF]]></title>
+    <url>%2F2016%2F05%2F16%2Ffluent%20udf%2FFluent%20UDF%E3%80%905%E3%80%91%EF%BC%9A%E7%AC%AC%E4%B8%80%E4%B8%AAUDF%2F</url>
+    <content type="text"><![CDATA[这里以一个简单的初始化案例来描述UDF的使用过程。 0 Fluent中的PatchFluent中提供了全域初始化以及局部Patch功能。对于整体区域的全局初始化可以采用starndard及hybrid方法进行初始化，指定各种物理量的初始分布。而对于计算域中的局部区域初始化，则可以通过Patch功能来实现。在使用Patch方法时，需要实现对要进行Patch的区域进行标记。选择Mark/Adapt Cells→Region...可弹出区域定义对话框。可以在弹出的对话框中设置几何条件来Mark区域。然而在此对话框中可定义的形状类型只有三种：Quad、Circle或Cylinder，在3D模型中对应的是Hex、Sphere以及Cylinder。对于更复杂的模型似乎无能为力。此时可以借助UDF来解决问题。 1 案例描述如下图所示的矩形区域为计算区域，其初始温度为300K。计算模型尺寸如图所示。图中红色部分为要进行初始化处理的椭圆区域，其初始温度为500K。 2 网格网格如图所示。 3 编写UDF对于这种椭圆形区域的初始化，只能采用UDF来实现。利用DEFINE_INIT宏来实现这种区域的标记工作。本案例中椭圆方程为:$$\frac{(x-0.05)^2}{0.03^2}+\frac{(x-0.03)^2}{0.015^2} =1$$因此可编写UDF如下。 4 编译UDF利用User Defined标签页下的Function→Compiled…，Fluent软件会弹出UDF编译对话框。在弹出的对话框中利用Add…按钮添加UDF源文件，点击Build按钮进行编译，并点击按钮Load加载UDF。本案例也可以采用解释的方式运行。 5 Hook UDFUDF编译完成后，需要将UDF加载到Fluent中。这部分工作可以通过相应的GUI来实现。DEFINE_INIT宏需要在User Defined标签页下的Funcition Hooks…中进行加载。选择此按钮后打开UDF加载对话框。 6 查看结果在查看初始化结果之前，需要开启相应的模型。由于本案例初始化的是温度变量，所以必须首先开启能量方程。之后进行初始化。初始化完毕后可以查看温度云图分布，如下图所示。可以看到椭圆形区域初始温度设置为500K。按同样的道理，可以初始化任何形状的区域，只要这些区域可以用数学函数来表达。 更多CFD资料可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>Fluent UDF</category>
+      </categories>
+      <tags>
+        <tag>Fluent</tag>
+        <tag>UDF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】27：小结及预告]]></title>
+    <url>%2F2016%2F04%2F27%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9127%EF%BC%9A%E5%B0%8F%E7%BB%93%E5%8F%8A%E9%A2%84%E5%91%8A%2F</url>
+    <content type="text"><![CDATA[这是小白系列的索引，后续会继续更新。 # 已更新的部分01 引子02 江小白03 老蓝04 任务05 补充基础06 流体力学基础07 CFD常识08 CFD速成之道09 初识FLUENT10 敲门实例11 敲门实例【续】12 敲门实例【续2】13 敲门实例【续3】14 实例反思15 四种境界16 流程17 需要编程?18 控制方程基础19 来自计算网格的困惑20 计算区域的构建21 网格划分软件的选择22 好网格与坏网格23 串行与并行24 稳态和瞬态 后续预告25 二维还是三维？26 何为收敛？27 残差是个什么鬼？28 神秘的湍流29 眼花缭乱的湍流模型30 偷懒的壁面函数31 多相还是多组分？32 诡异的颗粒33 化学反应34 转动的风车35 有图没真相？36 到底迎不迎风？ 37 难调的松弛因子38 评价计算结果39 改造求解器？40 选择求解器41 打造自己的CFD软件]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】26：何为收敛]]></title>
+    <url>%2F2016%2F04%2F26%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9126%EF%BC%9A%E4%BD%95%E4%B8%BA%E6%94%B6%E6%95%9B%2F</url>
+    <content type="text"><![CDATA[小白最近对流体计算的收敛产生了困惑。以前在学习高等数学的时候，小白接触过了级数的收敛，由于当时贪玩，并未将其放在心上，因此大学结束了小白也只是记住有这么一个名词罢了。现如今在利用CFD的过程中，小白又一次碰到了“收敛”这一名词。小白找了很多的资料，然而资料中关于收敛的介绍，无一不是一大堆的数学公式，小白觉得头很疼。“出来混，总是要还的。”小白的心情很复杂。 “流体计算为什么要收敛？收敛是什么意思？不收敛又有什么后果？如何判断是会否收敛？如果不收敛该采取何种措施使其收敛？”小白带着满腔的疑惑，找到了小牛师兄。 “师兄，最近在看资料的时候，老是碰到收敛这个名词，我想问一下，什么叫收敛呢？我最近看了很多的资料，都是用一堆数学公式来表达，看了很久概念也很模糊。”小白问道。 “也好，既然你注意到了收敛，今天我们就来聊一聊这个话题。”小牛师兄说。 计算机解决工程问题“在谈收敛之前，我们还是先来谈一谈数值方法。关于数值计算，我想你也了解了不少。你说计算机解决这些工程问题到底是如何实现的呢？”小牛师兄问道。 “我看了一些资料。利用计算机来解决工程问题，其核心是利用计算机求解物理模型，或者说是利用计算机求解数学方程。”小白说。 “基本上是这样。我们知道描述现实世界物理现象的数学模型大部分都是微分方程，利用计算机并不能直接求解微分方程，计算机通常需要利用数学方法将这些微分方程转化为代数方程，通过求解代数方程获取原微分方程的解。那么问题来了，计算机是如何将微分方程转化为代数方程的呢？”小牛师兄说。 “转化的方法其实有很多种，比如我们常说的有限差分法、有限元法、有限体积法等都是用来干这种工作的。为了实现这种软件，引入了网格。采用网格的目的是将连续的空间和时间转化为离散的空间与时间，从而在每一个网格单元或网格节点上获得代数方程。所有网格上的代数方程集合在一起，就构成了整个计算域上的代数方程组，求解方程组就可以得到每一个网格单元或网格节点上的物理量。” “当然，求解方程组得到的物理量还是离散的，为了得到节点之间或单元之间的物理量分布，采用了一种称之为插值的数学方法。利用插值可以得到近似连续的物理量分布。当计算网格或计算时间间隔足够小的时候，通过插值可以得到相当精确的计算结果。”小牛师兄说。 “因此我们可以说，利用计算机求解工程问题，实际上归根结底是利用计算机求解工程问题所涉及的物理模型转化而成的代数方程。那么问题来了，利用计算机求解代数方程是怎么实现的呢？”小牛师兄说。 “我记得线 性代数里面有讲到，可以采用矩阵求逆、高斯消去法、三角分解法、克拉默法则等。”小白说。 “嗯，这些方法的确可以用于计算机求解线性方程组，这些方法可以统称为直接求解法。然而在工程应用上是存在很大问题的。我们知道，为了得到比较精确的计算结果，网格数量常常非常多，直接后果就是最终的代数方程组包含的方程数量非常非常多。打个比方，如果网格数量是100万个，那么最终求解的代数方程组就有100万个方程，在利用直接法求解的过程中，需要采用100万维的矩阵进行存储，如此庞大的矩阵，消耗的内存是非常巨大的，而且其求逆计算或三角分解计算都是非常困难的，计算效率是极其低下的。因此，工程上求解这类数量庞大的方程组通常采用迭代法。”小牛师兄说。 “迭代法其实也有很多种，比较常见的如雅克比迭代、高斯-赛德尔迭代、超松弛迭代等等。关于迭代法求解线性方程组的具体方法，可以找一本数值计算的数看看。收敛就是迭代法求解线性方程组中的一个概念。”小牛师兄最后说。 关于迭代残差为了更好的说明收敛的问题，这里先举个例子来说明什么叫残差。 比如说要求解下面的线性方程组：$$\left{ \begin{array}{c}8x_1-3x_2+2x_3=20\4x_1+11x_2-x_3=33\6x_1+3x_2+12x_3=36\\end{array} \right.$$可将(1)式改写为迭代计算的形式：$$\left{ \begin{array}{c}x_1 = \frac {1}{8}(3x_2-2x_3+20)\x_2 = \frac {1}{11}(-4x_1+x_3+33)\x_3 = \frac {1}{12}(-6x_1-3x_2+36)\\end{array} \right.$$给定一个初值，如$x^{(0)}=(0,0,0)^T$，代入到式(2)中，可以得到$x^(1)=(2.5,3,3)^T$ 反复迭代，$$\left{ \begin{array}{c}x_1^{(k+1)} = \frac {1}{8}(3x_2^{(k)}-2x_3^{(k)}+20)\x_2^{(k+1)} = \frac {1}{11}(-4x_1^{(k)}+x_3^{(k)}+33)\x_3 ^{(k+1)}= \frac {1}{12}(-6x_1^{(k)}-3x_2^{(k)}+36)\\end{array} \right.$$可以得到一系列x1,x2及x3的值。| 迭代次数 | x1 | x2 | x3 || —- | ———– | ———– | ———– || 0 | 0 | 0 | 0 || 1 | 2.5 | 3 | 3 || 2 | 2.875 | 2.363636364 | 1 || 3 | 3.136363636 | 2.045454545 | 0.971590909 || 4 | 3.024147727 | 1.947830579 | 0.920454545 || 5 | 3.000322831 | 1.983987603 | 1.000968492 || 6 | 2.993753228 | 1.999970652 | 1.003841684 || 7 | 2.999028573 | 2.002620797 | 1.003130723 || 8 | 3.000200118 | 2.000637857 | 0.999830514 || 9 | 3.000281568 | 1.999911822 | 0.999740477 || 10 | 3.000031814 | 1.999874019 | 0.999881261 || 11 | 2.999982442 | 1.999977637 | 1.000015588 || 12 | 2.999987717 | 2.000007802 | 1.00001437 || 13 | 2.999999333 | 2.000005773 | 1.000004191 || 14 | 3.000001117 | 2.000000623 | 0.99999889 || 15 | 3.000000511 | 1.999999493 | 0.999999286 || 16 | 2.999999988 | 1.999999749 | 0.999999871 || 17 | 2.999999938 | 1.999999992 | 1.000000068 || 18 | 2.99999998 | 2.000000029 | 1.000000033 || 19 | 3.000000003 | 2.00000001 | 1.000000003 || 20 | 3.000000003 | 1.999999999 | 0.999999996 | 可以看出，随着迭代计算的进行，计算结果越来越接近解析解[3,2,1]。 我们可以将某一物理量两次迭代计算值的差值称之为该物理量的迭代残差。比如上面的迭代计算x1的第一次迭代计算残差为2.5，第二次迭代计算后残差变为0.375。 当然上面提到的残差为绝对残差，在实际计算过程中，有时也常常采用相对残差，即物理量随迭代进行的变化量。可以看到，当残差非常小时，可以认为不用再往下计算了，或者说再往下算已经没有太大意义了。 CFD计算中的残差在CFD计算中，每一个网格上都会存储众多物理量，因此每一个网格上的任一个物理量在计算迭代过程中都会存在一个残差，这意味着在一次迭代过程中，同一物理量在不同的计算网格上有不同的计算残差，而实际上我们在进行CFD计算时，每一个迭代步只对应着一个残差值。 CFD中残差分为几种： 最大残差：在一次迭代中，取所有网格中的残差值的最大值作为本次计算的残差。 平均残差：在一次迭代中，计算所有网格中的算术平均值作为本次迭代的残差 均方根残差：在一次计算，计算所有网格中残差值的均方根作为本次迭代计算的残差 在CFD计算中，常常采用均方根残差（RMS）作为残差值。 CFD中的收敛所谓迭代收敛，简单来说，就是在迭代计算过程中，物理量趋于某一值的情况。CFD计算中判断收敛通常有三种方法。 收敛判断规则之一：残差达到某一设定标准时可以认为迭代计算达到收敛。 这条规则最简单，在实际工程应用中也最常用。通常设定某一标准，当迭代计算过程中残差值低于此标准时则认为计算收敛。这也是几乎所有CFD软件用于判断收敛的基本方法。 然而此规则在实际工程应用中常常无法使用，有些复杂的问题，无论你怎么计算，其残差也不会下降，甚至有时候残差会出现周期性震荡。 残差稳定在某一位置不下降的原因有很多，常见的原因包括： 计算区域中存在低质量的网格。低质量的网格会造成计算残差增大及残差震荡 边界条件设置有误。错误的边界条件或边界类型搭配都会导致计算残差震荡。 利用稳态求解器计算瞬态问题也会造成残差的震荡。 在残差无法达到设定标准的时候该如何判断收敛呢？需要注意的是，此时的收敛并非数学意义上的收敛了，而只是意味着我们可以停止计算。 收敛判断规则之二：进出口物理量通量达到平衡 最常用的是判断进出口质量是否相等，这实际上是判断连续性条件是否达到满足的。实际上还有很多，如计算域中包含化学反应时，判断进出口组分是否守恒；如计算域中包含多相流时，判断进出口各相质量是否守恒等。此规则是一种非常弱的规则，实际上只是收敛的一个必要条件而已。但是在第一条判断规则无法达到时，也常常采用此规则来判断。 收敛判断规则三：计算域中的物理量随迭代进行不再发生变化 这条规则在实际应用中也很常用，甚至比第二条规则更常用。在实际工程中，经常监测某些敏感位置的物理量，当随着迭代进行，监测的量不再发生变化时，基本可以认为计算达到收敛。 注意后两种方法只是在残差无法达到标准时才采用的判断方法，并不意味着计算就收敛了。 稳态及瞬态计算的收敛在CFD迭代计算过程中，稳态残差曲线与瞬态残差曲线的形态有很大的不同。如下图所示为稳态计算残差，每一个物理量都有一条残差曲线，当残差曲线低于设定的标准时认为计算收敛，当所有的残差曲线低于设定的标准时，计算结束。 下图所示为典型的瞬态计算残差。可以看到其形状特征与稳态残差曲线有很大的不同。瞬态计算要求在每一个计算时间步内达到收敛。若不能达到收敛，则迭代次数达到所设定的内迭代次数后进入下一个时间步，重新开启迭代计算。因此瞬态计算残差呈现出下图所示的锯齿状。 注意：瞬态计算要求每一个时间步内均达到收敛。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】25：二维还是三维]]></title>
+    <url>%2F2016%2F04%2F25%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9125%EF%BC%9A%E4%BA%8C%E7%BB%B4%E8%BF%98%E6%98%AF%E4%B8%89%E7%BB%B4%2F</url>
+    <content type="text"><![CDATA[小白最近逛图书馆，发现最近关于Fluent的书是越来越多了，而且还发现这些关于Fluent教材中的案例都大同小异。小白接受小牛师兄的建议，找了一本结构比较鲜明的书照着上面的案例就练了起来。不过当练习的案例多了，小白却发现了一个问题“在建立计算模型时，为什么有时候采用二维模型，而有时候又采用三维模型？二维模型和三维模型的差异在哪里？二维代替三维到底有没有问题？”带着这些问题，小白找到了小牛师兄。“师兄，你说Fluent中计算的二维模型到底有没有意义呢？”小白问。“怎么会没有意义呢，当然有意义啊，当你计算机性能不行的时候，你就会知道能算二维是一件多么有意义的事情了。”小牛师兄说。“可是，现实世界中不可能存在二维的物体啊。”小白说。“嗯，这倒是真的，现实世界的任何物体都是三维的，不存在没有厚度的面，也不存在没有截面积的线，更不存在没有体积的点，所有的这一切都是近似的。但是近似并不表示一定就不行，实际上在很多时候利用这些近似，可以获得不错的结果。”小牛师兄说。“那什么时候可以利用这种简化呢？比如说用二维代替三维模型。”小白问。“我们常说的以二维模型来近似模拟三维模型，只是针对某一维尺寸远小于另外两维的情况下。这时候需要注意的是，采用二维模型时无法考虑法向方向的物理信息，在进行二维几何模型计算过程中，常常将面法向方向简化为常数，即总是认为面几何体的厚度为定值（通常默认为1 m）。在CFD中，二维模型一般都为平面模型。”小牛师兄说。“我在做案例的时候，碰到过很奇怪的问题。比如说计算一个管道内部流动，有的案例采用三维几何模型，如图1所示；有的案例用半个三维几何，如图2所示；有的案例采用四分之一模型，如图3所示；有的案例采用管道纵剖面几何（二维矩形），如图四所示；而有的案例又采用二维的半剖面几何（矩形），如图5所示。这个到底该怎么选呢？”小白问。 “通常来说，采用全三维模型自然是不存在任何问题的，对于比较简单的几何模型强烈建议使用全三维模型，因为其能提供所有的信息。在流场对称的情况下可利用对称性采用半模型或四分之一模型，当然严格意义上的流场对称是不存在的，不过有时候这种简化是可以认可的。比如图2所示的模型，如果沿对称面法向方向没有外部力作用则可以使用，但如果有外部力（如重力等）沿法向方向，则不可使用。图3也是一样，对称面法向法向不允许有外部力存在。至于图4和图5的简化，则除了要求外部力方向不能沿面法向之外，还必须假设流场特性在任意方向截面分布一致。”小牛师兄说。 案例测试分别测试以上五种模型的差异。计算模型为图1所示的直管道，截面直径10mm，长度100mm。入口面流速 0.1 m/s，出口采用静压 0 Pa。流体介质为水。雷诺数约为1000，采用层流计算。计算模型分别采用上述的五种模型。 计算结果以下采用相同计算条件得到的速度云图分布（从左至右分别对应上图1-5模型）。 分析：从图中看出，五种不同模型计算得到的速度分布趋势基本保持一致，但是利用模型4计算得到的最大速度明显小于其他四种模型计算得到的结果。 根据理论计算结果，充分发展的核心最大速度应为平均速度的2倍，即 0.2 m/s。 改进计算将计算区域延长，从当前的0.1m延长至0.4m重新计算。从上图可以看出，采用轴对称方式计算结果能够与3D模型相吻合，因此改进计算只采用两种平面模型。下图为延长至0.4m后的两种模型计算结果，可以看到最大速度已经非常接近理论值 0.2m/s。而2D平面模型计算的最大值小于0.15m/s，距离理论值相去甚远。 总结：对于类似直管流动问题，采用全3D模型，半3D模型、四分之一3D模型以及轴对称二维模型都可接受，但是2D平面模型是不可接受的。 原因分析：2D平面模型实际上是当做拉伸体而不是旋转体计算，拉伸厚度默认为1m。在计算过程中对于平面法向方向的考虑与真实的圆柱体不相符。 #其他问题实际上很多的模型都存在这样的限制，在使用2D平面模型时需要格外注意，其只适用于厚度相对于其他两个维度非常小的拉伸体的简化，对于回转体则不适用。如下图中的弯管模型及弯道模型 。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】24：稳态和瞬态]]></title>
+    <url>%2F2016%2F04%2F24%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9124%EF%BC%9A%E7%A8%B3%E6%80%81%E5%92%8C%E7%9E%AC%E6%80%81%2F</url>
+    <content type="text"><![CDATA[小白最近在练习案例的时候，对稳态和瞬态的问题，产生了一些疑问。譬如说，为什么有的案例用稳态，而有的案例用瞬态？有时候相同的案例既可以用稳态也可以用瞬态，而有的案例却只能用瞬态计算？小白决定找小牛师兄问一下。“师兄，稳态和瞬态到底有什么区别？在实际工程中应该怎么选择才好呢？ 区别“流动控制方程还记得不？”小牛师兄问。 “嗯，我记得有四项内容。”小白在纸上写出流动控制方程的通用形式。 $$\frac{\partial( \rho \phi)}{\partial t}+\nabla \cdot (\rho \textbf{u} \phi)=\nabla \cdot (\Gamma \nabla \phi )+S_{\phi}$$ “是的，控制方程有四项内容，其中第一项即瞬态项，稳态及瞬态的区別就在于控制方程中是否存在瞬态项。可以看出瞬态项是关于时间的偏导数，因此计算得到的结果也是与时间相关的。”小牛师兄说道。 “这样说不太好理解，来举个简单的例子就好理解了。最近不是流行问雨从高空掉下来能否砸死人么，我们现在不讨论能否砸死人，这里只考虑水滴下落过程。地球人都知道，雨滴在下落过程中主要受到两种力，其一为重力，其二为阻力。假设雨滴在下落过程中质量及形状保持不变，根据流体力学理论可知，雨滴在下落过程中，其受到的阻力与其运动速度的平方成正比。定性分析雨滴在空中的下落形式为：在下落的起始一段时间内，由于其速度较小，因此其阻力较小，此时重力大于阻力，其速度不断增大，而随着速度不断增大，雨滴所受阻力不断增大，此时作用在雨滴上的合力在断减小，加速度减小，但雨滴速度依然在增加，当速增加到作用在雨滴上的阻力与其重力相平衡时，其速度达到稳定，之后其将一直保持该速度直至下落到地面。”“整个过程可以分为两个阶段，首先是加速阶段，之后以稳定速度下降。如果单纯考虑雨滴下落速度的话，第一个阶段是与时间密切相关的，速度随时间推移逐渐增大；而在第二阶段，下落速度与时间无关，任意时刻其都将保持相同的速度。因此，若考虑速度，则第一阶段为瞬态，第二阶段为稳态。” “然而，若将位移作为目标物理量，则整个过程都是瞬态的。因此，稳态还是瞬态，取决于所要考虑的物理量。” “我们一般说瞬态得到的是物理量随时间发展的过程，而稳态计算得到的是稳定时的状态。”“由于数值计算过程中时间项也要进行离散，因此瞬态计算得到的是一系列时间点上的状态量，至于时间点间隔，则取决于离散时所采用的时间步长。”小牛师兄最后说。 选择“前面说了那么多，那么在工程中选用瞬态还是稳态实际上就很清楚了。根据所要考虑的物理量是否能够达到稳定而进行选择。”“现实中的问题，有一些可以达到稳定，而有些问题实际上根本就不可能达到稳定。比如说前面例子中的雨滴，其速度就可以达到稳定。而如圆柱绕流中圆柱的升力和阻力，那是成周期性变化的物理量，不管你计算多久都是不可能达到稳定的。”“记住一点，所有的工程问题都可以计算瞬态，但未必都能计算稳态。稳态只是一种简化！”小牛师兄说道。 “因此在实际应用中，到底是选择瞬态还是稳态，取决于你要观察的物理量。若只考虑系统稳定后的物理量状态，那么就选择使用稳态计算；若要考虑物理量的演化情况，则需要使用瞬态。” 时间“在瞬态计算时需要额外关注时间，在数值计算的过程中，时间被离散成不连续的时间点，时间点之间的间隔称之为时间步长（Time Step），在进行瞬态计算时，时间步长的大小会影响计算收敛性。” “说到收敛性，需要注意瞬态计算的收敛与稳态计算有些不同，稳态计算只需要最终迭代达到收敛即可，而瞬态计算则要求每个时间步内均达到收敛。” “时间步长的选择有时候需要满足CFL条件。可通过公式粗略的估计时间步长。”$$\Delta t = c\frac{\Delta x}{v}$$其中，$c$为库朗数，$\Delta x$为网格尺寸，$v$为局部速度。 “可以看出，网格越细密，则要求计算时采用的时间步长越小；流场中流体速度越大，则计算时要求的时间步长也越小。小的时间步长会极大的增加计算时间。因此若对计算时间有要求的话，则在划分计算网格时可以将网格适当画粗一点，这样可以使用更大的时间步长进行计算，不过网格粗了又会对计算结果有影响。”]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】23：串行与并行]]></title>
+    <url>%2F2016%2F04%2F23%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9123%EF%BC%9A%E4%B8%B2%E8%A1%8C%E4%B8%8E%E5%B9%B6%E8%A1%8C%2F</url>
+    <content type="text"><![CDATA[夏日的早晨，被酷热和蚊子骚扰了一夜的小白刚进入梦乡就被老蓝的电话给惊醒了。“8点开会！”老蓝说话永远那么简短有力，根本不给人请假的时间就挂了电话。小白一看时间，都7点半了，得，这懒觉睡不成了。小白跳下床，洗漱完毕往实验室奔去。到了实验室才发现大伙儿已经早就到齐了，小白找了张椅子挨着小牛师兄坐下，发现小牛师兄满眼血丝，还在打盹儿。“今天召集大家来呢，主要是因为负责项目的小秦毕业了，但这项目还没完成，需要安排一下人手，小牛是总负责，你来讲一下。”老蓝扫了众人一眼后说道。小牛师兄站起身，走到投影仪前将要做的项目内容详细的介绍了一遍，小白第一次参加这种会议，只感觉小牛师兄的逻辑很清晰。“现在这项目需要补充两个人，我觉得小白不错，这阵子学得挺快。还需要再找个人，小陈要不要参加？”小牛师兄说。小陈名字叫陈曦，和小白同一年进入实验室，是个很有意思的小女生，长得很萌，之前一直在学习有限元仿真计算。“嗯，可以啊，不过我学的是固体计算，不知道后面用不用得上。”陈曦说。“后面肯定要用到的，你和小白合作，争取尽快把项目接过来，趁那帮研三的还没离校尽快上手”小牛师兄说道。“还有个问题，咱们实验室的工作站需要升级了，需要加CPU和内存，后期我们采用并行计算加快进度。”小牛师兄对老蓝说。“嗯，这个我来解决，你回头把型号和数量统计给我就行。没其他问题的话我们就到这里吧。”老蓝说道。 并行效率会很快开完了，小白与众人一起返回实验室。”师兄，前两天在网上看到个消息，说世界排名第一的超级计算机在中国，拥有几百万个CPU呢。“小白碰到小牛师兄说。“没错，的确是在中国，咱们国家的超级计算机还是比较强的，不过俺们老百姓用不起啊。”小牛师兄说。“CPU越多算的越快么？”小白问道。“我们可以把CPU看做是一个个的人，那你觉得相同的一件事情，是人越多做得越快么？”小牛师兄反问道。“这肯定不是噢，有的时候人多反而效率越低，比如说一个和尚跳水吃，两个和尚抬水吃，三个和尚没水吃。”小白说。“就是这个理啊，CPU多了也是这样，并非CPU越多计算速度和效率越高，有时候反而下降。”小牛师兄说。 并行机制“多个CPU到底如何同时工作的呢？”小白问。“呃，这事情说起来其实有点儿复杂，如果你有兴趣的话，可以找一本并行程序设计的书看看。不过我们可以简单的八一八。”小牛师兄说。“前面说过，我们可以将CPU比作一个个干活儿的人。如果你是任务发布者，你会怎么做呢？“小牛师兄问。“直接把任务分解后分发给每一个人？”小白说。“NO，你这样做的话会很麻烦。如果任务比较简单的话倒是可以，但是如果很复杂的短期内无法完成的任务就很麻烦。最常见的做法是：先给这个团队找个队长，然后将任务下发给队长，队长再将任务一层层的下发下去，这样在一个周期结束后，队长将队员的结果收集起来进行汇总，层层汇总上来，最终交到你的手里。对于庞大的工作任务，这种管理机制是经常使用的。“小牛师兄说。“并行计算也是这样，通常在众多CPU中会有一个队长，专门负责在每一个周期内任务的下发与汇总。““并行计算通常这样运作：任务提交后，作为队长的CPU接受任务，并将任务分解后下发给各成员CPU，成员CPU接到自己的任务后进行计算求解，完毕后将结果上传给队长CPU，队长CPU收集所有的队员结果进行检查和汇总，之后进入下一个循环周期。” 并行劣势“并行计算其实也有很多的麻烦事情要解决。最常见的就是CPU间的通讯。就像一群人合力办一件事，甲说要这么做，乙说要那么做，丙说不按他的方案的话就罢工，这可怎么办？本来一件事情两天就能做完，结果花三天时间进行沟通，事情还没开始干。并行计算也是这样，CPU队长收集队员的数据并进行数据汇总需要花费时间。“ “还有一些情况并不适合并行计算。比如说具有明显流程性的操作，一个任务的开始必须建立在另一个任务结束的基础上，对于此类工作则不适合并行计算。“ “正因为有诸多问题，因此利用N个CPU并不能获得N倍计算速度的提升，一般情况下1+1都小于2。”小牛师兄最后说。 单机多核与多机单核“并行计算涉及到多个CPU，这些CPU可能位于一台或多台计算机上。现在单CPU拥有多个核心的情况已经非常普遍，而一台计算机上拥有几个CPU的情况在工作站上也很常见，这些有什么不一样么？”小白问。 “在本质上并没有什么不同，但是由于物理结构的不一样，计算效率相差比较大。通常CPU内部核心间带宽最大，通讯速度最快。而多路CPU间通讯次之，多机器互联的CPU通讯受限于网络传输速度，速度最慢。”小牛师兄解释道。 ####郑重申明 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 转载请务必保证文字完整 对系列感兴趣的朋友可微信扫描下方二维码，关注微信公众号第一时间接收文章更新。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】22：好网格与坏网格]]></title>
+    <url>%2F2016%2F04%2F22%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9122%EF%BC%9A%E5%A5%BD%E7%BD%91%E6%A0%BC%E4%B8%8E%E5%9D%8F%E7%BD%91%E6%A0%BC%2F</url>
+    <content type="text"><![CDATA[[TOC] 网格的作用如此重要，以至于小白纠结了很久。小白知道网格划分过程很大程度上受制于计算资源的限制，但小白还是不太明白，如果计算资源非常充足，不用顾忌资源限制的情况下，如何判断生成的网格好坏？如何确定自己生成的网格是否合乎要求？如何利用软件来判断网格是否满足要求？ 在食堂的餐桌上，小白向小牛师兄询问这些问题。 “在我的眼中，网格和美女一样，只有漂亮的和不漂亮的区别，没有好与坏。”小牛师兄看着不远处一群饭都堵不住嘴巴在那叽叽喳喳的女生，慢悠悠的说。 小牛师兄虽然学术搞得不错，可是快奔三的人仍然是光荣的单身狗一条，因此看到漂亮女生总能发表一些与众不同的看法。 “怎么说呢，对于网格好坏，我的做法是用肉眼观察，看着舒服的网格可能是好的，一眼看过去感觉不舒服的，肯定是有问题的不好的网格”。小牛师兄继续补充道。 “有没有科学点的判断方法呢？肉眼观察也太忽悠人了吧！”小白说。 网格疏密“嘿嘿，的确忽悠了点，那我们就来说点儿正紧的。我们都知道，一般情况下好的网格要根据流场分布来进行布置，那么在流场计算之前就要预估物理量的分布。”小牛师兄补充道。 “都没计算，怎么判断流场分布呢？”小白问。 “在计算之前，需要根据流体力学理论判断流场分布，比如说流体流经障碍物的时候，在障碍物的上游及下游必定会出现较大的扰动，物理量变化极为剧烈，因此在这些区域需要布置更多的网格。”小牛师兄说。 “网格的疏密跟流场物理量梯度直接相关，那么哪些区域流场梯度大呢？”小白问。 “一般来说，这些区域流场梯度大：(1)障碍物上下游附近区域。(2)边界层区域。大梯度的区域都和边界扰动有关。” “还有种情况需耍加密网格，那就是你需要提高某区域内计算精度时，此时需要提高此区域网格的密度。” “说到网格疏密，就不得不提网格增长率。一套好的网格是有疏密分布的，那么在粗网格向密网格过渡时，存在一个增长率。CFD网格要求这个增长率不能太大，一般在1.1~1.3之间。” 网格形状“除了网格疏密需要关注外，还需要关注网格形状，你觉得什么形状的网格是最好的？ ”小牛师兄问。 “我也不是很明确，很多资料上建议使用四边形和六面体，也有资料上说直接使用三角形和四面体，还有资料说要使用混合网格，也看到有资料说笛卡尔网格是一种发展趋势。众说纷纭，我都被搞迷糊了。”小白说道。 “先来说现在常用的网格形状。目前比较常用的网格形状主要有：三角形、四边形、四面体、六面体、五面体、三棱柱，有些求解器还支持多面体和六边形网格。”小牛师兄说道。 “这些形状是谁规定的呢?有没有球形和圆形的网格?”小白很好奇。 “网格的形状是由求解器决定的，或者更准确的说是由求解器的离散算法所决定。具体的以后有时间再具体探讨，今天要说的是：我们能够使用什么网格形状取决于求解器，像Fluent支持使用多面体网格，而CFX则不支持这种类型的网格。还有笛卡尔网格，很多EFD软件都支持，但支持此类型的CFD求解器并不多。当然如果是自己开发求解器的话，则完全可以开发支持任意形状网格的离散算法。”小牛师兄这样说。 “话虽然可以这样说，但实际上操作性并不强。因为选用网格类型需要考虑两个主要问题：(1)离散精度；(2)几何适应性。而这两方面却是相互矛盾的，某种网格离散精度高，其几何适应性往往不好。” “再说点儿实际的，都在说四边形和六面体网格好，你觉得它们为什么好？”小牛师兄问。 “我也说不好，是不是离散精度比较高？好多复杂的几何都很难生成六面体网格，我猜它们的几何适应性肯定不会太好。”小白说。 “是的，四边形和六面体网格的离散精度好。这主要得益于其正交性好及相邻结点数较多。具体来讲，完美的四边形网格，其网格边具有完美的正交性(夹角90度)，而完美的三角形网格夹角为60度，正交性会影响插值精度和计算收敛性。再说相邻结点数，四边形网格拥有四个相邻结点，六面体网格有六个相邻结点，而三角形网格及四面体网格相邻节点数分别为3个和4个。理论上讲，相邻节点数越多，插值精度越高。因此通常在网格数量相当的情况下，四边形和六面体网格拥有比三角形和四面体网格更高的精度。”小牛师兄解释道。 “有利就有弊，四边形和六面体网格也有其不利的方面，最典型的是几何适应性。对于复杂的几何模型，生成四边形网格或六面体网格常常需要花费极大的时间开销，有时甚至无法生成。” “还有一种情况不适合使用四边形和六面体网格，那就是当流动与网格流向不一致的时候，此时使用四边形或六面体网格可能会造成较大的伪扩散，严重影响计算精度” “实际上对于复杂的工程模型，往往同时存在多种类型的计算网格，常见的做法是：分割计算域几何，在简单区域或精度要求高的区域生成四边形或六面体网格，而在复杂区域或精度要求不高的区域生成三角形或四面体网格，不同类型网格之间采用五面体网格进行过度。”小牛师兄总结道。 其他的一些问题“除了这些问题，划分网格的过程中还有什么其他的问题需要注意呢？”小白问。 “其实还有很多问题需要注意，比如边界层网格，这个我们后面再来探讨。 ”小牛师兄说。 “关于网格，你只需要记住一点就够了：漂亮的网格才是好网格！” 小白的总结 一套好的网格，一定是看起来赏心悦目的 好的网格，一定是疏密有间的，要根据流场分布来布置网格 四边形和六面体网格拥有好的计算精度和收敛性，但几何适应性不好，对于复杂的模型通常采用混合 网格结构 ####郑重申明 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 转载请务必保证文字完整 对系列感兴趣的朋友可微信扫描下方二维码，关注微信公众号第一时间接收文章更新。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】21：网格划分软件的选择]]></title>
+    <url>%2F2016%2F04%2F21%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9121%EF%BC%9A%E7%BD%91%E6%A0%BC%E5%88%92%E5%88%86%E8%BD%AF%E4%BB%B6%E7%9A%84%E9%80%89%E6%8B%A9%2F</url>
+    <content type="text"><![CDATA[但是怎样才能获得流体计算网格呢？“工欲善其事必先利其器”，画网格该用什么器呢？小白决定找黄师姐请教一番。 小白找到黄师姐的时候，黄师姐正在电脑上忙着。“黄师姐，我发现网格划分软件有好多种，究竟哪种才更适合于CFD网格划分呢？”，小白在实验室找到黄师姐并询问道。“现在市面上的确有很多网格划分软件，这对于新手们来说选择起来真的挺难的。”黄师姐放下鼠标说道。“那要怎么去选择呢？”小白问道。黄师姐谈起了她对于网格划分软件的选择策略 1 常见网格划分工具当前市面上有形形色色的网格生成软件，这里列举一些最常见的网格软件。 ANSYS ICEM CFDICEM CFD如今是ANSYS软件中的一个前处理模块，在早些年（2002）ICEM CFD还不属于ANSYS，自从被ANSYS收归旗下之后，ANSYS就将其作为主打前处理软件对待，后来收购了CFX软件，ANSYS果断放弃了CFX原有的前处理模块（CFX-Build，一款以Patran为基础开发的CFD前处理模块），从CFX被收购后的第一个版本（CFX5.7)起，ICEM CFD就被作为CFX的御用前处理器。而在2005年ANSYS收购FLUENT后，ANSYS更是逐渐淡化GAMBIT作为FLUENT的前处理器作用，转而将ICEM CFD作为FLUENT的前处理器，同时在ANSYS14.5版本之后，将ICEM CFD作为Workbench中的模块（之前一直作为独立软件包）。如今ICEM CFD已经作为ANSYS CFD软件的前处理器。总体来说，ICEM CFD是一款功能全面的CFD网格生成工具。其不仅支持block形式的六面体网格，还支持生成四面体，五面体(金字搭)，三棱柱，笛卡尔网格等形式的网格，足以应对任何复杂程度几何模型的网格生成工作。 ANSYS Mesh这其实是ANSYS Workbench的网格模块，为ANSYS Worbench中的求解器（结构、电磁、流体等）提供网格。随着ANSYS版本的更新，该模块的网格生成功能也日益强大。据说该模块在不断的吸收GAMBIT、ICEM CFD及TGrid（都是ANSYS收购的软件）的网格生成算法，按照ANSYS的发展策略，可以预测将来ANSYS将会以此模块作为主打网格生成器。 TGrid这是一个非结构网格生成器，原本属于FLUENT，在ANSYS收购FLUENT的时候被一起打包收购。据说该软件生成非结构网格能力超强，可以毫不费劲的生成千万级别的网格。目前该软件已经被集成进fluent软件，作为FLUENT Meshing模式。 PointWise说起PointWise就不能不提Gridgen，Pointwise是Gridgen换了副面孔后的结构。Gridgen据说来源于通用动力公司开发F16战斗机时的遗留品，目前在CFD网格领域占有很大的比重。该软件提供了众多的网格操纵功能，在结构网格与非结构网格划分方面均提供了良好的性能，输入输出接口也相当丰富，能够支持绝大多数CAD文件格式，也支持绝大多数CFD求解器。对于打算长期从事CFD行业的人们来讲，PointWise是不错的选择。 GridProGP是另一款CFD专用网格生成软件。该软件早期版本仅 能生成六面体网格，不过该软件新版本貌似可以生成四面体网格了，实用性也更高了。该软件采用类似icem CFD的block网格生成思路，先创建块，再将块与几何进行关联，之后在块上生成网格，并将块上的网格映射到几何上，形成最终的网格。 ANSAANSA是一款希腊人开发的软件，号称是操作最快的软件。打开软件就明白这软件快的理由:所有的功能按钮都是单级，省去了其他软件多级菜单的寻找时间，当然快了。单级按钮虽然操作方便，但有密集恐惧症的使用者肯定不会这么想。ANSA的优势在于其面网格生成功能，因此尤其适合于汽车工业的有限元计算网格。对于CFD计算所需的体网格，虽然也可以生成，但更多的是利用ANSA生成初始面网格，再利用其它的体网格生成软件导入面网格，并生成体网格。 HyperMeshHM的情况与ANSA非常相似，它们是直接的竞争对手，功能重合度99%，这里不再细数。3 如何选择其实上述的任何一款软件都能满足工程需要，但考虑到各软件的易用性及功能侧重点，针对自己的工作环境选择合适的软件及其组合，还是可以考虑的。最基本的原则：能输出目标求解器支持的网格文件类型，除此以外还可以采用以下方案： 单纯的CFD环境。可以考虑ANSYS ICEM CFD或POINTWISE。就学习成本来讲，这两款软件差不多。 涉及多物理场计算。如果ANSYS系列软件，则建议使用ANSYS Mesh，可以同时划分流体网格和固体网格。 比较流行的工程组合TGrid+ANSA及TGrid+Hypermesh，主要是利用ANSA及Hypermesh生成面网格，之后利用TGrid生成体网格。这种方式充分利用了两个软件各自的优势，但缺点是需要购买两款软件，成本比较高。 免费的方案。不少人出于成本考虑，可能更希望找到一些免费的网格工具，这里推荐salome。这是一款基于opencascad的开源软件，同时具备几何建模及网格划分功能，是一款功能全面的前处理软件。 4 网格划分学习对于网格划分，重要的是练习，对于网格小白来讲，需要了解以下一些东西： 网格生成的基本流程。虽然当前网格生成软件众多，但是实际上网格生成流程都差不多，无非是：【几何准备】—【尺寸控制】—【局部控制】—【网格生成】—【质量评价】—【网格修改】—【网格输出】 评价网格好坏。对不同形式的网格，能快速评判其好坏，并配合软件对坏网格进行修补。 网格疏密分布。需要根据所求解的问题，提前预测测物理量分布，在梯度大的区域分布更密的网格。有时求解器提供的网格自适应功能也能提供较好的网格划分思路。 网格输出。通常情况下可输出为通用格式，如Fluent所支持的msh格式，可以被非常多的CFD软件所支持。 ####郑重申明 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 转载请务必保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】20：计算区域的构建]]></title>
+    <url>%2F2016%2F04%2F20%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9120%EF%BC%9A%E8%AE%A1%E7%AE%97%E5%8C%BA%E5%9F%9F%E7%9A%84%E6%9E%84%E5%BB%BA%2F</url>
+    <content type="text"><![CDATA[自从上次在食堂听了小牛师兄关于计算网格的一些问题后，小白决定在寒假期间好好的补习一下关于计算网格的划分内容。在之前小白也接触了一些CFD软件，像Fluent，CFX等，在做案例的过程中同城使用的是别人已经提供好的计算网格，严格说起来小白还没有自己动手生成过计算网格。这下真正说起要动手创建网格，小白还真的是懵了，不知道从哪儿下手。小白找到了黄师姐。 “师姐，我们考完试了，有什么任务分配需要我做的么？”小白在QQ上问。“考完试了呀，那就可以认真的学习一下流体仿真的内容了，现在项目上很缺人手。”黄师姐回复。“恩，就是有一些关于这方面的问题要请假一下。这半年我练习了很多流体计算案例，但是对于真正的工程问题，还是存在很多的问题。最基本的问题，比如流体计算区域的创建，到底该怎么弄呢？”小白问。 “你说的是计算域的构建问题，噢，对于新手来说还真有一些问题需要注意。” 计算域是什么“首先你要清楚，计算域是流体计算所要考虑的区域，其包含了时间域和空间域。空间域好说，就是我们告诉计算机所要求解计算的区域的长宽高等几何尺寸，而时间域则指的是我们告诉求解器需要考虑的时间范围。比如说要考虑管道内部流体流动特征，那么空间域则指的是管道内部流体所能够到达的空间范围，而时间域则取决于我们所要考虑的时间段，是1秒钟还是1小时，取决于我们自己。” “流体计算域，指的是流体能够达到的区域，但是我们知道，我们目前所用的CFD求解器除了能够解决流动问题之外，还能解决热问题。因此虽然流体无法在固体中流动，但是热量可以，温度可以在固体中分布。所以流体计算域中除了流体域之外，还可能包含有固体区域。” “除了流体域和固体域，在流体计算过程中，一些特殊的模型还可能包含一些特殊的区域，他们都是流体域的一些简化形式。比如说模拟多孔隙结构的多孔区域，模拟发热的源区域等，这些其实也都是流体域，只不过简化了几何模型而已。” “总而言之，计算域就是我们要告诉计算机的计算区域”。 计算域如何创建“明白了，计算域就是要提交给求解器的几何模型，可以这么理解么？”小白问。“可以这么说。”黄师姐答。“那这些几何该如何得到呢？”小白继续问。 “几何模型的创建有很多方法，大多数情况下我们利用专业的CAD软件来生成计算模型，对于复杂的几何模型尤其是这样。当然一些简单的几何模型，也可以利用CAE前处理软件来创建。”黄师姐这样说。 常用的建模软件“比较常用的有哪些软件呢？”小白继续问。“常用的软件如机械的CAD软件，像UG NX， Pro/E, Catia, Solidworks等，医学领域也有用CT成像来生成几何的，甚至可以采用一些激光扫描手段来生成几何。总而言之，不管采用何种方法，最终的目的是要获得数字模型。”黄师姐说。 常用的机械CAD软件： Solidworks：很容易上手，学习周期非常短，通常有一下午的时间就能能够独立操作了，该软件早些年被达索收购。 Catia：非常强大的3D建模软件，目前为达索的核心产品。 UG NX：西门子公司的3D建模软件，功能强大且全面。 SolidEdge：同样归属西门子公司，直接竞争对手为solidworks，建模方式简单，软件对计算机性能要求颇高，低配置计算机可能有点卡顿。 PRO/E：PTC公司的3D建模软件，中规中矩。另外还有一些非主流软件，如Inventor，犀牛等。其实还有不少的CAE前处理软件，也具备比较强大的几何建模功能，如ANSYS Workbench中的DM，SCDM等模块，STAR CCM+的几何创建模块等，这些前处理模块也可以用于创建计算域几何。 计算域几何的特殊之处“流体计算域几何与一般的意义上所说的几何模型并没有什么不同，唯一不同的地方只是你在与，流体计算域表征的是流体流经的区域，因此与实体几何有些差异。还是拿管道来打比方，我们说管道的几何模型包含的特征参数包括管道的内径、外径以及管道长度，这是实体模型，然而如果要计算管道内部流体流动而创建的计算域模型，则可能只需要管道内径及长度这两个参数了，由于流体不能进入管道壁面内，因此管道外径这一参数就不需要了。” 小白总结 计算域是流体计算所考虑的区域，计算域包含时间域和空间域，超出计算域的区域是不被求解器所考虑的。 流体计算域中可能包含有固体区域。 常常采用专业的CAD软件来创建计算域几何模型，有时也用CAE前处理软件来创建。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】19：来自计算网格的困惑]]></title>
+    <url>%2F2016%2F04%2F19%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9119%EF%BC%9A%E6%9D%A5%E8%87%AA%E8%AE%A1%E7%AE%97%E7%BD%91%E6%A0%BC%E7%9A%84%E5%9B%B0%E6%83%91%2F</url>
+    <content type="text"><![CDATA[经过一年的忙碌，终于又到了寒假时间，小白又满状态复活了。这一年小白学了很多的课程，但是一年下来，小白却感觉脑袋里没留下什么东西，貌似什么东西都在考完试的那一刹那全还回给老师了。这一年学习之余，小白仍然坚持着做案例，做大量不同的案例，虽然有一些案例做起来并没有太大的作用，但是至少可以熟练软件操作过程。 最近小白对于网格产生了一些困惑，正巧的是中午在食堂吃饭的时候碰到了小牛师兄，这一学期忙着上课，有一阵子没见着小牛师兄了。“嘿，师兄，好久不见了耶”，小白上去打招呼。“是啊小白，最近忙些啥子呢？”小牛师兄的眼神永远那么犀利的盯着面前的那盘红烧肉。“上课啊，考试啊，整天学这些基础理论也不知道后面用不用得到。唉呀妈呀终于结束了，终于可以安心做点事儿了。”小白很无奈的说。“哈哈，这不是都学完了嘛，以后就会知道有没有用了。对了，最近还在学CFD么？老蓝还等着你接班呢，嘿嘿”。小牛师兄说。“开什么玩笑哦，接班？接谁的班？我还没入门呢，就我学的那点儿假把式，估计还得半年，等研二了再说吧。”小白心里有点发虚。 “不开玩笑了，说真的，到底学怎样了？估计没那么多时间留给你学习了，最近有新的项目来了，急需人手，我建议你跟老蓝商量进组学习吧，这样比较快。”小牛师兄放下筷子说道。“恩，其实软件操作、计算流程都掌握得差不多了，但是总觉得缺点什么，遇到新的问题也还是把握不住。就最近来说吧，就对于计算网格比较困惑，你说在计算的过程中，到底是网格质量重要还是网格数量重要？”小白问道。 “怎么会有这种问题呢，当然都重要啊”，小牛师兄说。“那总有个优先级吧，比如说在为一个新的计算准备模型的时候，我是要优先考虑网格质量还是网格数量？虽然说很多时候网格数量多了网格质量也跟着变好，但是我那破电脑实在无法承受太多的计算网格，稍多一点就死机啊。那网格数量少了，计算结果还有用么？”小白问。 “其实很多时候，人们往往走入一个误区，他们认为网格数量多就意味着计算精度的提高。但其实并非是这样，对于变化梯度小的区域，你网格数量的增加对于计算精度的贡献其实并不明显，反而对于就计算时间的影响是显而易见的。而网格质量，则在很大程度上会影响计算的精度以及计算收敛过程，要知道收敛过程是直接影响计算时间的，我个人的观点，网格质量要比网格数量重要。高质量的计算网格，哪怕网格数量少点儿，但肯定不会影响计算趋势，但如果网格质量很差，则出现错误计算结果的概率可就比较大了。”小牛师兄说。 “嗯，懂了，在保证计算网格质量的基础上，再来根据计算机资源来考虑网格数量，对吧？”小白说。“根骨不错呀，骚年”，小牛师兄笑道。 “那问题又来了，网格数量要到什么程度才算合适呢？比如说我要考虑这食堂的环境质量，要画多少网格才行呢？”小白接着问。“这问题我没法回答你。首先，你没说你拥有的计算资源有多少。用笔记本和用巨型机，所能考虑的计算网格数量是很不一样的。其次，你没说你要考虑哪些问题。因为不同的物理模型和物理细节，对于网格的精密程度要求也是很不一样的。再次，你也没说你的计算时间有多少，一年的时间和一天的时间，所能接受的网格数量肯定有巨大的区别。但是我要说的是，在目前私人拥有的计算资源条件下，计算精度一般是与计算网格数量成正比的。也就是说，网格数量越多，计算精度越高。因此，如果计算时间充足，可以尽可能的提高网格数量。在工程上还有一种称之为”网格独立性“验证的说法，就是为了说明这一问题。”小牛师兄说。 “什么叫网格独立性？”小白很好奇的问。“所谓的网格独立性，只是一个近似的说法，实际的数值计算，绝对不可能做到网格独立的。网格独立性的做法是这样的：做N套不同密度的计算网格，在相同的工况条件下进行计算，考虑相关物理量的变化率。当网格密度达到一定程度后，继续增加网格密度对于计算结果的影响非常小，此时可以认为计算网格数量的增加对于计算结果的影响可以忽略，在后续的计算过程中，采用计算结果不再发生变化位置的计算网格数量作为网格数量基准。其实说白了就是在计算精度与计算时间之间进行一个折中而已。而这里所说的计算结果不再发生变化，也取决于个人的判断，你觉得变化量在1%以内叫不变化，我也可以认为在5%以内叫不变化，自己确定，但是可以肯定的是，计算结果随着网格数量的增加肯定会有变化的。你想，计算结果怎么可能与网格数量无关嘛。”小牛师兄说。 “网格独立性验证要求我们的计算网格疏密对计算结果的影响在可以接受的范围之内，但是如果计算资源充足的话，的确可以再提高网格的数量以增加精度。但要记住的一点是：增加网格数量不一定能提高计算精度，但是高精度的计算结果一定来自于高密度的网格。说起来很拗口，你可以这样思考，影响计算结果精度的因素除了计算网格之外还有很多，比如计算模型，边界条件，初始条件，残差标准等等，因此网格数量的增加不一定就能够提高计算精度，但是如果网格数量过少，肯定得不到精确的计算结果。” “那么问题来了，多少网格叫粗多少网格叫密呢？通常我们并不说某某模型需要多少网格，网格数量通常取决于你拥有的计算资源和时间资源。打个很简单的比方，比如你要设计某个产品，设计周期是一个月，你利用CFD来帮助进行设计，如果你每一个模型的计算时间需要一周，那时间资源肯定不够，你只能使用低密度的网格，每个计算时间在一天之内的网格模型来进行计算。或者你可以换用更高级的计算机，但一定要确保每个模型的计算时间不能超过一天。很简单的道理对不对。” “还有个很容易被忽略的问题，那就是网格的分布。初学者划分的网格常常是均匀分布的，这其实是一种资源浪费。要记住的一点是只有梯度大的区域才需要高密度的网格。在流场计算过程中，只有一些物理量变化剧烈的场合才需要更精细的网格。因此在划分网格之前就需要对流体域内流动特征有一个初略的估计，在物理量梯度大的区域布置更加细密的网格，这是一个很重要的网格划分规则。” 小白的总结 一般情况下，网格质量必须得到保证，否则会影响计算收敛过程，甚至导致错误的计算结果。 在保证网格质量的前提下，根据计算资源来考虑网格数量 网格独立性并非表示数值计算结果与计算网格数量无关，而只是在计算精度与计算网格数量之间的一个折衷 增加网格数量不一定能提高计算精度，但是高精度的计算结果一定来自于高密度的网格 梯度大的区域才需要划分更精细的网格，尺寸均匀的网格不一定是好的网格]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】18：控制方程基础]]></title>
+    <url>%2F2016%2F04%2F18%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9118%EF%BC%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E7%A8%8B%E5%9F%BA%E7%A1%80%2F</url>
+    <content type="text"><![CDATA[忙碌了一个学期终于放暑假了，小白心情很愉快。然而想起CFD教材上的那些点缀着各种让人眼花缭乱符号的数学公式，整个人就不好了。不过这些事情小白也不好意思去麻烦师兄师姐们，还得靠自己去摸索。正好趁着暑假把这些东西整理一下。小白觉得最基础的CFD理论是流动控制方程，除此之外是各种数值算法。所谓的流动控制方程，指的是流体流动过程中所需要遵循的物理规律，最常见的流动控制方程包括质量守恒方程、动量守恒方程与能量守恒方程。针对不同的流动工况，控制方程可能还包括组分守恒方程、湍流方程、状态方程等。然而对于任何流动问题，都必须遵循质量守恒方程和动量守恒方程。在非常多去的参考文献中，质量守恒方程也称之为连续方程，而把动量方程称之为纳维-斯托克斯方程，简称NS方程，CFD的任务即求解NS方程。 1 连续方程（质量守恒方程）连续性方程比较简单。简单来讲，就是流入（流出）系统中的质量要等于系统质量的增加量（减少量）。连续方程更严谨的表述为：[控制体内流体质量变化率] = [穿过控制体表面的流体质量流量]因此有：$$\frac{d}{dt}\int_{v}{\rho dV}=-\int_{s}{\rho \vec{v}\cdot \textbf{n}dS}$$式中，$\textbf{n}$为单位法向矢量。利用高斯散度定理（一个矢量散度的体积分应等于这个体积表面通量的面积分），即：$$-\int_{S}{\rho \vec{v} \cdot \textbf{n}dS}=\frac{d}{dt}\int_{V}{div\rho \vec{v}dV}$$ 则有：$$\frac{d}{dt}\int_{V}\rho dV = \frac{d}{dt}\int_{V}{div\rho \vec{v}dV}$$ 改变形式可得： $$\int_{V}\left[\frac{\partial \rho}{\partial t}+\nabla \cdot (\rho \vec{v})\right]dV = 0$$ 式中，$\nabla \cdot (\rho \vec{v}) \equiv div\rho \vec{v}$。 由于推导过程中对控制体形状未做任何限定，因此意味着$$\frac{\partial \rho}{\partial t}+\nabla \cdot (\rho \vec{v}) = 0$$ 此即流动控制方程的质量守恒方程。可展开为：$$\frac{\partial \rho}{\partial t}+\frac{\partial (\rho u)}{\partial x}+\frac{\partial (\rho v)}{\partial y}+\frac{\partial (\rho w)}{\partial z}=0$$ 对于不可 压缩流体介质，其密度$\rho$为常数，则质量守恒方程可简化为：$$\nabla \cdot \vec{v}=0$$展开即为：$$\frac{\partial u}{\partial x}+\frac{\partial v}{\partial y}+\frac{\partial w}{\partial z}=0$$ 2 随体导数随体导数是流体力学中的概念，与数学上的导数概念有差异。随体导数通常指流体微团岁时间的变化率。随体导数用$\frac{D}{Dt}$来表示。其形式为：$$\frac{D()}{Dt} = \frac{\partial() }{\partial t}+u \frac{\partial() }{\partial x}+v\frac{\partial()}{\partial y}+w\frac{\partial()}{\partial z}$$ 随体导数非常有用。若将单位质量通用变量记为$\phi$，将$\phi$对时间的随体导数记为$D\phi/Dt$，则有：$$\frac{D\phi}{Dt} = \frac{\partial \phi}{\partial t}+u \frac{\partial \phi}{\partial x}+v \frac{\partial \phi}{\partial y}+w\frac{\partial \phi}{\partial z}$$此方程定义了单位质量通用变量$\phi$对时间的变化率。而单位控制体体积内通用变量$\phi$的密度可通过密度$\rho$与$\phi$的随体导数的乘积得到，即$$\rho \frac{D\phi}{Dt} = \rho \frac{\partial \phi}{\partial t}+\rho u \frac{\partial \phi}{\partial x}+\rho v \frac{\partial \phi}{\partial y}+\rho w\frac{\partial \phi}{\partial z}$$此式表示单位控制体内通用变量$\phi$变化率的非守恒形式。 通过质量守恒方程 $$\frac{\partial \rho}{\partial t}+\frac{\partial (\rho u)}{\partial x}+\frac{\partial (\rho v)}{\partial y}+\frac{\partial (\rho w)}{\partial z}=0$$容易猜想通用变量$\phi$的守恒形式的各项可统一表示为：$$\frac{\partial(\rho \phi)}{\partial t}+\frac{\partial(\rho u \phi)}{\partial x}+\frac{\partial (\rho v \phi )}{\partial y}+\frac{\partial (\rho w \phi)}{\partial z}=0$$ 转换形式： $$\frac{\partial(\rho \phi)}{\partial t}+\frac{\partial(\rho u \phi)}{\partial x}+\frac{\partial (\rho v \phi )}{\partial y}+\frac{\partial (\rho w \phi)}{\partial z}=\rho \frac{\partial \phi}{\partial t}+\rho u \frac{\partial \phi}{\partial x}+\rho v \frac{\partial \phi}{\partial y}+\rho w \frac{\partial \phi }{\partial z}+\phi \left[\frac{\partial \phi}{\partial t}+\frac{\partial (\rho u)}{\partial x}+\frac{\partial (\rho v)}{\partial y}+\frac{\partial(\rho w)}{\partial z}\right]$$ 而根据质量守恒定律，有$$\frac{\partial \phi}{\partial t}+\frac{\partial (\rho u)}{\partial x}+\frac{\partial (\rho v)}{\partial y}+\frac{\partial(\rho w)}{\partial z}=0$$ 故可得： $$\frac{\partial(\rho \phi)}{\partial t}+\frac{\partial(\rho u \phi)}{\partial x}+\frac{\partial (\rho v \phi )}{\partial y}+\frac{\partial (\rho w \phi)}{\partial z}=\rho \frac{\partial \phi}{\partial t}+\rho u \frac{\partial \phi}{\partial x}+\rho v \frac{\partial \phi}{\partial y}+\rho w \frac{\partial \phi }{\partial z}=\rho \frac{D\phi}{Dt}$$ 因此单位体积内$\phi$的变化率可表示为$\rho \frac{D\phi}{Dt}$。 3 动量守恒方程应用牛顿第二定律，作用在流体微团上的合力等于流体质量与加速度的乘积，即$$\sum{F_x}=ma_x$$式中，$F_x$和$a_x$分别为$x$方向上的分力与加速度。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】17：需要编程]]></title>
+    <url>%2F2016%2F04%2F17%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9117%EF%BC%9A%E9%9C%80%E8%A6%81%E7%BC%96%E7%A8%8B%2F</url>
+    <content type="text"><![CDATA[小白经过大半个多月对于CFD的学习，终于对其大概轮廓有了初步的了解，尤其是在与小牛师兄交流之后。小牛师兄毕竟是专业学流体力学的，小白认为在流体力学理论方面自己与牛师兄至少存在5年的差距。不过小白并不气馁，照黄师姐的话说，”内功需要自己慢慢积累，武侠电影中的那种灌顶大法是不存在的“。小白认为当前自己的主要任务是把软件FLUENT用熟。 小白在网上找了一些学习FLUENT应用的论坛，也加了一些QQ群，不过他更习惯自己去思考去总结。这天小白被一个QQ群里争论的话题引起了兴趣。这话题是关于CFD软件与计算机编程之间的关系，有人说”只有精通了编程才可能成为CFD高手“，也有人说”CFD只是工具，会不会编程都不重要“，也有中间派说”CFD是工具，但是熟悉编程会更有利于使用这一工具“，众说纷纭吵得不亦乐乎。小白自认学CFD时日尚短，插不上话只好搬凳子围观。 中午在食堂吃饭的时候，小白碰到了小牛师兄，几天没见也不知道小牛师兄最近在忙些啥。“牛师兄，这么巧啊”，小白端着饭碗坐到了牛师兄的对面。“恩，最近在忙些啥呢？”牛师兄问道。“还不是在学CFD软件，照着实例依猫画虎呢，进展很慢啊”小白很无奈的说。“不用急，软件这东西很容易学的，多练几次就有感觉了。”牛师兄安慰道。“嗯，牛师兄，你说我需要学编程么？今天在网上看有人说要学CFD必须精通编程，也不知道是不是真的。”小白将群里的争论说给牛师兄听。“你以前学过编程没有？”牛师兄问小白。“读本科的时候学过C语言，知道基本的语法编过小的练习程序，没有真正用过。”小白据实回答。“那还行。”小牛师兄说。 接下来小牛师兄在饭桌上说起他对于软件和编程之间关系的认识。 目录[toc] #1关于编程人们谈起编程，总是认为这是一个高大上的职业。为什么会觉得高大上呢？无外乎这几个原因： 编程人员（亦称程序猿）拿的薪水很高。如果做的不是高大上的事情，凭什么拿这么高的薪水？ 编程行当门槛比较高，一般人难以进入。 计算机程序能够做很多人脑难以完成的工作，编程者自然就能做很多普通人难以完成的工作 说了那么多，这跟CFD有什么关系呢？CFD离不开计算机，也离不开计算机程序。但是问题在于“使用别人的程序就真的很low么？” 我老家在南方农村，小时候过年的时候家家户户要做年糕，就是那种用糯米蒸熟的饼饼。这玩意儿吃起来好吃，做起来却特别的费劲，这些年基本上都没什么人做了。去年寒假回家的时候突然发现市面上居然有卖，打听之下才发现已经有了做饼饼的机器了，当时还特别去参观了一下，制作流程特别的简单，将米放进料斗，饼饼分分钟就从下料口出来了，特意买了些回去品尝，虽然有人说口感没有手工制作的好，但我却没感觉出来。 实际上诸如此类的例子生活中比比皆是，比如说做饭，以前农村用柴火煮饭，费时费力还一不留神把饭烧焦，现在用电饭锅做饭，省时省力味道也不差。 之所以举这些例子，只是想说明“工具的作用是为了解放我们的双手，工具的特性是在使用工具的过程中不需要考虑工具的原理”，你在用机器做饼饼、用电饭锅烧饭的时候，需要思考饼饼机和电饭锅的工作原理么？ 话说回来，程序的作用是帮助人们完成工作，而不需要在使用程序的过程中思考程序是如何编制的。 #2 关于CFD的工具论 CFD是工具么？不同人群对这一说法可能存在不同的见解。有的人眼中CFD是一套理论，一套关于如何数值求解流体流动控制方程的理论，这些人分布在计算机和数学专业，他们关注算法的实现和效率。而在工程师的眼中，CFD那就是一工具，他们关注的是工程问题，最多就是把工程问题抽象成控制方程，至于这方程如何求解则不必过多的考虑，因为有现成的工具可以做这一工作。 应当给予工具足够的信任。要使用工具而又不信任工具是一件很痛苦的事情。 分清到底是人的问题还是工具的问题。很多人事情没做好往往不从自己身上找原因，利用CFD软件也一样，算出来的结果不好通常都认为是软件功能的缺陷，你要是问他有什么证据他又说不出来。在很多时候，计算结果不好往往是我们没有将工具使用好，而不是工具本身的问题。 #3 CFD编程到底有用没？肯定是有用的。毋庸置疑任何技能都是有用的。其实问题不在于编程有没有用，而在于学习编程的时间成本对于CFD技能的提升是否划算？对于将CFD当做工具的人群来说，其实只需要掌握少量的编程知识即可完成绝大多数工作了。编程在此体现为CFD工具软件的二次开发上，而不是要我们从头到尾的将CFD程序写出来。 这些CFD工具的功能扩展通常采用用户编程来实现，不同的软件采用的程序语言有较大差异。比如说FLUENT利用的C语言，CFX利用的是Fortran，STAR CCM+利用JAVA和Fortran，还有一些软件利用脚本语言，如Python，TCL/TK、Lisp等等。其实在工作中软件功能扩展工作进行得并不是特别多，更多的是做一个功能封装，这可能是利用高级语言写一个GUI再配合软件脚本来实现，其实很简单。 #4 利用编程来学习CFD利用编程来学习CFD？当然是很好的做法，但是可能要消耗大量的时间，恐怕只有学生党才玩得起。企业人员哪里有这功夫玩这个哟。不过也不排除工程上用一些开源CFD求解器，逼迫研发人员去学习这些求解器的内核源代码，这可是个苦逼的工作，时间成本也很高。就好比说士兵为了提高射击精度而花费大量时间研究枪炮原理一样。 #5 我需要学习编程么这取决于几点因素： 关注CFD算法更胜于利用CFD解决工程问题 对编程有强烈的兴趣。没有兴趣的话可能会半途而废 有大量的空余时间。计算机语言的学习需要花费大量的时间 #6 学什么语言如果真要学的话，有几个语言可以推荐： C语言。学习C语言绝对不会吃亏，这玩意儿用途太广泛了（数值计算、操作系统等），长期雄霸TOBIE编程语言排行榜前三 Python语言。最近很火的动态语言，好多的CAE软件都转而支持此语言做二次开发了。 JAVA语言。这个也可以学一学。 7 总结 先搞清楚自己感兴趣的是CFD的哪个方面再来决定是否要学习编程 学习编程对于CFD来讲是锦上添花，懂一些有好处，但不懂也可以用好CFD 有大把时间的学生党可以学一门编程语言]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】16：流程]]></title>
+    <url>%2F2016%2F04%2F16%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9116%EF%BC%9A%E6%B5%81%E7%A8%8B%2F</url>
+    <content type="text"><![CDATA[那天听了小牛师兄关于CFD应用的四种境界的说法后，小白发现自己连第一种境界都算不上，自己对于CFD还只是停留在做了少数几个案例的基础上，可以说是对其一无所知。不过小白不是那种遇到挫折就退缩的人，他决定沿着黄师姐的方法从软件入手继续学下去。在认真的做完了敲门实例后，小白又认真的做了几个FLUENT实例文档中的案例，虽然说案例都比较简单，但是小白还是在黄师姐的提示下对这些案例的共同点进行了总结，从而了解CFD解决实际问题的基本流程。[toc] #1 明确计算目的 从现实世界中提出要解决的问题非常重要。提出的问题必须是清晰具体的。比如说，要研究飞机的飞行，我们提出的问题不能是“飞机为什么会飞？”，这问题太大而且不方便进一步考虑，如果问题是“这飞机飞行时的升力和阻力多大？”则具体得多，也更方便进行下一步的研究工作。 准确地提出计算目的需要良好的理论背景作支撑。准确地抓住物理现象背后的力学模型，找到流体问题求解的目标，是利用CFD工程应用的基础。 在这一步工作中需要对问题进行简化，保留重要特征忽略一些不重要的细节，如计算传热问题时，当温差不很大时，可以忽略热辐射。 在这一步，需要明确的问题包括： 要算什么？有哪些物理量可以用来描述计算目标？ 这些物理量是否可以直接计算获取？若不能直接获取，是否可以用间接物理量进行替代？ 当物理模型过于复杂时，是否可以进行一些简化，忽略一些不重要的特征？ CFD是否适合解决此问题？ #2 抽象模型 找到问题求解的目标之后，下一步的工作是建立力学模型，将物理现象以数学语言进行描述。利用流体力学理论建立适合自己问题的控制方程。建立控制方程，包括： 模型理论基础。基于哪些物理基础，进行了哪些假设，都需要明确。 确定模型的边界条件及初始条件。对于建立的流体模型，通常都是一些偏微分方程，这些方程的求解必须配合边界条件与初始条件。 #3 计算规划 确定了计算目标并建立了力学模型之后，下一步的工作就要开始规划如何进行计算了。流体力学模型通常是非线性的偏微分方程，绝大多数都无法进行解析求解，通常采用数值方法进行求解。利用数值方法求解这些方程可采用手动编制程序，也可以采用已有的一些软件包，至于采用何种方式，取决于当前的研究条件和时间周期要求。 编制程序计算灵活性更高，可以应用最新的研究成果和算法，可能获得更精确的计算结果。但是从头编制程序需要耗费大量的人力物力和时间，在工程上很难满足产品研发的周期要求，因此手动编制程序计算多见于研究机构。工程产品研发多用成品软件包来进行，CFD商用软件包大多很贵，但是具有良好的人机界面而且经过严格的软件测试，具有良好的鲁棒性，可靠性能够得到保障。利用开源软件包开源节省一大笔软件购买费用，然而开源软件的人机界面通常不如商用软件做得好，软件不一定经过了严格的测试，特别是自己定制的程序。但是开源软件的程序代码是公开的，开源根据实际需要进行修改。 #4 创建计算模型在确定计算方式之后，若选用计算软件进行计算，则下一步工作为创建计算模型。计算模型包括两部分：几何模型及网格模型。几何模型可以采用常用的CAD软件创建，在创建几何模型时，对于模型中的一些细节特征，需要仔细的考量，尽可能的忽略一些不重要的特征，这有助于减少网格数量从而减小计算开销。将几何模型进行网格划分后形成网格模型。网格模型不一定要完全贴合几何模型，但是对于计算过程中一些重要的特征，则需要尽可能的特近真实几何。流体计算网格通常需要沿着流线方向划分，在流动梯度大的区域需要加密网格。一般需要做多套网格进行计算，以评估网格疏密对计算结果的影响。 #5 确定物理模型其实在第一步和第二步中已经涉及到了物理模型，这里说的物理模型指的是在CFD程序中添加的物理模型。对于不同的物理模型，需要设置相应的模型参数，这些模型参数有些依赖于理论，有些则依赖于实验。 #6 边界条件及初始条件边界条件和初始条件直接影响计算结果，确保输入真实的边界条件。对于瞬态计算，还要求输入真实的初始条件。虽然稳态计算不依赖于初始条件，但是输入相对真实的初始值有助于帮助收敛。真实的边界条件和初始条件通常都需要通过实验测定获取。 #7 计算结果评估在初步计算后，通常需要通过对比实验结果进行模型标定。在这一过程中，往往包括网格独立性验证、时间独立性验证以及数值控制参数调整等。通常需要准备多套网格，进行多组计算，比较计算结果与实验值来获取计算结果与网格、时间步长等的敏感性，从而选择最合适的网格粒度以及时间步长。 #8 计算后处理分析计算结果，获取有用的数据。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】15：四种境界]]></title>
+    <url>%2F2016%2F04%2F15%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9115%EF%BC%9A%E5%9B%9B%E7%A7%8D%E5%A2%83%E7%95%8C%2F</url>
+    <content type="text"><![CDATA[天气不错，小白一大早就起床了，吃过早餐就往奔实验室而去。路上碰到了同去实验室的小牛师兄。 “小白，这么早啊”，小牛师兄老远就发现了小白，打招呼道。“早啊，牛师兄，刚吃完饭呢”，小白说。“对了，牛师兄，你觉得CFD怎样才算学好了呢？”，小白问道。“按我个人的观点，可以把一个人的能力划分为四个阶段：无意识无能力、有意识无能力、有意识我能力及无意识有能力，怎么说呢，我给你说几个真实案例吧”，于是牛师兄就给小白举了几个例子。 牛师兄的案例 ###1无意识无能力张同学是我的硕士同学，是一个非常好学的孩子，对于新事物的接受能力非常的强。研一上学期他迷上了CFD。张同学在图书馆找了几本关于CFD软件应用的书，照猫画虎做了其中的几个简单的案例，没有也无法对软件及案例背后所涉及的基础理论有所了解。 然而张同学并未意识到自己的欠缺，在同学面前俨然以CFD专家自居。“湍流计算？很简单啊，在软件里头勾选湍流模型就好了”，“多相流计算？不难，只是比单相流多添加 几种材料而已”，“燃烧计算？看起来很难实际上很简单啊，添加化学反应就是了”，诸如此类的话题经常出自张同学的口中。在他的心目中，所谓的CFD就是利用软件来解决流动问题，仅此而已。 张同学只是接触了CFD很少的一点皮毛就自认为已掌握全部，完全没意识到自己的问题所在，不清楚自己的欠缺也没有意识地去弥补自己的欠缺，对软件的运作机理一无所知而盲目的依赖软件，更悲剧的是，张同学没有意识到他可以学到更多就停止了学习，他认为自己在CFD领域已经无所不能了。 他是典型的无意识无能力。 ###2有意识无能力 李同学是我在网上认识的一个朋友，他在一家生产流体机械的工厂中从事离心水泵的研发。李同学拥有良好的流体力学背景，在大学时学过流体力学和传热学，学过流体机械，但是他深知自己所学的理论知识还不足以支撑他的工作，因为他对目前广泛使用的计算流体力学方法知之甚少，还有很多的东西需要学习。 因此，李同学在网络上搜索计算流体力学所涉及的理论，也买了一些相关的学习资料，在熟悉了软件操作之后，又回到最基本的流体力学及计算流体力学基础学习上来，从软件背后的理论入手，学习软件背后的工作原理，努力掌握软件的运行机理，并尝试修改各种计算参数，分析参数修改后对计算结果的影响。李同学还经常光顾各种学习论坛，他将自己的问题以相对专业的方式写出来放到论坛上，并以初学者的心态寻求帮助，并对回应者表示感谢。 李同学处于CFD学习的第二阶段：有意识的无能力。 ###3有意识的有能力 小王是一家流体机械研发机构的研究人员，他出自某名牌大学流体力学博士专业，在学校期间从事了大量流体力学理论研究，偶尔也做一些基础实验以验证自己的理论，但是小王始终觉得自己很难将自己所学的知识应用到工程设计中去。小王在学校没有接触过CFD，也没有用过任何CFD软件，但是当前所从事的工作无时不刻不是与CFD打交道，小王很苦恼，他决定学习CFD。 小王只用了三天时间就熟悉了主流CFD软件的使用，大学期间系统性的流体力学知识给了他极大的帮助，他在补充了一些有限体积法理论后就已经熟悉了CFD软件背后的工作机理，对于CFD前处理和后处理，他都能很顺利的掌握。用了不到一个月时间，他就已经能够利用CFD软件配合流体力学理论来进行日常的研发工作了。 小王不再满足商用的CFD软件，因为他发现一些特殊的功能利用商用软件无法实现，而商用软件的程序代码又无法改变，使用者只能无奈的等待商用软件的版本更新。小王发现目前有一些源代码公开的CFD软件很不错，能够很容易的将一些新的算法集成进去，很容易添加一些新的特性以满足工作需要，小王迷上了开源CFD软件。 开源CFD软件的开发并不是那么简单，其求解器开发涉及到深厚的理论背景，不过这难不倒小王，良好的数学功底令他学习计算流体力学理论如虎添翼，深厚的流体力学理论背景使他更容易理解求解器开发的目的和目标。小王不厌其烦的调试他的程序，虽然会遇到很多意想不到的问题，但是小王坚信这条路走下去是没错的。 小王 正走在成为一个优秀的专家的路上，但他不会给自己加上这个称号，他愿意去等。阿德是有意识的有能力。 ###4无意识的 有能力 这是CFD水平的终极阶段。 它不仅仅是知识积累的结果，更是一系列的逻辑规则在数年里慢慢的刻印到一个人的脑海里的结果。 我们面对这样的一个人时不得不由衷的佩服他对如此复杂的问题能更如此轻松的应对。 这种CFD使用者看起来就像是能够嗅出问题的解决方案，而不是思考出的。 流体现象数学抽象、物理建模、CFD软件应用及软件开发、应用CFD解决工程中的问题， 这些会自动的在他的工作中体现出来。 这种人能够轻松的使用合适的CFD工具解决流体问题。 — ###郑重申明 - 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 - 转载请务必保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】14：实例反思]]></title>
+    <url>%2F2016%2F04%2F14%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9114%EF%BC%9A%E5%AE%9E%E4%BE%8B%E5%8F%8D%E6%80%9D%2F</url>
+    <content type="text"><![CDATA[小白将敲门实例认真做了三遍，终于可以脱离文档直接将实例从头到尾的完成了。不过在做实例的过程中，小白 还是发现了不少的问题。 这些问题包括： 实例是从导入网格文件开始的，这网格是什么鬼？ 在Models节点中选择了Energe及Viscous模型，但是模型列表框中包含有很多种模型，在其他的问题中，到底应该选用何种模型？ 案例中有很多节点没有进行任何设置，如Dynamics Mesh节点，那么什么时候该启用这些节点？ 在Solution Methods设置面板中存在众多的离散方法，这些离散方法是什么鬼？在实际工程中该如何选择？ 在进行计算之前，实例中进行了初始化，这初始化是什么鬼？有什么作用？ 计算后处理中包含了众多菜单选项，应该怎么选择？ 敲门案例做完了么？后面还有没有需要补充的内容？怎样才算完？ 怎么去评价计算结果？如何知道算得对不对呢？ 带着这些问题，小白又找到了黄师姐，但是不巧黄师姐有点事儿要出门，于是让小白找小牛师兄。小牛师兄是一个很严肃的人，带着厚厚的眼镜坐在实验室靠窗的办公桌上，小白找到他时他正在草稿纸上埋首写着什么。“牛师兄，早啊“，小牛打招呼道。“嗯早，小白啊，找我有事么？”小牛师兄停下手中的事情，问小白。小白将他的疑问说给小牛师兄听。小牛师兄听完后笑了。 “不错不错，做完案例后能有这些疑问很难得。等你把这些疑问都搞明白了，CFD也基本上算入门了”。小牛师兄的话声音很轻但很令人信服。“你的这些疑问几乎是所有初学者的疑问，详细来讲今天时间不够，我们还是大概的聊一聊吧”，小牛师兄继续说。 [toc] 1 关于网格网格是个什么东西呢？为啥子需要网格？简单来讲，网格实现了将一个大问题化解为多个小问题，将连续的问题化解为离散的问题 NS方程流体的运动过程很复杂，通常我们基于守恒方程来建立力学模型，如常用的基于质量守恒、动量守恒的N-S方程，这些方程都是复杂的偏微分方程。 连续方程（质量守恒方程）$$\frac{\partial \rho}{\partial t}+div(\rho \vec{v})=0$$动量方程（动量守恒方程）：$$\frac{\partial (\rho u)}{\partial t}+div(\rho u \vec{u}) = - \frac{\partial p}{\partial x}+div(\mu grad u)+S_{mx}$$$$\frac{\partial (\rho v)}{\partial t}+div(\rho v\vec{u}) = - \frac{\partial p}{\partial y}+div(\mu grad v)+S_{my}$$$$\frac{\partial (\rho w)}{\partial t}+div(\rho w\vec{u}) = - \frac{\partial p}{\partial z}+div(\mu grad w)+S_{mz}$$ 可写成统一形式：$$\frac{\partial (\rho \phi)}{\partial t}+div(\rho \phi \vec{u}) = div(\Gamma grad \phi)+S_{\phi}$$ 如此复杂的方程，难以直接求得数学上的解，工程上常用数值方法进行求解。数值怎么求解呢？一种基本的思想是将无限连续的计算空间分解为有限离散的计算区域，这些小的区域称之为网格。有了网格后，就可以在网格基础上应用控制方程，利用一些离散方法将偏微分方程转化为代数方程，通过求解代数方程可以获取所有网格上的物理量分布。 2 没设置的节点Fluent是一个通用软件包，为了适应大多数的问题求解，因而在设计时考虑了大部分流体问题求解所需要进行的设置，因此在案例设置的过程中，存在很多不需要进行设置的节点。那么该怎么知道哪些节点需要设置哪些节点不需要设置呢？归根结底还是跟使用者对自己问题所涉及的物理背景了解程度，以及想要考虑物理模型的精细程度。 3离散方法所谓的离散方法，指的是将微分方程转化为代数方程所采用的方法，这些方法在后面学习有限体积法的时候会接触到。 4 初始化之所以会存在初始化，是因为计算采用的是迭代法求解。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】13：敲门实例【续3】]]></title>
+    <url>%2F2016%2F04%2F13%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9113%EF%BC%9A%E6%95%B2%E9%97%A8%E5%AE%9E%E4%BE%8B%E3%80%90%E7%BB%AD3%E3%80%91%2F</url>
+    <content type="text"><![CDATA[接上文【小白的CFD之旅】12 敲门实例【续2】[toc] #4 Results计算后处理。 ##4.1 计算监测图形 残差曲线计算监测得到的残差曲线如下图所示。 图中残差曲线显示计算在迭代120步左右达到收敛，表现为残差曲线降低至设置的残差标准以下，默认残差标准为$10^{-3}$ 入口压力监测图两个入口压力监测图如下图所示。 （图1） （图2）从这两幅压力监测图看出计算结果基本达到稳定，压力值随迭代变化很小。 出口温度标准差变化图监测得到的出口温度标准差曲线图如下图所示。 温度标准差反映了温度混合的均匀程度，该值越大表示温度分布越不均匀。图中最终的温度标准差约为0.2。 ##4.2 Graphics模型树节点Graphics下包含了Mesh、Contours、Vectors、Pathlines以及Particle Tracks，如图所示。在Graphics参数设置面板中还包含了Animations操作以及一些图形显示参数设置按钮，如灯光、视图等。 Mesh：显示网格图 Contours：显示云图 Vectors：显示矢量图 Pathlines：显示流线图 Particle Tracks：显示粒子追踪图 本案例主要利用Contours及Vectors显示云图及矢量图。 ###4.2.1 壁面温度分布查看壁面温度云图显示。鼠标双击Graphics列表框中的Contours列表项，在弹出的对话框中进行如下图所示设置： 勾选激活Filled选项 在Contours of下拉框中选择Temperature及Static Temperature 在Surfaces列表项中选择wall-fluid 点击按钮Display 壁面上的温度云图显示如下图所示。 ###4.2.2 创建截面创建截面后可以显示截面上的物理量分布。这里创建x截面。 利用Ribbon界面中的Postprocessing标签页 选择Create按钮下的Iso-Surface…功能菜单如下图所示。 在弹出的对话框中进行如图所示设置： 选择Surface of Constant为Mesh及X-Coordinate 设置Iso-Value为0 设置New Surface Name为x-0 点击Create按钮创建截面 ###4.2.3 显示截面物理量回到Contours设置面板， 设置Contours of为Velocity及Velocity Magnitude 选择Surface为x-0 点击按钮Display 显示速度云图如下图所示。 设置Contours of为Temperature及Static Temperature，点击Display按钮。 显示温度云图如下图所示。 ###4.2.4 Pathline显示可以利用Pathline显示流线。选择Graphics列表中的Pathlines选项，弹出如下图所示对话框。 显示的流线图如下图所示。 ##4.3 Plots模型树节点Plots可以输出一系列图形，如曲线图、直方图等。 列表项： XY Plot：以XY曲线图显示变量的变化规律 Histogram：以直方图形式显示数据 File：以图形形式显示文件中的数据 Profile：图形化显示配置文件 FFT：对文件指定的数据进行快速傅里叶变换，将时域数据转化为频域数据。 可以先创建line，再利用XYPlot显示线上物理量分布。利用Postprocessing下的工具按钮Create，选择菜单项Line/Rake…，如下图所示。 弹出如下图所示对话框： 设置Type为Line 设置End Point分布为**（0，-0.3556，0）及（0,0.3556,0） 设置New Surface Name为line-center 双击模型树节点XY Plot，弹出如下图所示对话框，进行如下设置： 设置Plot Direction为**（0,1,0） 设置Y Axis Function为Velocity及Velocity Magnitude 选择Surface列表项line-center 点击按钮Plot 显示沿直线line-center上速度分布曲线如下图所示。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】12：敲门实例【续2】]]></title>
+    <url>%2F2016%2F04%2F12%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9112%EF%BC%9A%E6%95%B2%E9%97%A8%E5%AE%9E%E4%BE%8B%E3%80%90%E7%BB%AD2%E3%80%91%2F</url>
+    <content type="text"><![CDATA[接上文【小白的CFD之旅】敲门实例【续】 主要内容 [toc] #3 Solution ##3.1 Solution Methods模型树节点Solution Methods主要设置模型的离散算法。如图所示。 设置面板中包含的元素： Pressure-Velocity Couping：压力-速度耦合算法选择 Spatial Discretization：空间离散算法设置 Gradient：设置梯度项离散算法 Pressure：设置压力项离散算法 Momentum：设置动量方程离散方法 Turbulent Kinetic Energy：设置湍动能离散方法 Turbulent Dissipation Rate：设置湍流耗散率离散方法 Energy：设置能量方程离散方法 Transient Formulation：设置瞬态项格式（仅用于瞬态计算） Non-Iterative Time Advancement：无迭代时间推进算法（仅用于瞬态计算） Pseudo Transient ：伪瞬态算法 Warped-Face Gradient Correction：17.0版本新增功能，用于提高低质量网格计算精度 High Order Term Relaxation：高阶项松弛 对于本案例，设置Pressure-Velocity Coupling为Coupled，激活 Pseudo Transient及 Warped-Face Gradient Correction，如上图所示。 3.2 Solution Controls模型树节点Solution Controls主要用于设置求解控制参数，如亚松弛因子，用于控制收敛过程。如图所示。 图中参数说明： Relaxation Factors：设置各求解参数的亚松弛因子。根据前面选择的求解算法，亚松弛项目也有差异。 Equations…：设置求解的方程 Limits…：设置一些物理量的限制值 Adanced…：设置一些高级控制项 注意：FLUENT会根据前面的模型设置参数给出一些优化的求解控制参数，因此在实际工程中很少调整这些控制参数。对于新手来讲，默认控制参数即可。本例采用默认参数。 3.3 Monitors利用模型树节点Monitors可以在计算过程中监测一些物理量的变化。本例设置监测两个入口压力值及出口温度标准差。Monitors设置面板如下图所示。 设置面板中的一些参数： Residuals,Statistic and Force Monitors：监测残差、统计值以及各种力 Surface Monitors：监测面上的各种参数值 Volume Monitors：监测体上的各种参数值 Covergence Monitors：收敛监测，通过前面的监测参数来判断计算是否收敛 本例中监测三个面参数，利用Surface Monitors下方的Create按钮进行创建。鼠标选择此按钮后，如下图所示。 定义三个Monitors，步骤包括： 点击Surface Monitors下的Create…按钮 Name：设置为p-inlet-y Plot Windws：设置为2 Report Type：设置为Area-Weighted Average Field Variable：设置为Pressure及Static Pressure Surface：选择inlet-y 点击Surface Monitors下的Create…按钮 Name：设置为p-inlet-z Plot Windws：设置为3 Report Type：设置为Area-Weighted Average Field Variable：设置为Pressure及Static Pressure Surface：选择inlet-z 点击Surface Monitors下的Create…按钮 Name：设置为t-dev-outlet Plot Windws：设置为4 Report Type：设置为Standard Deviation Field Variable：设置为Temperature及Static Temperature Surface：选择outlet 3.4 Report Definitions模型树节点Report Definitions用于定义报告的输出，本案例不进行此定义。 3.5 Report Files无需设置 3.6 Report Plots无需设置 3.7 Solution Initialization利用模型树节点Solution Initialization可对计算域进行初始化。FLUENT提供了两种初始化方法： Hybird Initialization：通过各种不同的插值方式获得计算域中的初始值。如利用求解拉普拉斯方程的方式获取初始速度场与压力场 Standard Initialization：直接定义各未知物理量的初始值 本案例采用Hybird Initialization方式进行初始化，如上图所示，选择Initialize按钮进行初始化。此时在图形窗口中可能会出现如下图所示的警告信息，不过这仅仅只是提示拉普拉斯方程没有收敛，大可以忽略。 对于稳态计算，初始值不会影响最终计算结果，但是会影响收敛过程，严重偏离实际的初始值可能会导致计算收敛缓慢甚至发散。对于瞬态计算，初始值会影响到后续的计算结果。 3.8 Calculatin Activities模型树节点Calculation Activities节点主要用于设置计算过程中自动刚保存、运行命令及保存动画。本案例无需设置此节点。 3.9 Run Calculation选择模型树节点Run Calculation，如图所示。 设置Number of Iterations为350，点击按钮Calculate进行迭代计算。 注：由于案例较长，因此将其拆散为多篇]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】11：敲门实例【续】]]></title>
+    <url>%2F2016%2F04%2F11%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9111%EF%BC%9A%E6%95%B2%E9%97%A8%E5%AE%9E%E4%BE%8B%E3%80%90%E7%BB%AD%E3%80%91%2F</url>
+    <content type="text"><![CDATA[主要内容： 接上文【小白的CFD之旅】10 敲门实例 [toc] ##2.4 Materials设置利用模型树节点Materials设置计算域中的介质属性。 如图所示，在创建任何材料之前，FLUENT已经默认添加了两种材料：流体材料为Air，固体材料为aluminum。本案例使用的介质材料为液态水，可以通过点击按钮Create/Edit…来实现。点击此按钮后： 在弹出的Create/Edit Materials对话框中选择Fluent Database…按钮 在弹出的对话框中，选择Fluent Fluid Materials列表框中的材料介质water-liquid(h2o) 点击copy按钮选择材料 若要修改材料属性（如密度、粘度、比热、热传导系数等），可直接在参数设置框中修改。本案例采用Fluent材料库中的液态水，不进行材料修改。 ##2.5 Cell Zone Conditions 在此模型树节点中可以设置计算域属性，如计算域介质、计算域运动等。如图所示。 图中按钮元素： Zone列表：列出网格中所包含的计算区域。有些计算模型中包含多个计算区域 Phase：当使用了多相流模型时，此选项能被激活，可以针对不同的相设置参数。本例为单相流，故该下拉框为不可用状态。 Type：设置计算域类型，包含Fluid、Solid两种类型 ID：显示选中的列表项中的区域ID，此ID编号在在UDF编程时有用 Edit…：设置区域属性 Copy：拷贝区域参数至其他区域 Profiles：profile管理窗口 Parameters：参数管理窗口 Display Mesh：显示网格 Operation Conditons…：设置操作条件 Porous Formulation：当设置区域为多孔介质区域时，此选项被激活。 选择Edit…按钮打开区域设置对话框，如图所示。 设置Material Name为water-liquid。 点击OK按钮确认操作 ##2.6 Boundary Conditons在模型树节点Boundary Conditions中可以设置计算模型的边界条件。如图所示。 界面元素与Cell Zone Conditions设置面板类似。设置边界条件： inlet-y边界设置 在Zone列表框中选择边界inlet-y，选择Type下拉框选项Velocity-inlet，鼠标点击面板按钮Edit… 弹出参数设置对话框，如图所示。在Momentum标签页下，设置Velocity Manitude参数值为0.3； 选择Specification Method为Intensity and Hydraulic Diameter，设置Tubulent Intensity为5，设置Hydraulic Diameter为0.15。 切换至Thermal面板，设置Temperature为15，如图所示。 inlet-z边界设置 与inlet-y设置相类似，所不同的是 设置Velocity Manitude参数值为0.1； 设置Hydraulic Diameter为0.15； 设置Temperature为25 outlet边界设置 选择Type下拉框选项pressure-outlet，点击Edit…按钮 在弹出的对话框Momentum标签页下，设置Gauge Pressure为0，设置Specification Method为Intensity and Hydraulic Diameter，设置Backflow Turbulent Intensity为5，设置Backflow Hydraulic Diameter为0.15 切换至Thermal面板，设置Temperature为20。 ##2.7 Dynamic Mesh本案例不涉及动网格，因此不需要进行任何设置 ##2.8 Reference Values参考值设置用于后处理中各种系数计算，本案例不涉及系数计算，因此可不设置此节点。 注：由于案例较长，因此将其拆散为多篇]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】10：敲门实例]]></title>
+    <url>%2F2016%2F04%2F10%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9110%EF%BC%9A%E6%95%B2%E9%97%A8%E5%AE%9E%E4%BE%8B%2F</url>
+    <content type="text"><![CDATA[按黄师姐的说法，做好第一个案例很重要。 第一个案例既可以帮助理解CFD的工作流程，还可以帮助熟悉软件的操作界面。黄师姐推荐的入门案例来自于ANSYS官方提供的培训教程，是一个关于交叉管内流动混合的案例，涉及到流动及传热。[toc] #1.问题描述两个异径管道相交，分别流入不同温度的介质，利用FLUENT求解介质混合后的状态。 #2.案例目的案例包含了利用FLUENT进行仿真计算的基本步骤。通过本案例可以学习的内容包括： 读入计算网格 选择并设置流体介质属性 定义计算边界条件 设置计算监测 进行仿真计算 计算后处理 #2.FLUENT设置 ##2.1 导入网格案例中并没有包括几何模型创建及网格划分过程，因此案例从网格导入开始。 启动FLUENT，启动面板中进行如图所示设置。 Dimension：选择3D Working Directory：选择设置案例工作路径 Fluent启动后，导入网格文件 利用菜单File|Read|Mesh…，在弹出的文件选择对话框中选择网格文件Mixing_tee.msh，选择OK按钮确认选择 ##2.2 General设置选择模型树节点General后，在其右侧会显示出General节点的设置面板，如图所示。 图中包含的按钮及选项： Scale：缩放网格尺寸 Check：检查网格 Report Quality：报告网格质量 Diaplay：显示网格 Type Pressure-Based：采用压力基求解器 Density-Based：采用密度基求解器 Velocity Formulation Absolute：绝对速度 Relative：相对速度 Time Steady：采用稳态计算 Transient：采用瞬态计算 Gravity：设置重力加速度 Units：设置单位 1.Display 导入网格后网格并不直接显示在图形窗口中，此时可通过树形节点General中的设置面板中Dispaly按钮显示计算网格 2.模型Scale选择模型树节点General，之后选择参数面板中的Scale…按钮，在弹出的对话框中检查计算域尺寸。如图所示。 查看图中的Domain Extents，观察计算域尺寸与要模拟的计算空间尺寸是否吻合，若不吻合的话，需要通过设置缩放因子对网格进行缩放。 3.Check网格点击Check按钮，软件自动检查网格并在文本窗口中显示网格信息，包含计算域尺寸、网格体积统计、网格面统计等。如图所示。 比较重要的参数为minimum Volume，确保该参数值为正值。建议在读入网格之后及网格缩放之后进行网格检查工作 4.Report Quality点击此按钮输出网格质量信息。如图所示。根据网格形状的不同，FLUENT输出的网格质量评价指标也不相同。对于本案例，FLUENT输出了三个参数： Minimum Orthogonal Quality：最小正交质量 Max Ortho Skew：最大正交歪斜率 Maximum Aspect Ratio：最大长宽比 最小正交质量值范围为0~1，最差为0，最好为1，一般情况下要求网格最小正交质量大于0.2；最大歪斜率取值0~1，越小越好。 5.采用Pressure-Based求解器 6.使用Absolute速度格式 7.采用Steady稳态计算 8.设置Units默认温度单位为K，这里为方便起见设置温度单位为℃。选择按钮Units..打开单位设置面板。如图所示，选择Quantities列表项temperature，在右侧列表框中选择单位为c。完毕后点击Close关闭对话框。 不管使用何种单位，FLUENT在求解时始终使用国际单位制，这里设置单位只是为了前处理设置方便。 ##2.3 Models设置 模型树节点Models用于选择并设置计算过程中所涉及的物理模型。如图所示。 FLUENT提供的计算模型包括： Multiphase：多相流模型，用于模拟多相流现象。 Energy：能量模型。当计算涉及到传热时需要激活能量模型。 Viscous：粘性模型。如考虑湍流时需要在粘性模型中进行设置 Radiation：辐射模型。当计算域中存在大的温差需要考虑辐射效应时需要激活此模型 Heat Exchanger：热交换器。在计算域中构造换热器模型 Species：组分模型。当需要模拟组分扩散或化学反应时需要设置此模型 Discrete Phase：离散相模型。模拟计算域中的稀薄颗粒运动轨迹 Solidification &amp; Melting：凝固融化模型，模拟材料固液相变 Acoustics：气动声学计算 Eulerian Wall Film：欧拉液膜模型 Electric Potential：电势模型 本案例中涉及到传热及湍流，因此需要激活Energy及Viscous模型。 Energy模型设置Energy模型不需要设置任何参数，只需要激活即可。 Viscous模型设置激活Viscous后，选择k-epsilon模型，在子模型选项中选择Realizable，如图所示。 注：由于案例较长，因此将其拆散为多篇 #郑重申明 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 转载请务必保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】09：初识FLUENT]]></title>
+    <url>%2F2016%2F04%2F09%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9109%EF%BC%9A%E5%88%9D%E8%AF%86FLUENT%2F</url>
+    <content type="text"><![CDATA[按黄师姐的推荐，小白回头查找起 FLUENT的资料来。通过网络及图书馆查找相关资料，小白对于FLUENT有了基本的认识。 FLUENT是一个CFD软件包，目前隶属于ANSYS公司 目前FLUENT的最新版本为Fluent17.0，包括在ANSYS安装包内 FLUENT软件是ANSYS公司2005年收购于FLUENT公司，FLUENT公司开发的的最终版本为6.3，ANSYS收购后的第一个FLUENT版本为FLUENT12.0 FLUENT软件是市场占有率最高的通用CFD软件 FLUENT软件可以在ANSYS Workbench中启动，也可以以独立软件包形式启动。在Workbench中启动时，可以利用Mesh、ICEM CFD等模块生成计算网格。 FLUENT软件包含Meshing模式及Solution模式。其Meshing模式为其老东家FLUENT公司的TGrid软件，后来与FLUENT同时被ANSYS收购。[toc] ###1 软件安装 FLUENT的安装非常容易。由于其隶属于ANSYS软件包，因此需要通过ANSYS安装包安装，在安装过程中选择FLUENT。关于ANSYS的安装，可参考： ANSYS安装 。 ###2 软件界面 FLUENT安装完毕后，可以通过在ANSYS Workbench中选择FLUENT模块启动，也可以通过开始菜单直接启动FLUENT。 ####2.1 FLUENT17.0的工作界面 界面元素： 1.选择模型维度，FLUENT可以计算二维模型和3维模型 2.显示选项。 Display Mesh After Reading 激活此项则导入网格后显示网格，否则不直接显示； Workbench Color Scheme 激活此项采用蓝色渐变背景图像窗口，否则采用黑色背景的FLUENT经典图形窗口。 3.求解器选项。 Double Precision 为双精度求解器，若不激活此项则采用单精度求解器； Meshing Mode 为Meshing模式，若不选择此项则采用SolutIon模式 4.并行设置。 Serial 为采用串行计算； Parallel 为并行计算设置，激活此项后可以进行并行设置 5.版本选择。若计算机中安装了多个FLUENT版本，在此可以进行选择。 6.激活此项则只利用FLUENT进行前后处理，不启用求解器功能。 7.设置工作路径。 8.设置FLUENT应用程序路径。 此选项一般不要改动 9.激活此项记录Journal脚本文件，否则不记录。 ####2. 2 工作界面 FLUENT的工作界面如图所示。 图中元素： 1.Ribbon菜单。17.0添加的新工具菜单。 2.树形菜单。树形节点从上至下以CFD工作流程设计。 3.设置面板。左侧树形节点对应的参数设置面板 4.图形显示窗口。 5.文本命令及消息输出窗口 ####2. 3模型树菜单 FLUENT主要工作界面为树形菜单，如图所示。 模型树节点包括： Setup ：前处理设置 general ：一般设置。如设置时间项（瞬态或稳态）、求解器类型（压力基或密度基）等 Models ：设置物理模型。如设置湍流模型、多相流模型等 Materials ：设置流体介质材料属性 Cell Zone Conditions ：设置计算域属性 Boundary Conditions ：设置边界条件 D ynamic Mesh ：设置动网格 Reference Values ：设置参考值 Solution ：求解器设置 Solution Methods ：求解算法设置，如各种离散算法的选择 Solution Controls ：求解控制参数设置，如各种亚松弛因子设置 Monitors ：监视器设置 Report Definitions ：定义计算过程中的报告输出 Report Files ：列出定义的报告文件 Report Plots ：定义报告的输出形式 Solution Initialization ：计算初始化 Calculation Activities ：定义求解中的参数，如定义自动保存、动画输出等 Run Calculation ：计算设置 Result ：计算后处理 Graphics ：显示各种图形，如云图、矢量图、流线图等 Animations ：显示动画 Plots ：显示各种线图 Reports ：显示报告 Parameters &amp; Customizations ：参数化及自定义列表— ###郑重申明 - 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 - 转载请务必保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】08：CFD速成之道]]></title>
+    <url>%2F2016%2F04%2F08%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9108%EF%BC%9ACFD%E9%80%9F%E6%88%90%E4%B9%8B%E9%81%93%2F</url>
+    <content type="text"><![CDATA[学了那么一个星期的流体力学，又看了一周的计算流体力学，小白对于如何应用CFD解决工程流体问题，依然是一无所知。眼看一个月的时间已经过半，小白有点着急起来。于是在一个阳光明媚的早晨，小白又找到了黄师姐。 “师姐，半个月过去了，还是对CFD如何解决工程问题没有一点思路，怎么办呀？“小白略显着急的问。”这半个月让你学习流体力学和计算流体力学，虽然时间太少，但却是条正道。要想 用好CFD，这两方面的基础是越深厚越好，但是咱们没那么多的时间留给你慢慢学了，这样吧，今天我教你一种CFD快速入门方法。“黄师姐也有点急。”虽然有点急功近利，但时间来不及了也只好这样了，我要讲的速成方法，核心在于以下几个方面： 以软件学习为主，理论学习为辅 以软件实例学习为主，软件操作学习为辅 再次强调这种学习方式是一种快餐式的学习方式，难免会留下基础不牢的缺陷。“黄师姐补充道。 ”看过《笑傲江湖》没有？今天介绍的这种CFD学习方式就类似华山派的剑宗，先从招式入手，以精妙的剑法打天下。而与此相反的CFD学习方式（先学CFD背后的理论，再使用CFD软件）则类似于华山派的气宗。两种方式在前期的表现差异很大，剑宗入门容易但难免内力不足威力不够，气宗则内力很足却缺乏精妙的招式将威力发挥出来，最理想的状态则是：有深厚的理论基础，也会熟练的使用软件。”黄师姐是个武侠迷，小白听实验室的其他师兄说过。 “好了，下面来具体讲该怎么做吧。”黄师姐以一种过来人的口吻教导着小白。 黄师姐的CFD速成之道[toc] ####1 选择合适的CFD软件选择一款合适的CFD软件对于初学者来讲非常重要。虽然说目前的CFD软件界面都很友好，使用起来也很方便，但是还是需要认真选择。有些CFD软件的GUI设计比较好，逻辑性很强，更适合于新手入门。而有些软件则不是那么的适合。黄师姐建议小白选择ANSYS FLUENT作为CFD软件的入门软件，黄师姐的理由： FLUENT的界面非常友好，完全图形化的界面 FLUENT的界面具有非常好的逻辑性，将计算参数设置以一种逻辑性比较强的树形菜单形式展示给用户 FLUENT有完备的实例文档，通过大量的CFD实例练习可以快速的掌握软件 项目使用的是FLUENT，有这一条理由足够了 ####2 软件的学习通常情况下，对于软件的学习通常是先从操作入手，先熟悉软件界面，再熟悉功能按钮的使用方法等等。但如果要想快速的入门CFD软件，自然不能太纠结这些细节，这里的方法是： CFD问题整理分类 大量练习案例#####2.1 CFD问题分类CFD问题的分类是从牛师兄那里得到的，他将CFD问题大体分为了6类： 常规流动问题：不涉及除了流体流动之外的问题，计算过程中求解连续方程、动量方程，可涉及能量方程。这方面的应用包括低速流动、高速流动（跨音速、超音速以及高超音速流动）。流动问题可以包括内流流动及外流流动。 热问题：包括热传导、对流以及热辐射问题。除了求解流动问题外，还需要额外求解传热模型。 组分传输问题：包括常规的组分扩散问题、化学反应及燃烧问题。组分传输是典型的质量传递问题，较为复杂。 多相流问题：对于计算域中涉及多相流的问题，需要求解多相流模型。 运动部件的模拟：对于一些涉及到边界运动的问题，如旋转机械的叶片、发动机中的活塞等，如何建模是个很重要的问题。 多物理场耦合：对于流场与其他物理场的耦合问题 [实际工程问题中，往往不会分得那么清楚，通常是多种问题的混合。] #####2.2 大量案例练习找寻大量案例进行练习。ANSYS FLUENT有完善的Tutorial文档，最好的做法是将所有的案例都做一遍。如果时间不够用的话，可以只做流动问题和传热问题的案例。做这几个案例的目的是为了熟悉软件操作及CFD工作流程。案例练习过程中需要注意： 完整性：确保每一个案例都完全做完。即从网格模型导入至计算后处理完成这整个过程都完全做到。对于零基础人员来讲，一开始的案例可能做不出结果，这时候一定要有耐心，仔细检查设置，确保案例完全做完。案例没做完等于白做 多思考：在对着文档做案例的过程中，一定要多思考，虽然说暂时不去考虑软件设置背后的理论基础，但是在进行各项设置过程中，多留个心眼，比较不同案例设置中的不同。 多总结多记录：认真总结记录案例操作过程中遇到的问题以及问题解决过程。其实问题解决的过程就是自己成长的过程。 ####3 学习资料虽然目前市面上有很多CFD软件的资料，不过最好的资料还是软件的帮助文档。 [最近版本的FLUENT软件中已经没有了tutorial，正版用户可以在ANSYS官方网站下载，盗版用户可以通过其他途径获取] ####郑重申明 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 转载请务必保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】07：CFD常识]]></title>
+    <url>%2F2016%2F04%2F07%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9107%EF%BC%9ACFD%E5%B8%B8%E8%AF%86%2F</url>
+    <content type="text"><![CDATA[学了一周的流体力学，小白对于流体力学有了基本的了解，但是流体力学涵盖的内容何其之多，一周的时间怎么可能学得好呢，很多的概念都是模棱两可。为了在一个月之后能够应用CFD，小白又找到了黄师姐。 “师姐，看了一周的流体力学，现在对它有了基本的认识，我想知道计算流体力学和流体力学有什么联系么？“小白问。”小白，这样吧，我给你推荐一本书，你先去图书馆借出来自己先看看吧，有不懂的再来问我。“黄师姐说。于是，小白去图书馆借到了黄师姐推荐的书《计算流体力学：从实践中学习》。 黑色的封皮儿，看着挺高端。听黄师姐介绍，这本书原本就是为高年级本科生准备的，里面的理论部分不是很多，而且书中更偏重于工程应用，非常适合于像小白这类零基础人员入门。 黄师姐同时还叮嘱小白在阅读此书时思考的问题，并提醒重点弄明白以下问题： CFD是什么？ CFD可以应用于哪些场合？ CFD是如何应用于工程的？ 常用的CFD软件有哪些？ 小白去文具店买了个笔记本，将这些问题写在笔记本上。经过三天的学习，小白觉得已经把这几个问题弄清楚了。 小白的学习心得： ###1 CFD是什么 CFD是计算流体动力学（Computional Fluid Dynamic）的英文缩写，其利用计算机求解流体流动过程中的质量传递、能量传递、动量传递以及化学反应问题。CFD是一种方法或者工具，解决对象是流体力学问题，利用手段是数值计算。 ###2 CFD应用场合 只要存在流体流动的场合均可应用CFD。随着计算机技术及计算机计算能力的发展，CFD以及广泛应用于航空航天、造船、汽车、食品、能源、石油化工、生物医学等领域，而且还在不断的向其他行业扩展。 ###3 CFD如何应用于工程要将CFD应用于工程，需要做很多的工作，一般来讲，CFD工程应用都可以分为三个阶段：前处理、计算求解以及计算后处理。 ####3.1 前处理计算前处理的主要目的在于使计算机识别现实世界。计算机和人脑有很大的不同，要想让计算机识别真实世界是一件不太容易的事情。举个简单的例子，如图所示，杯子里有水。 人类的识别方式可能是通过视觉将光学图像送入大脑，再凭借记忆将图像识别为杯子和水。但是要让计算机来识别可就有点儿麻烦了。我们该怎样告诉计算机“这里有个杯子，杯子中有半杯水”这一事实呢？首先要告诉计算机“这里有个杯子”。我们需要告诉计算机： 杯子的尺寸。杯子的形状是怎样的？圆柱形还是圆台形？半径及壁厚等尺寸参数需要定义。 杯子的空间属性。杯子是放在地上的还是放在桌子上？我们需要给它一个定位尺寸。其次，我们需要告诉计算机“杯子中有水”。杯具的是，计算机可不知道什么水是什么玩意儿。不过我们可以告诉计算机： 杯子中盛装的物质的各种物理性质。比如说水的密度、粘度、比热等。 杯子中装了多少水。比如说告诉计算机水位高度或者水的体积。通过提供 以上信息，计算机就能识别出“杯子中装了水”这一物理现实。 前处理的作用就在如此，要告诉计算机流体流动发生的场合、流体属性、流体流动遵循的物理规则等。CFD前处理包含以下一些内容： 定义流动计算域：建立流体流动区域。告诉计算机流体流动发生的场合。 计算域离散：将流动计算区域离散成网格单元。 指定计算控制方程：告诉计算机所要解决的流体流动遵循的物理规则。 定义边界流动条件：特定流动问题有特定的流动边界条件。 定义初始时刻流动条件：告诉计算机，零时刻计算域处于何种状态。 求解参数定义： 如指定串行或并行计算、计算过程监测、离散算法指定等。 输出参数定义：定义计算过程中一些计算参数输出。 ####3.2 计算求解 计算求解通常由计算机自动完成，一般不需要人工干预。在前处理指定完毕后，求解器读取所有的求解参数进行自动求解计算，直至求解完成。 ####3.3 计算后处理通过计算后处理将计算求解得到的数据以直观的方式展示出来，便于解读和工程应用。数据展现的方式包括： 数据表：每一个网格节点上的物理量数据，通常为压力、速度等原始变量。 曲线图：反映物理量变化规律 云图：反映物理量空间分布 矢量图：反映矢量空间分布 动画：以动画形式反应物理量随时间变化 ###4 CFD软件CFD本身是一种数值计算方法，常常将其编制为计算机程序。当前有很多CFD软件可用于工程流体计算，根据软件功能，可分为通用软件及专业软件；根据软件源代码是否公开，可分为商业软件及开源软件；根据软件在CFD过程中的位置，可分为前处理软件、求解器软件及后处理软件。 ####4.1 通用软件及专业软件 通用软件：设计用于所有的CFD场合，求解的是通用流体控制方程。通用软件的前处理对象普遍，能应付大多数的工程问题。然而也正是因为要保证通用性，而牺牲了部分性能。通用CFD软件很多，比较常用的如ANSYS系列的FLUENT及CFX、CD-Adapco公司的STAR CCM+及STAR CD、ESI公司的Fastran及ACE+、CHAM公司的Phoenics、Metacomp公司的CFD++、Altair公司的Acusolve等 专业软件：专为某一行业设计的CFD软件。专业CFD软件如用于泵阀压缩机的PumpLinx、NUMECA；用于火灾消防的pyrosim及FDS等；用于建筑物暖通计算的Flovent及AirPak等；用于电子散热的Flotherm及Icepak等，专业软件在特定的行业上具备通用软件无可比拟的建模和计算精度优势。 ####4.2 商业软件及开源软件 商业软件：软件源代码不公开，需要花钱购买的软件。上网提到的CFD软件都是商业软件，都需要花费不少的银子才能使用。 开源软件：源代码公开的软件，用户可以自己进行编译也可以对源代码进行修改形成自己的计算软件。目前CFD开源软件也不少，比较出名的如OpenFoam、SU2等都是比较好的开源CFD软件。 ####4.3 前处理及后处理软件前面提到的CFD软件基本上都是求解器软件（不排除 一些软件包含前后处理），当前市面上还存在一些专业前后处理软件。 前处理软件：对于CFD前处理软件，其主要任务是进行网格划分。代表性的CFD商用前软件包括ICEM CFD、Pointwise、Gridgen、GridPro等，开源前处理软件如Gmsh、Salome等 后处理软件：后处理软件也有不少，代表性的商用后处理软件包括Tecplot、Ensight等，开源的如ParaView等。 ####郑重申明 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 转载请务必保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】06：流体力学基础]]></title>
+    <url>%2F2016%2F04%2F06%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9106%EF%BC%9A%E6%B5%81%E4%BD%93%E5%8A%9B%E5%AD%A6%E5%9F%BA%E7%A1%80%2F</url>
+    <content type="text"><![CDATA[[toc] 从黄师姐那里了解到要学习CFD的话，需要先补充流体力学、数学以及计算机方面的常识，小白就一阵头大。想起当初自己已经把牛皮吹出去了，现在都不知道怎么收场，一个月入不了门多丢人。不过头大归头大，小白还是老老实实在图书馆呆了一个星期，基本上将流体力学基础过了一遍，虽然说学得很粗糙，但一些基本原理还是有了了解。。 流体力学基础内容： ####1.流体属性 连续介质假定：需要了解”宏观上无穷小、微观上无穷大”的概念以及knudsen数的定义方式。 $$K_n=\frac{\lambda}{L}$$ 其中，$\lambda$为分子自由程，$L$为系统长度尺度。$K_n$越大，意味着流体越稀薄。 流体密度：流体密度反映的是流体微团的平均密度。 流体粘度：反映剪切应力与应变之间的关系。 根据流体属性可将流体分为不同的类型： 稀薄流体 可压缩流体和不可压缩流体 牛顿流体与非牛顿流体 粘性流体与理想流体 ####2.流 体静力学 流体静力学：几乎所有的流体力学参考资料上都会包含有流体静力学方面的内容，这些内容说到底也就是一个流体静止条件下压力分配的问题。在学习流体静力学过程中，需要掌握的概念包括： 静力学基本方程$$z+\frac{p}{\rho g}=c$$ 流体压力只与深度有关，与方向无关，同一深度位置压力相等。 绝对压力与相对压力 表压 ####3.流体动力学流体动力学研究流体流动状态下压力速度分布，主要包括两大块的内容： #####3.1 伯努利方程$$p_0+\rho gh_0+\frac{1}{2}\rho v_0^2= p_1+\rho gh_1+\frac{1}{2}\rho v_1^2 $$或$$p_0+\rho gh_0+\frac{1}{2}\rho v_0^2=c$$ 在学习伯努利方程时，需要搞清楚几个关于压力的概念： 静压：即式中的$p_0$ 动压：即式中的$ \frac{1}{2}\rho v_0^2$ 总压：静压与动压的和称之为总压。#####3.2 流动阻力计算流动阻力包含沿程阻力与局部阻力。######3.2.1 沿程阻力对于管道流动，其沿程阻力可通过范宁公式计算：$$h_f=\lambda \frac{l}{d} \frac{u^2}{2}$$式中，$l$为管道长度，$d$为管道内径，$\lambda$为阻力系数。对于阻力系数$\lambda$，层流和湍流状态下计算方式不同： 层流状态下：$$\lambda=\frac{64}{Re}$$其中雷诺数$Re=\frac{ud\rho}{\mu}$ 湍流状态下对于光滑管道，可用伯拉修斯经验方程$$\lambda = \frac {0.3164}{Re^ \left(0.25\right)}$$对于粗糙管道，阻力系数可查莫迪图。######3.2.2局部阻力$$h_f = \xi \frac{u^2}{2}$$式中，$\xi$为阻力系数，不同设备的阻力系数需要通过实验测定。 这是江小白通过一周的学习，对于流体力学总结的内容，不过黄师姐听完小白的汇报后，只说了句“学了点儿皮毛，聊胜于无，后面有的学。” ####郑重申明 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 转载请务必保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】05：补充基础]]></title>
+    <url>%2F2016%2F04%2F05%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9105%EF%BC%9A%E8%A1%A5%E5%85%85%E5%9F%BA%E7%A1%80%2F</url>
+    <content type="text"><![CDATA[黄师姐是一个很干脆果敢的人，从她的日常装扮就能显露出来。卡帕运动装，白色运动鞋，马尾辫，这是小白对黄师姐的第一印象。“明天早上九点钟来实验室，我给你安排这阵子的任务。”黄师姐对小白说。说话语气和老蓝一样，坚定的语气中透漏着不容置疑。后来小白才体会到，这整个实验室二三十号人说话都是这种语气。“乖乖，女强人么”，小白心里嘀咕着。 第二天一大早七八点钟，小白吃过早餐赶到实验室后，发现自己居然是最后一个到的，“研究生都这么敬业么？”小白心里嘀咕。 “今后你就坐这里吧，这台电脑是今年毕业的师兄留下的，日常办公学习应该是够用了，最计算的话我们实验室有专门的工作站。“黄师姐发现小白后，带着他来到一张空桌子旁边，边打开电脑边对小白说道。”你以前什么专业的呀？”黄师姐问。“本科读的材料成型及控制工程，模具设计方向。”小白答。“噢，那机械方面的课程应该都学过，学过流体力学没有？“黄师姐问。”没有学过。”小白答道。“高等数学和线性代数应该都学过吧，数值计算你们应该要开课了吧？”黄师姐问道。“恩，数值计算现在正在学呢。”小白说。“那可要好好学，以后很多地方都用得到。特别是微分方程数值求解、插值、误差和收敛等一些基本方法和概念。这一阵子你需要学习一些准备知识”，黄师姐拿出一个笔记本对小白说。接下来给小白指定了一些学习内容。 #####1.流体力学 学习内容先找本《流体力学》参考书学习一下，不过现在没有那么多的时间给你去仔细学习其中的理论，这个可以在以后的时间里慢慢的去补习。重点了解一下流体力学的基本内容、基本研究手段、研究对象等，你需要了解到流体力学所要求解的是哪些基本物理量，这个非常重要，我们要做流体仿真的话，这些内容都要透彻了解。 参考资料给你推荐几本参考书。1 《图解流体力学》这本书比较通俗易懂，作者为小峰龙男，高丕娟翻译。通过这本书可以了解流体力学的一些基本原理及基本理论。图书馆就可以找得到，强烈建议像你这样完全没有流体力学基础的人翻阅。 2 《普朗特流体力学基础》这本书作者为[德]H.欧特尔，朱自强等翻译。作者为现代流体力学开山祖师普朗特的学生，内容很全面，也很基础，强烈建议精读。 3 Fluid MechanicsKundu的经典流体力学，建议阅读。 《流体力学基础及其工程应用》外文影印版，推荐阅读。 除了以上推荐的流体力学书之外，有时间可以去图书馆找其他的对你口味的书籍。 #####2.数学补充除了本科阶段学习的高等数学与线性代数之外，我们还需要加强数学方面的素质。对于你们现在正在学习的《数学物理方程》，强烈建议认真学习，仔细体味力学问题的数学建模过程，比如说波动方程、扩散方程等的推导过程，以及偏微分方程的分类方式等。至于偏微分方程的解析求解方式，咱们不是搞理科的，基本上很少用到，而且以后我们遇到的物理问题所抽象的偏微分方程，基本上都是无法求出解析解的，这部分内容，应付考试就可以了。《数值计算》这门课要认真学，尤其是差分方法、数值微分等部分的内容。不过你们在课堂上所学的数值 计算内容是非常基础的内容，后面我再给你讲计算流体力学的内容，这方面的理论以后多请教牛师兄，他是搞这方面理论的。 #####3.计算机我们的数值计算与计算机密不可分，强烈建议你学一门编程语言。Fortran或C语言若能精通其一就很完美了，我们实验室很缺程序猿。学一学Python也是很不错的选择，强烈建议学习。推荐一些Python学习资料。 《Python基础教程》通过这本书学习Python的基本语法。 2.Python数据分析基础教程NumPy学习指南通过此书学习NumPy的基本用法，这在以后的项目中会经常用到。 以上关于流体力学、数学以及计算机的基础学习，是我们学习计算流体力学的基础，计算流体力学所涉及的内容是这三个学科的综合体，因此，我建议你先低这些方面有些基本的了解。过两天我在给你讲CFD的速成学习计划。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】04：任务]]></title>
+    <url>%2F2016%2F04%2F04%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9104%EF%BC%9A%E4%BB%BB%E5%8A%A1%2F</url>
+    <content type="text"><![CDATA[和老蓝见面之后的很长一段时间里，小白都没有接到任何老蓝的消息，再加上课比较多，小白也慢慢适应了白天上课，晚上窝在宿舍打游戏，偶尔也去图书馆看看书的生活，这样宁静的生活持续了差不多两个月。就在老蓝的影子都快要从小白的脑海中溜走的时候，一个电话打破了小白的平静生活。 “小白，下午三点来实验室开会！”老蓝的电话简单且干脆，带着不可商量的语气。 下午没课，小白踩着点来到实验室，这地方还是第一次来。房间挺大，收拾得比较整齐干净，几台大块头电脑放在墙角（后来才知道那是计算工作站），面板上还在闪烁着光芒，房间里头有个小型会议室，小白进去的时候里面已经坐了几个人，有个漂亮的女孩子正在对着墙上的投影讲解着什么，其他人正在下面听着，还不时地在本子上记着什么。 小白找了个板凳坐在一旁，也看起墙上的投影来。一大堆的数学公式看不大明白，不过小白却被后面的几幅漂亮图片给吸引了，图上显示的是污染物在空气中扩散过程，有污染物浓度在空间上的分布图，有污染物扩散动画，看着很漂亮。 讲了差不多大半个小时，漂亮美女终于讲完了，这时候老蓝给小白介绍桌旁坐的几个人来，原来漂亮美女姓黄，高小白一届读研二。除了黄师姐外，还有陆师兄和洪师兄，他们都在读研三，还有半年就要毕业了。除此之外还有个年纪看起来比较老一点的师兄，姓牛，目前读博一，也和小白一样刚进实验室。 “小牛和小白，都是今年新进实验室的，小牛硕士读的是流体力学专业，理论上的问题你们可以找他解决，小白是新手，小黄带一下他。项目时间紧，你们最近抓紧时间”，老蓝吩咐道。 “小牛是临时帮你们的，还要负责其他的项目，平时不要太劳烦他，你们三个负责把小白培养成主力，小陆和小洪马上要毕业了，项目需要有人接手，不要搞到最后你们毕业了扔下摊子没人收拾哟。”，老蓝继续说。 “小白啊，只能给你一个月时间，我希望你能够入门，基本上能够独立开展工作，从明天开始你就进实验室，我给你分配一台计算机。”老蓝说。 “所以呢，你这一个月的主要任务，就是跟着你黄师姐学习，一个月后再给你派任务。虽然说我让你黄师姐负责教你，不过我更希望你能够主动学习，师兄师姐们都很忙，不可能像教小学生一样的教你，他们最多就是告诉你要学什么并给你一些学习建议，关键还是要靠你自己去学习，希望你明白。“老蓝说道。 ”实验室还有其他的师兄师姐，有什么问题也可以找他们咨询。” 老蓝终于说完了，小白也信心十足的保证一个月一定能将CFD学好（后来小白才知道自己当初是多傻多天真，一个月学好CFD，骗鬼的吧，难怪师兄师姐包括老蓝的眼睛里都充满了笑意，是笑初生牛犊不怕虎的吧），当时的小白根本就不知道CFD到底是个什么东西。不过江小白是个善于接受新事物的童鞋，对于新鲜事物总能保持极大的兴趣，因此小白当时就下大决心将CFD学好。 ####郑重申明 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 转载请务必保证文字完整 本系列文档在微信公众号同步发布，可微信扫描下方二维码关注微信公众号。]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】03：老蓝]]></title>
+    <url>%2F2016%2F04%2F03%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9103%EF%BC%9A%E8%80%81%E8%93%9D%2F</url>
+    <content type="text"><![CDATA[第一次见到老蓝，小白都不太敢相信，对面那不修边幅的糟老头子会是自己要找的导师。嘴里叼着烟，牙都掉了好几颗，穿着还算整齐，这是小白对老蓝的第一印象，这印象并不太好，尤其是在小白发誓认真度过研究生三年时光之后。 那是一个秋风萧瑟的下午，没有课的小白午休后还没起床，忽然收到老蓝的电话。 “小白啊，下午没课来我办公室一趟”，简单的一句话，干脆利索。小白感觉起床找了身正式的衣服就去了。老蓝是小白在考研复试的时候找的导师，当时老蓝在出差，小白只是和他在电话里联系了一下。当时老蓝问了一下小白的数学英语成绩后就答应将小白收归门下。直到今天小白依旧无法理解，为何老蓝那么迷信数学和英语成绩呢，小白的专业课成绩才勉强刚过国家线，说起来都是泪。 急匆匆的赶到指定地点，敲开门后发现一大堆资料背后藏着一老头，长得还算慈眉善目，带着一副深色眼睛，眼睛很有神彩。“江小白？坐吧“，老头朝门口的小白招了招手。“蓝老师好”，江小白搬了张凳子坐在了办公桌的旁边。”这还是我们第一次见面吧。不知道你对研究生的学习方式了解多少，不过我希望你能够认真的去了解一下。我这里要告诉你的是，研究生和本科生有很大的不同，学习方式也有很大的差异，我的学生，我希望他在毕业的时候能够具备四种基本能力：听、说、读、写，但是这里的听说读写和你们以前学英语的听说读写能力是不一样的。我的听说读写指的是： 听：要听话。俗话说“没有规矩不成方圆”，实验室有专门的规矩，希望你在今后的时间里能够遵守。具体的规章制度可咨询师兄师姐。 说：具有良好的表达能力。实验室的项目汇报我一般都是让学生上。 读：读文献的能力，中文的英文的文献都要会读会总结。 写：专业论文写作能力。 “我这个人比较注重结果，不太关注过程，因此在今后的几年中，我不会整天盯着你们，不过三年后我会考察你们，若没有达到我的要求，我不会让你们毕业的。”老蓝继续说。 ”平时多锻炼自己的学习能力，研究生要解决的问题都是没有直接答案的，很多东西都是需要你们现学现用的，因此文献阅读能力很重要。”老蓝停不下来了。 “咱们实验室主要做流体机械，主要用到CFD技术，希望你能尽快的掌握。”老蓝还在自顾自的说。 “CFD是咱们实验室的强项，……（此处省略一千字）” 说了近两个小时，都是老蓝在说小白在听。小白已经听得头晕脑胀，听了一下午就记住了”CFD”这三个字母。 “CFD是什么鬼？流体仿真是什么鬼？本科时候只是学过工程流体力学啊，只记得有个什么伯努利方程，其他的东西考完试后都还给老师了呀”，小白头有点疼。 这是江小白第一次接触CFD，当时的他怎么也没有料到，之后的十年他会和这三个字母结下如此深的缘分，以至于甩都甩不掉。 本系列根据真实经历改编，如有雷同实属巧合，请勿人肉 转载请务必保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】02：小白]]></title>
+    <url>%2F2016%2F04%2F02%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9102%EF%BC%9A%E5%B0%8F%E7%99%BD%2F</url>
+    <content type="text"><![CDATA[虽然已经是9月份了，但是西南地区的湿热天气依然将小白热成了狗。独自一个人来到这号称天府之国的西南城市，小白却一点都没感受到这天府之国的友好。毒辣的阳光像利剑一样照射到身上，让人感觉如在蒸笼中一样。从炎热的华中火炉来到祖国大西南，却没感受到哪怕一丝的清凉。 今天是开学的日子，学校将研究生和本科生新生入学时间放到了一起，导致报名地点拥挤不堪。小白扛着他那伴随自己走南闯北多年的旅行箱，跟随者人群缓慢移动。“麻蛋，难道就不能先给安排宿舍把东西放下来么，非要等报完名交完钱才给安排宿舍？”小白心里很是不爽，还没入校就已经对学校产生了三分不满意。 小白很郁闷。大学毕业后去了北方一个大型国企单位，由于无法人忍受常年累月的野外施工，一怒之下没和任何人商量就辞职考研去了，火急火燎的准备了两个月，有惊无险的居然被录取了，虽然不是自己理想的第一志愿学校，但好歹是被录取了，至少不用顶着被父母骂，被周围人嘲笑的眼光去找工作。但是来到学校后却感觉很不爽，学校在郊区，离市中心很远，就像偏远的农村，周围全是破破烂烂的房子。当初读本科的时候就是因为学校所在的城市很偏僻，导致找工作很是麻烦，没想到读研的学校又是那么偏僻，小白感觉自己的前途一片黑暗。 然而江小白是一个天生乐观的人，绝不会被一时的困难所阻扰，拿到宿舍钥匙之后，他的心情又飞扬了起来。哼着小曲儿扛着箱子找寻着宿舍所在地。崭新的四人间的宿舍还飘散着一股子装修的气味，小白立刻就想到了甲醛净化员这一伟大的职业，“把我们当做甲醛净化员了么，刚盖完的房子就让我们住？”小白心里嘀咕。不过小白并不在意这些，他最在意的是刚打开宿舍后闻到的一股子令人作呕的脚臭味。 四人间的宿舍，上面是床下面放着电脑桌，三个人都在专心的玩着游戏，没有人鸟小白。不过小白并不在意，作为学渣的小白在大学本科四年时间也是趴在电脑键盘上度过的，也能够理解那种“两耳不闻窗外事，一心扑在游戏上”的行为。不过这么热的天气，几个哥们儿光着膀子穿着拖鞋玩游戏的精神也太可贵了吧，旁边那哥们还在抠脚，看到这些小白觉得天气更热了，瀑布汗。 终于到饭点儿了，几个哥们这才发现宿舍里多了个人，彼此认识了之后，相约一起去吃饭，之后的事情就和常规的大学宿舍狗血剧情一样，大伙儿按着年龄大小称兄道弟起来。 时间过得很快，小白与舍友的关系搞得还不错，毕竟在社会上混了两年，小白又属于那种随遇而安的人，平和的心态很容易和周围的人打交道。在后面的时间里，研究生的课程很多，每天时间都安排很紧，这然小白感觉不到研究生生活的不同之处，每天除了上课还是上课，印象中的实验室、科研工作不是这样子的啊。（奉劝各位想要读研的童鞋们，在你们考研之前，请实地调研研究生的生活） 日子过得很平淡，直到一个秋风萧瑟的下午接到老蓝的电话。 本系列根据本人真实经历改编，如有雷同实属巧合，请勿人肉 转载请保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[【小白的CFD之旅】01：引子]]></title>
+    <url>%2F2016%2F04%2F01%2Fxiaobai%2F%E3%80%90%E5%B0%8F%E7%99%BD%E7%9A%84CFD%E4%B9%8B%E6%97%85%E3%80%9101%EF%BC%9A%E5%BC%95%E5%AD%90%2F</url>
+    <content type="text"><![CDATA[CFD是计算流体力学的英文简称，是计算机辅助工程（CAE）的主要分支，目前广泛应用与科学研究、工程设计中。这是一门综合了数学、计算机及流体力学的综合学科，涉及到众多的专业理论，如果缺少相应的专业基础，要想将CFD应用于工程中则需要花费较多的时间。 CFD工程应用主要涉及到以下几个方面： 力学建模：将现实世界中的物理现象抽象为计算机能够识别的力学模型。这部分在CFD应用中是最为重要的一步，然而在实际工作中常常被忽略。力学建模要求CFD应用者具备良好的流体力学理论功底。只有具备良好的理论素质，才能够准确的把握现象的本质，而不至于造成因为不必要的细节而舍去核心本质。 数值计算：将力学模型转化为计算机可求解计算的代数方程组以及代数方程组的数值求解。力学建模通常得到的是微分方程，除非一些特别简单的物理现象，否则这些微分方程基本上很难得到解析解。CFD通常采用的是数值求解技术，通过离散化技术将微分方程转化为计算机容易求解的代数方程。 网格生成：数值计算过程中的数值离散技术通常要用到计算网格。我们将连续的求解域切割成离散的小的空间的过程称之为网格生成。生成高质量的网格是优质计算的前提。 计算结果解释：计算机求解代数方程后获取的是计算域空间上所有节点上的物理量的值，为了更好地利用计算结果，通常将数值计算结果以图形图表的形式进行展示。 本系列教程以一个研究生小白的学习经历为主线，内容涵盖CFD工程应用的几个主要方面，除了包含技术内容外，还包含了一些学习过程中的困扰和茫然，这其实也是本人在刚学习CFD的时候的心路历程。很久以前就想将这一段经历分享出来，给CFD初学者一些帮助。 CFD涉及的内容太繁杂，完全依靠自学是一件非常艰辛的事情，现在想起当年一个人天天泡在图书馆啃着那些满页都是数学符号的专业书籍，都不敢相信自己居然能够坚持下来。那时候不像现在有那么多的参考书，周围又没有人引导，走了不少的弯路，浪费了很多的时间，如果能够重来的话，有很多的事情实际上是没必要去做的，因此本系列将以过来人的观点来引导事情的发展，与真实历程其实有一定的偏移。 虽然以前写过不少的文字，但以小说的情况来写这种技术性的文章还是第一次，文笔生涩之处在所难免，工科生的文字总是偏于简洁甚至简陋，从而忽略了文字表述上的优美，遇到生涩之处， 看官们大可一笑而过。 本系列根据本人真实经历改编，如有雷同实属巧合，请勿人肉 转载请保证文字完整]]></content>
+      <categories>
+        <category>小白CFD之旅</category>
+      </categories>
+      <tags>
+        <tag>CFD</tag>
+        <tag>小白CFD之旅</tag>
+      </tags>
+  </entry>
+</search>

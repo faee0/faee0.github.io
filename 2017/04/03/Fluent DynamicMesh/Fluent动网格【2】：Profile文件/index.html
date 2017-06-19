@@ -1,0 +1,923 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Fluent,动网格," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="动网格中一个重要任务是部件运动方式的指定。在动网格中指定部件的运动，往往将部件的运动方式指定为其加速度、速度或位移与时间的相关关系，本文主要讲述如何在Fluent中利用瞬态Profile文件指定部件的运动方式。 在Fluent中指定部件运动主要有两种方式：Profile与UDF宏。当运动方程已知时，利用UDF宏指定运动非常方便，然而当需要指定的运动并无任何函数关系时（比如说通过传感器监测得到的速度">
+<meta name="keywords" content="Fluent,动网格">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fluent动网格【2】：Profile文件">
+<meta property="og:url" content="bestcax.top/2017/04/03/Fluent DynamicMesh/Fluent动网格【2】：Profile文件/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="动网格中一个重要任务是部件运动方式的指定。在动网格中指定部件的运动，往往将部件的运动方式指定为其加速度、速度或位移与时间的相关关系，本文主要讲述如何在Fluent中利用瞬态Profile文件指定部件的运动方式。 在Fluent中指定部件运动主要有两种方式：Profile与UDF宏。当运动方程已知时，利用UDF宏指定运动非常方便，然而当需要指定的运动并无任何函数关系时（比如说通过传感器监测得到的速度">
+<meta property="og:image" content="http://mmbiz.qpic.cn/mmbiz_png/AF2vGryRNydibFichUjP8tFjsBXspJHJQFUm9czD6snOxcmwwRENOOwJQ4xzIAU7FicQV6JSfU3lfbpTuNuoUM6iaw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1">
+<meta property="og:image" content="http://i2.muimg.com/567571/c9756c7e3be1d2d2.png">
+<meta property="og:image" content="http://i1.piimg.com/567571/3dd2e86fd1a72510.png">
+<meta property="og:image" content="http://i1.piimg.com/567571/b75e964e8b9bdd93.png">
+<meta property="og:image" content="http://i1.piimg.com/567571/080530d6455371ef.png">
+<meta property="og:image" content="http://i2.muimg.com/567571/88ddb6cbc526184a.png">
+<meta property="og:image" content="http://i1.piimg.com/567571/e5560678a4bba06b.png">
+<meta property="og:updated_time" content="2017-06-18T09:27:26.187Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Fluent动网格【2】：Profile文件">
+<meta name="twitter:description" content="动网格中一个重要任务是部件运动方式的指定。在动网格中指定部件的运动，往往将部件的运动方式指定为其加速度、速度或位移与时间的相关关系，本文主要讲述如何在Fluent中利用瞬态Profile文件指定部件的运动方式。 在Fluent中指定部件运动主要有两种方式：Profile与UDF宏。当运动方程已知时，利用UDF宏指定运动非常方便，然而当需要指定的运动并无任何函数关系时（比如说通过传感器监测得到的速度">
+<meta name="twitter:image" content="http://mmbiz.qpic.cn/mmbiz_png/AF2vGryRNydibFichUjP8tFjsBXspJHJQFUm9czD6snOxcmwwRENOOwJQ4xzIAU7FicQV6JSfU3lfbpTuNuoUM6iaw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2017/04/03/Fluent DynamicMesh/Fluent动网格【2】：Profile文件/"/>
+
+
+
+
+
+  <title>Fluent动网格【2】：Profile文件 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2017/04/03/Fluent DynamicMesh/Fluent动网格【2】：Profile文件/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Fluent动网格【2】：Profile文件</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-03T20:53:21+08:00">
+                2017-04-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Fluent动网格/" itemprop="url" rel="index">
+                    <span itemprop="name">Fluent动网格</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>动网格中一个重要任务是部件运动方式的指定。在动网格中指定部件的运动，往往将部件的运动方式指定为其加速度、速度或位移与时间的相关关系，本文主要讲述如何在Fluent中利用瞬态Profile文件指定部件的运动方式。</p>
+<p>在Fluent中指定部件运动主要有两种方式：Profile与UDF宏。当运动方程已知时，利用UDF宏指定运动非常方便，然而当需要指定的运动并无任何函数关系时（比如说通过传感器监测得到的速度-时间、加速度-时间曲线），此时利用Profile文件进行运动表述则较为方便。</p>
+<p>Profile文件有三种表述方式：</p>
+<ul>
+<li><code>标准形式</code></li>
+<li><code>表格形式</code></li>
+<li><code>CSV格式</code></li>
+</ul>
+<blockquote>
+<p>需要注意的是：在Fluent中的Profile文件所指定的边界运动均是与时间相关的。只有在动网格中指定了in-cylinder方法时，profile文件才可以指定为角度的函数。关于in-cylinder方法，我们在后面再进行详细描述。</p>
+</blockquote>
+<h1 id="标准瞬态Profile文件"><a href="#标准瞬态Profile文件" class="headerlink" title="标准瞬态Profile文件"></a>标准瞬态Profile文件</h1><p>标准瞬态Profile文件可表述为以下格式：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">((profile-name transient n periodic?)</div><div class="line">(field_name_1 a1 a2 a3 ... an)</div><div class="line">(field_name_2 b1 b2 b3 ... bn)</div><div class="line">.</div><div class="line">.</div><div class="line">.</div><div class="line">(field_name_r r1 r2 r3 ... rn)</div><div class="line">)</div></pre></td></tr></table></figure>
+<p>文件中：</p>
+<ul>
+<li><strong>profile-name</strong>：自定义的 profile名，必须全部为小写字母，且要求小于64个字符</li>
+<li><strong>field_name</strong>：各种场变量，但<strong>必须有一行time，且时间变量数据为升序排列</strong></li>
+<li><strong>transient</strong>：为瞬态profile关键字，需要保留</li>
+<li><strong>n</strong>：每一个场变量拥有的数据个数</li>
+<li><strong>periodic?</strong>：表示是否使用时间周期profile，若为1则使用周期，写0或省略则表示不使用周期。</li>
+</ul>
+<p>一个典型的Profile文件示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">((sampleprofile transient <span class="number">3</span> <span class="number">0</span>)</div><div class="line"> (time  <span class="number">1</span> <span class="number">2</span>  <span class="number">3</span> )</div><div class="line"> (u  <span class="number">10</span>  <span class="number">20</span>  <span class="number">30</span> )</div><div class="line">)</div></pre></td></tr></table></figure>
+<p><strong>标准Profile注意的问题</strong>：</p>
+<ul>
+<li>profile中所有的物理量均需要使用国际单位制，软件并不会进行转换</li>
+<li>必须有一行为time，可以是任意一行。但如果采用in-cylinder方法，则必须有一行为angle</li>
+<li>profile名必须为小写字母，且不能包含有空格或其他标点符号</li>
+<li>标准形式Profile文件可以通过菜单<strong>File →Read →Profile…</strong>读取</li>
+</ul>
+<h1 id="表格形式瞬态Profile文件"><a href="#表格形式瞬态Profile文件" class="headerlink" title="表格形式瞬态Profile文件"></a>表格形式瞬态Profile文件</h1><p>表格形式的profile文件与标准形式类似，表述为以下形式：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">profile-name n_field n_data periodic?</div><div class="line">field-name<span class="number">-1</span> field-name<span class="number">-2</span> field-name<span class="number">-3</span> .... field-name-n_field</div><div class="line"> v<span class="number">-1</span><span class="number">-1</span>  v<span class="number">-2</span><span class="number">-1.</span>.. ... ... ... v-n_field<span class="number">-1</span></div><div class="line"> v<span class="number">-1</span><span class="number">-2</span>  v<span class="number">-2</span><span class="number">-2.</span>.. ... ... ... v-n_field<span class="number">-2</span></div><div class="line">.</div><div class="line">.</div><div class="line">.</div><div class="line">.</div><div class="line">.</div><div class="line">v<span class="number">-1</span>-n_data v<span class="number">-2</span>-n_data ... ... ... ... v-n_field-n_data</div></pre></td></tr></table></figure>
+<p>一个典型示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">sampletabprofile <span class="number">2</span> <span class="number">3</span> <span class="number">0</span></div><div class="line">time u <span class="number">2</span> <span class="number">3</span> <span class="number">0</span></div><div class="line"><span class="number">1</span> <span class="number">10</span></div><div class="line"><span class="number">2</span> <span class="number">20</span></div><div class="line"><span class="number">3</span> <span class="number">30</span></div></pre></td></tr></table></figure>
+<p><strong>表格形式profile文件需要注意的问题</strong>：</p>
+<ul>
+<li>profile中所有的物理量均需要使用国际单位制，软件并不会进行转换</li>
+<li>第一个field_name必须为time。但如果采用in-cylinder方法，则必须为angle</li>
+<li>profile名必须为小写字母，且不能包含有空格或其他标点符号</li>
+<li>标准形式Profile文件可以通过TUI命令<strong>file →read-transient-table</strong>读取</li>
+</ul>
+<h1 id="CSV格式瞬态文件"><a href="#CSV格式瞬态文件" class="headerlink" title="CSV格式瞬态文件"></a>CSV格式瞬态文件</h1><p>CSV文件是以逗号隔开的数据文件，可以使用excel打开。</p>
+<p>在描述运动过程时，通常采用瞬态csv文件。</p>
+<p>瞬态CSV文件形式如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">[Name]</div><div class="line">transient-temperature</div><div class="line">[Data]</div><div class="line">time,temperature</div><div class="line"><span class="number">1.1</span>,<span class="number">300</span></div><div class="line"><span class="number">1.2</span>,<span class="number">350</span></div><div class="line"><span class="number">1.3</span>,<span class="number">400</span></div></pre></td></tr></table></figure>
+<p>文件可以采用文本文件编辑，保存后修改文件扩展名为CSV。</p>
+<p>上例中的Name与Data是关键字，不可修改。</p>
+<p>time和terperature为变量名，分别为时间和温度。数据列表采用逗号隔开。</p>
+<p><strong>注意：标准形式Profile文件可以通过菜单File →Read →Profile…读取</strong>。</p>
+<h1 id="profile文件中的物理量"><a href="#profile文件中的物理量" class="headerlink" title="profile文件中的物理量"></a>profile文件中的物理量</h1><p>能用profile表示的物理量很多，在动网格中常用的如：表示位置的变量x,y,z；表示速度的变量v_x,v_y,v_z；表示角速度的变量omega_x,omega_y,omega_z；表示时间的变量time。</p>
+<h1 id="时间步长"><a href="#时间步长" class="headerlink" title="时间步长"></a>时间步长</h1><p>需要注意的是，profile中的数据采用的是线性插值，因此计算过程中采用的时间步长需要低于profile数据时间步长，否则会造成数据信息丢失，尤其是在曲线有曲率存在的位置。</p>
+<p>如下图所示，蓝色线条为大时间步长下得到的值，可以看到在曲率位置并未严格遵守profile指定的规律。</p>
+<p><img src="http://mmbiz.qpic.cn/mmbiz_png/AF2vGryRNydibFichUjP8tFjsBXspJHJQFUm9czD6snOxcmwwRENOOwJQ4xzIAU7FicQV6JSfU3lfbpTuNuoUM6iaw/640?wx_fmt=png&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1" alt=""></p>
+<h1 id="一个案例"><a href="#一个案例" class="headerlink" title="一个案例"></a>一个案例</h1><p>如果要表示运动函数：<br>$$<br>v_x=2sin(3t)+5<br>$$<br>时间区间为[0,20]，时间步长为0.5s，如果要利用profile来表达，则可以采用如下步骤：</p>
+<ul>
+<li>step 1：利用excel编辑公式计算数据（这里括号内假设计算得到的是度，将其转化为弧度）</li>
+</ul>
+<p><img src="http://i2.muimg.com/567571/c9756c7e3be1d2d2.png" alt=""></p>
+<ul>
+<li>step 2：如果采用标准profile文件，需要转置保存数据</li>
+</ul>
+<p><img src="http://i1.piimg.com/567571/3dd2e86fd1a72510.png" alt=""></p>
+<p>之后将文件保存到文本文件中，并添加其他所需的结构信息。如图所示。</p>
+<p><img src="http://i1.piimg.com/567571/b75e964e8b9bdd93.png" alt=""></p>
+<p>之后将文件保存为扩展名为prof即可。</p>
+<ul>
+<li>若采用表格形式profile文件，则直接保存到文本文件并添加其他的结构信息。</li>
+</ul>
+<p><img src="http://i1.piimg.com/567571/080530d6455371ef.png" alt=""></p>
+<ul>
+<li>若采用CSV格式，则需要在Excel文件中添加文本信息并保存为CSV格式。</li>
+</ul>
+<p><img src="http://i2.muimg.com/567571/88ddb6cbc526184a.png" alt=""></p>
+<p>保存后用文本编辑器打开csv文件。</p>
+<p><img src="http://i1.piimg.com/567571/e5560678a4bba06b.png" alt=""></p>
+<p>需要去掉数据信息后的逗号，如上图中前三行行末尾的逗号。去掉完毕后保存csv文件即可。</p>
+<hr>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Fluent/" rel="tag"># Fluent</a>
+          
+            <a href="/tags/动网格/" rel="tag"># 动网格</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/04/02/Fluent DynamicMesh/Fluent动网格【1】：概述/" rel="next" title="Fluent动网格【1】：概述">
+                <i class="fa fa-chevron-left"></i> Fluent动网格【1】：概述
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/04/04/Fluent DynamicMesh/Fluent动网格【3】：DEFINE_CG_MOTION宏/" rel="prev" title="Fluent动网格【3】：DEFINE_CG_MOTION宏">
+                Fluent动网格【3】：DEFINE_CG_MOTION宏 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#标准瞬态Profile文件"><span class="nav-number">1.</span> <span class="nav-text">标准瞬态Profile文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#表格形式瞬态Profile文件"><span class="nav-number">2.</span> <span class="nav-text">表格形式瞬态Profile文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CSV格式瞬态文件"><span class="nav-number">3.</span> <span class="nav-text">CSV格式瞬态文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#profile文件中的物理量"><span class="nav-number">4.</span> <span class="nav-text">profile文件中的物理量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#时间步长"><span class="nav-number">5.</span> <span class="nav-text">时间步长</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个案例"><span class="nav-number">6.</span> <span class="nav-text">一个案例</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

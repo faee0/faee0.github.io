@@ -1,0 +1,894 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CFD,小白CFD之旅," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="学了一周的流体力学，小白对于流体力学有了基本的了解，但是流体力学涵盖的内容何其之多，一周的时间怎么可能学得好呢，很多的概念都是模棱两可。为了在一个月之后能够应用CFD，小白又找到了黄师姐。 “师姐，看了一周的流体力学，现在对它有了基本的认识，我想知道计算流体力学和流体力学有什么联系么？“小白问。”小白，这样吧，我给你推荐一本书，你先去图书馆借出来自己先看看吧，有不懂的再来问我。“黄师姐说。于是，小">
+<meta name="keywords" content="CFD,小白CFD之旅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【小白的CFD之旅】07：CFD常识">
+<meta property="og:url" content="bestcax.top/2016/04/07/xiaobai/【小白的CFD之旅】07：CFD常识/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="学了一周的流体力学，小白对于流体力学有了基本的了解，但是流体力学涵盖的内容何其之多，一周的时间怎么可能学得好呢，很多的概念都是模棱两可。为了在一个月之后能够应用CFD，小白又找到了黄师姐。 “师姐，看了一周的流体力学，现在对它有了基本的认识，我想知道计算流体力学和流体力学有什么联系么？“小白问。”小白，这样吧，我给你推荐一本书，你先去图书馆借出来自己先看看吧，有不懂的再来问我。“黄师姐说。于是，小">
+<meta property="og:image" content="http://olx22rz2y.bkt.clouddn.com/17-6-18/69225799.jpg">
+<meta property="og:image" content="http://olx22rz2y.bkt.clouddn.com/17-6-18/27284715.jpg">
+<meta property="og:updated_time" content="2017-06-18T09:18:02.974Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【小白的CFD之旅】07：CFD常识">
+<meta name="twitter:description" content="学了一周的流体力学，小白对于流体力学有了基本的了解，但是流体力学涵盖的内容何其之多，一周的时间怎么可能学得好呢，很多的概念都是模棱两可。为了在一个月之后能够应用CFD，小白又找到了黄师姐。 “师姐，看了一周的流体力学，现在对它有了基本的认识，我想知道计算流体力学和流体力学有什么联系么？“小白问。”小白，这样吧，我给你推荐一本书，你先去图书馆借出来自己先看看吧，有不懂的再来问我。“黄师姐说。于是，小">
+<meta name="twitter:image" content="http://olx22rz2y.bkt.clouddn.com/17-6-18/69225799.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2016/04/07/xiaobai/【小白的CFD之旅】07：CFD常识/"/>
+
+
+
+
+
+  <title>【小白的CFD之旅】07：CFD常识 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2016/04/07/xiaobai/【小白的CFD之旅】07：CFD常识/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【小白的CFD之旅】07：CFD常识</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-04-07T11:11:11+08:00">
+                2016-04-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/小白CFD之旅/" itemprop="url" rel="index">
+                    <span itemprop="name">小白CFD之旅</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>学了一周的流体力学，小白对于流体力学有了基本的了解，但是流体力学涵盖的内容何其之多，一周的时间怎么可能学得好呢，很多的概念都是模棱两可。为了在一个月之后能够应用CFD，小白又找到了黄师姐。</p>
+<p>“师姐，看了一周的流体力学，现在对它有了基本的认识，我想知道计算流体力学和流体力学有什么联系么？“小白问。<br>”小白，这样吧，我给你推荐一本书，你先去图书馆借出来自己先看看吧，有不懂的再来问我。“黄师姐说。<br>于是，小白去图书馆借到了黄师姐推荐的书《计算流体力学：从实践中学习》。<br><img src="http://olx22rz2y.bkt.clouddn.com/17-6-18/69225799.jpg" alt=""></p>
+<p>黑色的封皮儿，看着挺高端。听黄师姐介绍，这本书原本就是为高年级本科生准备的，里面的理论部分不是很多，而且书中更偏重于工程应用，非常适合于像小白这类零基础人员入门。</p>
+<p>黄师姐同时还叮嘱小白在阅读此书时思考的问题，并提醒重点弄明白以下问题：</p>
+<ul>
+<li><strong>CFD是什么？</strong></li>
+<li><strong>CFD可以应用于哪些场合？</strong></li>
+<li><strong>CFD是如何应用于工程的？</strong></li>
+<li><strong>常用的CFD软件有哪些？</strong></li>
+</ul>
+<p>小白去文具店买了个笔记本，将这些问题写在笔记本上。经过三天的学习，小白觉得已经把这几个问题弄清楚了。</p>
+<p>小白的学习心得：</p>
+<p>###1 CFD是什么</p>
+<ul>
+<li><strong>CFD是计算流体动力学（Computional Fluid Dynamic）的英文缩写，其利用计算机求解流体流动过程中的质量传递、能量传递、动量传递以及化学反应问题。CFD是一种方法或者工具，解决对象是流体力学问题，利用手段是数值计算。</strong></li>
+</ul>
+<p>###2 CFD应用场合</p>
+<ul>
+<li><strong>只要存在流体流动的场合均可应用CFD。随着计算机技术及计算机计算能力的发展，CFD以及广泛应用于航空航天、造船、汽车、食品、能源、石油化工、生物医学等领域，而且还在不断的向其他行业扩展。</strong></li>
+</ul>
+<p>###3 CFD如何应用于工程<br>要将CFD应用于工程，需要做很多的工作，一般来讲，CFD工程应用都可以分为三个阶段：<strong>前处理</strong>、<strong>计算求解</strong>以及<strong>计算后处理</strong>。</p>
+<p>####3.1 前处理<br>计算前处理的主要目的在于<strong>使计算机识别现实世界</strong>。计算机和人脑有很大的不同，要想让计算机识别真实世界是一件不太容易的事情。<br>举个简单的例子，如图所示，杯子里有水。<br><img src="http://olx22rz2y.bkt.clouddn.com/17-6-18/27284715.jpg" alt=""></p>
+<p>人类的识别方式可能是通过视觉将光学图像送入大脑，再凭借记忆将图像识别为杯子和水。<br>但是要让计算机来识别可就有点儿麻烦了。我们该怎样告诉计算机“这里有个杯子，杯子中有半杯水”这一事实呢？<br>首先要告诉计算机“这里有个杯子”。我们需要告诉计算机：</p>
+<ul>
+<li>杯子的尺寸。杯子的形状是怎样的？圆柱形还是圆台形？半径及壁厚等尺寸参数需要定义。</li>
+<li>杯子的空间属性。杯子是放在地上的还是放在桌子上？我们需要给它一个定位尺寸。<br>其次，我们需要告诉计算机“杯子中有水”。杯具的是，计算机可不知道什么水是什么玩意儿。不过我们可以告诉计算机：</li>
+<li>杯子中盛装的物质的各种物理性质。比如说水的密度、粘度、比热等。</li>
+<li>杯子中装了多少水。比如说告诉计算机水位高度或者水的体积。<br>通过提供 以上信息，计算机就能识别出“杯子中装了水”这一物理现实。</li>
+</ul>
+<p>前处理的作用就在如此，要告诉计算机流体流动发生的场合、流体属性、流体流动遵循的物理规则等。CFD前处理包含以下一些内容：</p>
+<ul>
+<li><strong>定义流动计算域</strong>：建立流体流动区域。告诉计算机流体流动发生的场合。</li>
+<li><strong>计算域离散</strong>：将流动计算区域离散成网格单元。</li>
+<li><strong>指定计算控制方程</strong>：告诉计算机所要解决的流体流动遵循的物理规则。</li>
+<li><strong>定义边界流动条件</strong>：特定流动问题有特定的流动边界条件。</li>
+<li><strong>定义初始时刻流动条件</strong>：告诉计算机，零时刻计算域处于何种状态。</li>
+</ul>
+<ul>
+<li><p><strong>求解参数定义</strong>：  如指定串行或并行计算、计算过程监测、离散算法指定等。</p>
+</li>
+<li><p><strong>输出参数定义</strong>：定义计算过程中一些计算参数输出。</p>
+</li>
+</ul>
+<p>####3.2 计算求解</p>
+<ul>
+<li><strong>计算求解</strong>通常由计算机自动完成，一般不需要人工干预。在前处理指定完毕后，求解器读取所有的求解参数进行自动求解计算，直至求解完成。</li>
+</ul>
+<p>####3.3 计算后处理<br>通过<strong>计算后处理</strong>将计算求解得到的数据以直观的方式展示出来，便于解读和工程应用。数据展现的方式包括：</p>
+<ul>
+<li><strong>数据表</strong>：每一个网格节点上的物理量数据，通常为压力、速度等原始变量。</li>
+<li><strong>曲线图</strong>：反映物理量变化规律</li>
+<li><strong>云图</strong>：反映物理量空间分布</li>
+<li><strong>矢量图</strong>：反映矢量空间分布</li>
+<li><strong>动画</strong>：以动画形式反应物理量随时间变化</li>
+</ul>
+<p>###4 CFD软件<br>CFD本身是一种数值计算方法，常常将其编制为计算机程序。当前有很多CFD软件可用于工程流体计算，根据软件功能，可分为<strong>通用软件</strong>及<strong>专业软件</strong>；根据软件源代码是否公开，可分为<strong>商业软件</strong>及<strong>开源软件</strong>；根据软件在CFD过程中的位置，可分为<strong>前处理软件</strong>、<strong>求解器软件</strong>及<strong>后处理软件</strong>。</p>
+<p>####4.1 通用软件及专业软件</p>
+<ul>
+<li><strong>通用软件</strong>：设计用于所有的CFD场合，求解的是通用流体控制方程。通用软件的前处理对象普遍，能应付大多数的工程问题。然而也正是因为要保证通用性，而牺牲了部分性能。<strong>通用CFD软件很多，比较常用的如ANSYS系列的FLUENT及CFX、CD-Adapco公司的STAR CCM+及STAR CD、ESI公司的Fastran及ACE+、CHAM公司的Phoenics、Metacomp公司的CFD++、Altair公司的Acusolve等 </strong></li>
+<li><strong>专业软件</strong>：专为某一行业设计的CFD软件。<strong>专业CFD软件如用于泵阀压缩机的PumpLinx、NUMECA；用于火灾消防的pyrosim及FDS等；用于建筑物暖通计算的Flovent及AirPak等；用于电子散热的Flotherm及Icepak等</strong>，专业软件在特定的行业上具备通用软件无可比拟的建模和计算精度优势。</li>
+</ul>
+<p>####4.2 商业软件及开源软件</p>
+<ul>
+<li><strong>商业软件</strong>：软件源代码不公开，需要花钱购买的软件。上网提到的CFD软件都是商业软件，都需要花费不少的银子才能使用。</li>
+<li><strong>开源软件</strong>：源代码公开的软件，用户可以自己进行编译也可以对源代码进行修改形成自己的计算软件。目前CFD开源软件也不少，比较出名的如<strong>OpenFoam、SU2等</strong>都是比较好的开源CFD软件。</li>
+</ul>
+<p>####4.3 前处理及后处理软件<br>前面提到的CFD软件基本上都是求解器软件（不排除 一些软件包含前后处理），当前市面上还存在一些专业前后处理软件。</p>
+<ul>
+<li><strong>前处理软件</strong>：对于CFD前处理软件，其主要任务是进行网格划分。<strong>代表性的CFD商用前软件包括ICEM CFD、Pointwise、Gridgen、GridPro等，开源前处理软件如Gmsh、Salome等</strong></li>
+<li><strong>后处理软件</strong>：后处理软件也有不少，<strong>代表性的商用后处理软件包括Tecplot、Ensight等，开源的如ParaView等</strong>。</li>
+</ul>
+<hr>
+<p>####<font color="#FF0000">郑重申明</font></p>
+<ul>
+<li><strong>本系列根据真实经历改编，如有雷同实属巧合，请勿人肉</strong></li>
+<li><strong>转载请务必保证文字完整</strong></li>
+</ul>
+<hr>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CFD/" rel="tag"># CFD</a>
+          
+            <a href="/tags/小白CFD之旅/" rel="tag"># 小白CFD之旅</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/06/xiaobai/【小白的CFD之旅】06：流体力学基础/" rel="next" title="【小白的CFD之旅】06：流体力学基础">
+                <i class="fa fa-chevron-left"></i> 【小白的CFD之旅】06：流体力学基础
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/08/xiaobai/【小白的CFD之旅】08：CFD速成之道/" rel="prev" title="【小白的CFD之旅】08：CFD速成之道">
+                【小白的CFD之旅】08：CFD速成之道 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,882 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CFD,小白CFD之旅," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="小白最近对流体计算的收敛产生了困惑。以前在学习高等数学的时候，小白接触过了级数的收敛，由于当时贪玩，并未将其放在心上，因此大学结束了小白也只是记住有这么一个名词罢了。现如今在利用CFD的过程中，小白又一次碰到了“收敛”这一名词。小白找了很多的资料，然而资料中关于收敛的介绍，无一不是一大堆的数学公式，小白觉得头很疼。“出来混，总是要还的。”小白的心情很复杂。 “流体计算为什么要收敛？收敛是什么意思？">
+<meta name="keywords" content="CFD,小白CFD之旅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【小白的CFD之旅】26：何为收敛">
+<meta property="og:url" content="bestcax.top/2016/04/26/xiaobai/【小白的CFD之旅】26：何为收敛/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="小白最近对流体计算的收敛产生了困惑。以前在学习高等数学的时候，小白接触过了级数的收敛，由于当时贪玩，并未将其放在心上，因此大学结束了小白也只是记住有这么一个名词罢了。现如今在利用CFD的过程中，小白又一次碰到了“收敛”这一名词。小白找了很多的资料，然而资料中关于收敛的介绍，无一不是一大堆的数学公式，小白觉得头很疼。“出来混，总是要还的。”小白的心情很复杂。 “流体计算为什么要收敛？收敛是什么意思？">
+<meta property="og:updated_time" content="2017-06-18T09:03:03.570Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【小白的CFD之旅】26：何为收敛">
+<meta name="twitter:description" content="小白最近对流体计算的收敛产生了困惑。以前在学习高等数学的时候，小白接触过了级数的收敛，由于当时贪玩，并未将其放在心上，因此大学结束了小白也只是记住有这么一个名词罢了。现如今在利用CFD的过程中，小白又一次碰到了“收敛”这一名词。小白找了很多的资料，然而资料中关于收敛的介绍，无一不是一大堆的数学公式，小白觉得头很疼。“出来混，总是要还的。”小白的心情很复杂。 “流体计算为什么要收敛？收敛是什么意思？">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2016/04/26/xiaobai/【小白的CFD之旅】26：何为收敛/"/>
+
+
+
+
+
+  <title>【小白的CFD之旅】26：何为收敛 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2016/04/26/xiaobai/【小白的CFD之旅】26：何为收敛/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【小白的CFD之旅】26：何为收敛</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-04-26T11:11:11+08:00">
+                2016-04-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/小白CFD之旅/" itemprop="url" rel="index">
+                    <span itemprop="name">小白CFD之旅</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>小白最近对流体计算的收敛产生了困惑。以前在学习高等数学的时候，小白接触过了级数的收敛，由于当时贪玩，并未将其放在心上，因此大学结束了小白也只是记住有这么一个名词罢了。现如今在利用CFD的过程中，小白又一次碰到了“收敛”这一名词。小白找了很多的资料，然而资料中关于收敛的介绍，无一不是一大堆的数学公式，小白觉得头很疼。<br>“出来混，总是要还的。”小白的心情很复杂。</p>
+<p>“流体计算为什么要收敛？收敛是什么意思？不收敛又有什么后果？如何判断是会否收敛？如果不收敛该采取何种措施使其收敛？”小白带着满腔的疑惑，找到了小牛师兄。</p>
+<p>“师兄，最近在看资料的时候，老是碰到<strong>收敛</strong>这个名词，我想问一下，什么叫收敛呢？我最近看了很多的资料，都是用一堆数学公式来表达，看了很久概念也很模糊。”小白问道。</p>
+<p>“也好，既然你注意到了收敛，今天我们就来聊一聊这个话题。”小牛师兄说。</p>
+<h1 id="计算机解决工程问题"><a href="#计算机解决工程问题" class="headerlink" title="计算机解决工程问题"></a>计算机解决工程问题</h1><p>“在谈收敛之前，我们还是先来谈一谈数值方法。关于数值计算，我想你也了解了不少。你说计算机解决这些工程问题到底是如何实现的呢？”小牛师兄问道。</p>
+<p>“我看了一些资料。利用计算机来解决工程问题，其核心是利用计算机求解物理模型，或者说是利用计算机求解数学方程。”小白说。</p>
+<p>“基本上是这样。我们知道描述现实世界物理现象的数学模型大部分都是微分方程，利用计算机并不能直接求解微分方程，计算机通常需要利用数学方法将这些微分方程转化为代数方程，通过求解代数方程获取原微分方程的解。那么问题来了，计算机是如何将微分方程转化为代数方程的呢？”小牛师兄说。</p>
+<p>“转化的方法其实有很多种，比如我们常说的有限差分法、有限元法、有限体积法等都是用来干这种工作的。为了实现这种软件，引入了网格。采用网格的目的是将连续的空间和时间转化为离散的空间与时间，从而在每一个网格单元或网格节点上获得代数方程。所有网格上的代数方程集合在一起，就构成了整个计算域上的代数方程组，求解方程组就可以得到每一个网格单元或网格节点上的物理量。”</p>
+<p>“当然，求解方程组得到的物理量还是离散的，为了得到节点之间或单元之间的物理量分布，采用了一种称之为<strong>插值</strong>的数学方法。利用插值可以得到近似连续的物理量分布。当计算网格或计算时间间隔足够小的时候，通过插值可以得到相当精确的计算结果。”小牛师兄说。</p>
+<p>“因此我们可以说，利用计算机求解工程问题，实际上归根结底是利用计算机求解工程问题所涉及的物理模型转化而成的代数方程。那么问题来了，利用计算机求解代数方程是怎么实现的呢？”小牛师兄说。</p>
+<p>“我记得线 性代数里面有讲到，可以采用矩阵求逆、高斯消去法、三角分解法、克拉默法则等。”小白说。</p>
+<p>“嗯，这些方法的确可以用于计算机求解线性方程组，这些方法可以统称为直接求解法。然而在工程应用上是存在很大问题的。我们知道，为了得到比较精确的计算结果，网格数量常常非常多，直接后果就是最终的代数方程组包含的方程数量非常非常多。打个比方，如果网格数量是100万个，那么最终求解的代数方程组就有100万个方程，在利用直接法求解的过程中，需要采用100万维的矩阵进行存储，如此庞大的矩阵，消耗的内存是非常巨大的，而且其求逆计算或三角分解计算都是非常困难的，计算效率是极其低下的。因此，工程上求解这类数量庞大的方程组通常采用<strong>迭代法</strong>。”小牛师兄说。</p>
+<p>“迭代法其实也有很多种，比较常见的如雅克比迭代、高斯-赛德尔迭代、超松弛迭代等等。关于迭代法求解线性方程组的具体方法，可以找一本数值计算的数看看。收敛就是迭代法求解线性方程组中的一个概念。”小牛师兄最后说。</p>
+<h1 id="关于迭代残差"><a href="#关于迭代残差" class="headerlink" title="关于迭代残差"></a>关于迭代残差</h1><p>为了更好的说明收敛的问题，这里先举个例子来说明什么叫残差。</p>
+<p>比如说要求解下面的线性方程组：<br>$$<br>\left{ \begin{array}{c}<br>8x_1-3x_2+2x_3=20\<br>4x_1+11x_2-x_3=33\<br>6x_1+3x_2+12x_3=36\<br>\end{array} \right.<br>$$<br>可将(1)式改写为迭代计算的形式：<br>$$<br>\left{ \begin{array}{c}<br>x_1 = \frac {1}{8}(3x_2-2x_3+20)\<br>x_2 = \frac {1}{11}(-4x_1+x_3+33)\<br>x_3 = \frac {1}{12}(-6x_1-3x_2+36)\<br>\end{array} \right.<br>$$<br>给定一个初值，如$x^{(0)}=(0,0,0)^T$，代入到式(2)中，可以得到$x^(1)=(2.5,3,3)^T$</p>
+<p>反复迭代，<br>$$<br>\left{ \begin{array}{c}<br>x_1^{(k+1)} = \frac {1}{8}(3x_2^{(k)}-2x_3^{(k)}+20)\<br>x_2^{(k+1)} = \frac {1}{11}(-4x_1^{(k)}+x_3^{(k)}+33)\<br>x_3 ^{(k+1)}= \frac {1}{12}(-6x_1^{(k)}-3x_2^{(k)}+36)\<br>\end{array} \right.<br>$$<br>可以得到一系列x1,x2及x3的值。<br>| 迭代次数 | x1          | x2          | x3          |<br>| —- | ———– | ———– | ———– |<br>| 0    | 0           | 0           | 0           |<br>| 1    | 2.5         | 3           | 3           |<br>| 2    | 2.875       | 2.363636364 | 1           |<br>| 3    | 3.136363636 | 2.045454545 | 0.971590909 |<br>| 4    | 3.024147727 | 1.947830579 | 0.920454545 |<br>| 5    | 3.000322831 | 1.983987603 | 1.000968492 |<br>| 6    | 2.993753228 | 1.999970652 | 1.003841684 |<br>| 7    | 2.999028573 | 2.002620797 | 1.003130723 |<br>| 8    | 3.000200118 | 2.000637857 | 0.999830514 |<br>| 9    | 3.000281568 | 1.999911822 | 0.999740477 |<br>| 10   | 3.000031814 | 1.999874019 | 0.999881261 |<br>| 11   | 2.999982442 | 1.999977637 | 1.000015588 |<br>| 12   | 2.999987717 | 2.000007802 | 1.00001437  |<br>| 13   | 2.999999333 | 2.000005773 | 1.000004191 |<br>| 14   | 3.000001117 | 2.000000623 | 0.99999889  |<br>| 15   | 3.000000511 | 1.999999493 | 0.999999286 |<br>| 16   | 2.999999988 | 1.999999749 | 0.999999871 |<br>| 17   | 2.999999938 | 1.999999992 | 1.000000068 |<br>| 18   | 2.99999998  | 2.000000029 | 1.000000033 |<br>| 19   | 3.000000003 | 2.00000001  | 1.000000003 |<br>| 20   | 3.000000003 | 1.999999999 | 0.999999996 |</p>
+<p>可以看出，随着迭代计算的进行，计算结果越来越接近解析解[3,2,1]。</p>
+<p>我们可以将<strong>某一物理量两次迭代计算值的差值称之为该物理量的迭代残差</strong>。比如上面的迭代计算x1的第一次迭代计算残差为2.5，第二次迭代计算后残差变为0.375。</p>
+<p>当然上面提到的残差为<strong>绝对残差</strong>，在实际计算过程中，有时也常常采用<strong>相对残差</strong>，即物理量随迭代进行的变化量。可以看到，当残差非常小时，可以认为不用再往下计算了，或者说再往下算已经没有太大意义了。</p>
+<h1 id="CFD计算中的残差"><a href="#CFD计算中的残差" class="headerlink" title="CFD计算中的残差"></a>CFD计算中的残差</h1><p>在CFD计算中，每一个网格上都会存储众多物理量，因此每一个网格上的任一个物理量在计算迭代过程中都会存在一个残差，这意味着在一次迭代过程中，同一物理量在不同的计算网格上有不同的计算残差，而实际上我们在进行CFD计算时，每一个迭代步只对应着一个残差值。</p>
+<p>CFD中残差分为几种：</p>
+<p><strong>最大残差</strong>：在一次迭代中，取所有网格中的残差值的最大值作为本次计算的残差。</p>
+<p><strong>平均残差</strong>：在一次迭代中，计算所有网格中的算术平均值作为本次迭代的残差</p>
+<p><strong>均方根残差</strong>：在一次计算，计算所有网格中残差值的均方根作为本次迭代计算的残差</p>
+<p>在CFD计算中，常常采用均方根残差（RMS）作为残差值。</p>
+<h1 id="CFD中的收敛"><a href="#CFD中的收敛" class="headerlink" title="CFD中的收敛"></a>CFD中的收敛</h1><p>所谓迭代收敛，简单来说，就是在迭代计算过程中，物理量趋于某一值的情况。CFD计算中判断收敛通常有三种方法。</p>
+<p><strong>收敛判断规则之一：</strong>残差达到某一设定标准时可以认为迭代计算达到收敛。</p>
+<p>这条规则最简单，在实际工程应用中也最常用。通常设定某一标准，当迭代计算过程中残差值低于此标准时则认为计算收敛。这也是几乎所有CFD软件用于判断收敛的基本方法。</p>
+<p>然而此规则在实际工程应用中常常无法使用，有些复杂的问题，无论你怎么计算，其残差也不会下降，甚至有时候残差会出现周期性震荡。</p>
+<p>残差稳定在某一位置不下降的原因有很多，常见的原因包括：</p>
+<ul>
+<li>计算区域中存在低质量的网格。低质量的网格会造成计算残差增大及残差震荡</li>
+<li>边界条件设置有误。错误的边界条件或边界类型搭配都会导致计算残差震荡。</li>
+<li>利用稳态求解器计算瞬态问题也会造成残差的震荡。</li>
+</ul>
+<p>在残差无法达到设定标准的时候该如何判断收敛呢？需要注意的是，此时的收敛并非数学意义上的收敛了，而只是意味着我们可以停止计算。</p>
+<p><strong>收敛判断规则之二</strong>：进出口物理量通量达到平衡</p>
+<p>最常用的是判断进出口质量是否相等，这实际上是判断连续性条件是否达到满足的。实际上还有很多，如计算域中包含化学反应时，判断进出口组分是否守恒；如计算域中包含多相流时，判断进出口各相质量是否守恒等。此规则是一种非常弱的规则，实际上只是收敛的一个必要条件而已。但是在第一条判断规则无法达到时，也常常采用此规则来判断。</p>
+<p><strong>收敛判断规则三</strong>：计算域中的物理量随迭代进行不再发生变化</p>
+<p>这条规则在实际应用中也很常用，甚至比第二条规则更常用。在实际工程中，经常监测某些敏感位置的物理量，当随着迭代进行，监测的量不再发生变化时，基本可以认为计算达到收敛。</p>
+<p>注意后两种方法只是在残差无法达到标准时才采用的判断方法，并不意味着计算就收敛了。</p>
+<h1 id="稳态及瞬态计算的收敛"><a href="#稳态及瞬态计算的收敛" class="headerlink" title="稳态及瞬态计算的收敛"></a>稳态及瞬态计算的收敛</h1><p>在CFD迭代计算过程中，稳态残差曲线与瞬态残差曲线的形态有很大的不同。<br>如下图所示为稳态计算残差，每一个物理量都有一条残差曲线，当残差曲线低于设定的标准时认为计算收敛，当所有的残差曲线低于设定的标准时，计算结束。</p>
+<p>下图所示为典型的瞬态计算残差。可以看到其形状特征与稳态残差曲线有很大的不同。瞬态计算要求在每一个计算时间步内达到收敛。若不能达到收敛，则迭代次数达到所设定的内迭代次数后进入下一个时间步，重新开启迭代计算。因此瞬态计算残差呈现出下图所示的锯齿状。<br>  <strong>注意</strong>：瞬态计算要求每一个时间步内均达到收敛。</p>
+<hr>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CFD/" rel="tag"># CFD</a>
+          
+            <a href="/tags/小白CFD之旅/" rel="tag"># 小白CFD之旅</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/25/xiaobai/【小白的CFD之旅】25：二维还是三维/" rel="next" title="【小白的CFD之旅】25：二维还是三维">
+                <i class="fa fa-chevron-left"></i> 【小白的CFD之旅】25：二维还是三维
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/27/xiaobai/【小白的CFD之旅】27：小结及预告/" rel="prev" title="【小白的CFD之旅】27：小结及预告">
+                【小白的CFD之旅】27：小结及预告 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#计算机解决工程问题"><span class="nav-number">1.</span> <span class="nav-text">计算机解决工程问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#关于迭代残差"><span class="nav-number">2.</span> <span class="nav-text">关于迭代残差</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CFD计算中的残差"><span class="nav-number">3.</span> <span class="nav-text">CFD计算中的残差</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CFD中的收敛"><span class="nav-number">4.</span> <span class="nav-text">CFD中的收敛</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#稳态及瞬态计算的收敛"><span class="nav-number">5.</span> <span class="nav-text">稳态及瞬态计算的收敛</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

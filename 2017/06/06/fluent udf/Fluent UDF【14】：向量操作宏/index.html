@@ -1,0 +1,894 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Fluent,UDF," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="CFD计算中存在众多的向量，典型的如速度、角速度等。向量的运算要比标量运算复杂，UDF提供了众多的向量操作宏用于向量的运算。 对于这些向量操作宏，UDF头文件中对这些宏的名称进行了区分。如宏名称中包含v，则表示为向量，S表示为标量，D表示为向量的三个分量序列，在2D模型中，第三个分量被忽略。矢量函数不遵循括号、指数、乘法、除法、加法和减法（PEMDAS）的运算顺序约定。 取而代之的是利用下划线（_">
+<meta name="keywords" content="Fluent,UDF">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fluent UDF【14】：向量操作宏">
+<meta property="og:url" content="bestcax.top/2017/06/06/fluent udf/Fluent UDF【14】：向量操作宏/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="CFD计算中存在众多的向量，典型的如速度、角速度等。向量的运算要比标量运算复杂，UDF提供了众多的向量操作宏用于向量的运算。 对于这些向量操作宏，UDF头文件中对这些宏的名称进行了区分。如宏名称中包含v，则表示为向量，S表示为标量，D表示为向量的三个分量序列，在2D模型中，第三个分量被忽略。矢量函数不遵循括号、指数、乘法、除法、加法和减法（PEMDAS）的运算顺序约定。 取而代之的是利用下划线（_">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3577886-d669d698a12ddeea.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2017-06-19T13:24:12.137Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Fluent UDF【14】：向量操作宏">
+<meta name="twitter:description" content="CFD计算中存在众多的向量，典型的如速度、角速度等。向量的运算要比标量运算复杂，UDF提供了众多的向量操作宏用于向量的运算。 对于这些向量操作宏，UDF头文件中对这些宏的名称进行了区分。如宏名称中包含v，则表示为向量，S表示为标量，D表示为向量的三个分量序列，在2D模型中，第三个分量被忽略。矢量函数不遵循括号、指数、乘法、除法、加法和减法（PEMDAS）的运算顺序约定。 取而代之的是利用下划线（_">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/3577886-d669d698a12ddeea.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2017/06/06/fluent udf/Fluent UDF【14】：向量操作宏/"/>
+
+
+
+
+
+  <title>Fluent UDF【14】：向量操作宏 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2017/06/06/fluent udf/Fluent UDF【14】：向量操作宏/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Fluent UDF【14】：向量操作宏</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-06T12:12:12+08:00">
+                2017-06-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Fluent-UDF/" itemprop="url" rel="index">
+                    <span itemprop="name">Fluent UDF</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>CFD计算中存在众多的向量，典型的如速度、角速度等。向量的运算要比标量运算复杂，UDF提供了众多的向量操作宏用于向量的运算。</p>
+<p>对于这些向量操作宏，UDF头文件中对这些宏的名称进行了区分。如宏名称中包含v，则表示为向量，S表示为标量，D表示为向量的三个分量序列，在2D模型中，第三个分量被忽略。矢量函数不遵循括号、指数、乘法、除法、加法和减法（PEMDAS）的运算顺序约定。 取而代之的是利用下划线（_）符号将操作数分组成对，以便在成组之前对元素执行操作。</p>
+<h1 id="1-ND操作宏"><a href="#1-ND操作宏" class="headerlink" title="1 ND操作宏"></a>1 ND操作宏</h1><p>UDF中使用较多的ND操作宏包括：ND_ND、ND_SUM及ND_SET。</p>
+<h2 id="1-1-ND-ND宏"><a href="#1-1-ND-ND宏" class="headerlink" title="1.1 ND_ND宏"></a>1.1 ND_ND宏</h2><p>ND_ND为常数，在2D模型中其值为2，在3D模型中其值为3。</p>
+<p><strong>注意：ND_ND宏的值不可以改变。如下语句ND_ND=1是错误的。在实际应用过程中，把ND_ND当做是数字。</strong></p>
+<p>如下语句定义了一个矩阵：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">real A[ND_ND][ND_ND];</div></pre></td></tr></table></figure>
+<h2 id="1-2-ND-SUM宏"><a href="#1-2-ND-SUM宏" class="headerlink" title="1.2 ND_SUM宏"></a>1.2 ND_SUM宏</h2><p>ND_SUM宏用于计算其参数的和。</p>
+<p>如代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ND_SUM(x,y,z);</div></pre></td></tr></table></figure>
+<p>在2D模型中，其等效于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">x+y;</div></pre></td></tr></table></figure>
+<p>而在3D模型中，其等效于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">x+y+z;</div></pre></td></tr></table></figure>
+<h2 id="1-3-ND-SET宏"><a href="#1-3-ND-SET宏" class="headerlink" title="1.3 ND_SET宏"></a>1.3 ND_SET宏</h2><p>ND_SET宏用于设置其参数。如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ND_SET(u,v,w,C_U(c,t),C_V(c,t),C_W(c,t));</div></pre></td></tr></table></figure>
+<p>在2D模型中，其等效为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">u = C_U(c,t);</div><div class="line">v = C_V(c,t);</div></pre></td></tr></table></figure>
+<p>在3D模型中，其等效为：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">u = C_U(c,t);</div><div class="line">v = C_V(c,t);</div><div class="line">w = C_W(c,t);</div></pre></td></tr></table></figure></p>
+<h1 id="2-NV宏"><a href="#2-NV宏" class="headerlink" title="2 NV宏"></a>2 NV宏</h1><p>NV宏与ND宏类似，只不过NV宏操作的是向量。</p>
+<h2 id="2-1-NV-V宏"><a href="#2-1-NV-V宏" class="headerlink" title="2.1 NV_V宏"></a>2.1 NV_V宏</h2><p>NV_V宏进行向量赋值操作。如代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">NV_V(a, = , x);</div></pre></td></tr></table></figure>
+<p>其等效于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">a[<span class="number">0</span>] = x[<span class="number">0</span>];</div><div class="line">a[<span class="number">1</span>] = x[<span class="number">1</span>];</div><div class="line">a[<span class="number">2</span>] = x[<span class="number">2</span>];</div></pre></td></tr></table></figure>
+<p>宏中间的操作符可以是<strong>+=</strong>，此时则换为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">a[<span class="number">0</span>] += x[<span class="number">0</span>];</div><div class="line">a[<span class="number">1</span>] += x[<span class="number">1</span>];</div><div class="line">a[<span class="number">2</span>] += x[<span class="number">2</span>];</div></pre></td></tr></table></figure>
+<h2 id="2-2-NV-VV宏"><a href="#2-2-NV-VV宏" class="headerlink" title="2.2 NV_VV宏"></a>2.2 NV_VV宏</h2><p>NV_VV宏能实现向量元素操作。如代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">NV_VV(a , = , x , + , y);</div></pre></td></tr></table></figure>
+<p>则其等效于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">a[<span class="number">0</span>] = x[<span class="number">0</span>] + y[<span class="number">0</span>];</div><div class="line">a[<span class="number">1</span>] = x[<span class="number">1</span>] + y[<span class="number">1</span>];</div></pre></td></tr></table></figure>
+<h2 id="2-3-NV-V-VS宏"><a href="#2-3-NV-V-VS宏" class="headerlink" title="2.3 NV_V_VS宏"></a>2.3 NV_V_VS宏</h2><p>此宏可用于向量与标量的乘积运算。如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">NV_V_VS(a, = , x, + , y, *, <span class="number">0.5</span>);</div></pre></td></tr></table></figure>
+<p>等效于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">a[<span class="number">0</span>] = x[<span class="number">0</span>] + y[<span class="number">0</span>] * <span class="number">0.5</span>;</div><div class="line">a[<span class="number">1</span>] = x[<span class="number">1</span>] + y[<span class="number">1</span>] * <span class="number">0.5</span>;</div></pre></td></tr></table></figure>
+<h2 id="2-4-NV-VS-VS宏"><a href="#2-4-NV-VS-VS宏" class="headerlink" title="2.4 NV_VS_VS宏"></a>2.4 NV_VS_VS宏</h2><p>矢量与标量的混合运算。如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">NV_VS_VS(a, =, x, *, <span class="number">2.0</span>, +, y, *, <span class="number">0.5</span>);</div></pre></td></tr></table></figure>
+<p>此语句等效于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">a[<span class="number">0</span>] = (x[<span class="number">0</span>]*<span class="number">2.0</span>) + (y[<span class="number">0</span>]*<span class="number">0.5</span>);</div><div class="line">a[<span class="number">1</span>] = (x[<span class="number">1</span>]*<span class="number">2.0</span>) + (y[<span class="number">1</span>]*<span class="number">0.5</span>);</div></pre></td></tr></table></figure>
+<h1 id="3-向量操作宏"><a href="#3-向量操作宏" class="headerlink" title="3 向量操作宏"></a>3 向量操作宏</h1><p>向量操作宏可用于向量的求模运算、点乘与叉乘运算。</p>
+<h2 id="3-1-NV-MAG及NV-MAG2"><a href="#3-1-NV-MAG及NV-MAG2" class="headerlink" title="3.1 NV_MAG及NV_MAG2"></a>3.1 NV_MAG及NV_MAG2</h2><p>这两个宏用于求取向量的模及模的平方。如宏NV_MAG示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">NV_MAG(x);</div></pre></td></tr></table></figure>
+<p>等效于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="number">2</span>D中: <span class="built_in">sqrt</span>(x[<span class="number">0</span>]*x[<span class="number">0</span>] + x[<span class="number">1</span>]*x[<span class="number">1</span>]);</div><div class="line"><span class="number">3</span>D中: <span class="built_in">sqrt</span>(x[<span class="number">0</span>]*x[<span class="number">0</span>] + x[<span class="number">1</span>]*x[<span class="number">1</span>] + x[<span class="number">2</span>]*x[<span class="number">2</span>]);</div></pre></td></tr></table></figure>
+<p>而NV_MAG2则计算向量的模的平方。如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">NV_MAG2(x);</div></pre></td></tr></table></figure>
+<p>等效于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="number">2</span>D: (x[<span class="number">0</span>]*x[<span class="number">0</span>] + x[<span class="number">1</span>]*x[<span class="number">1</span>]);</div><div class="line"><span class="number">3</span>D: (x[<span class="number">0</span>]*x[<span class="number">0</span>] + x[<span class="number">1</span>]*x[<span class="number">1</span>] + x[<span class="number">2</span>]*x[<span class="number">2</span>]);</div></pre></td></tr></table></figure>
+<h2 id="3-2-NV-DOT宏"><a href="#3-2-NV-DOT宏" class="headerlink" title="3.2 NV_DOT宏"></a>3.2 NV_DOT宏</h2><p>NV_DO宏用于向量的点积。可以有多种用法，如下示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">ND_DOT(x, y, z, u, v, w);</div><div class="line">  <span class="number">2</span>D: (x*u + y*v);</div><div class="line">  <span class="number">3</span>D: (x*u + y*v + z*w);</div><div class="line"> </div><div class="line">NV_DOT(x, u);</div><div class="line">  <span class="number">2</span>D: (x[<span class="number">0</span>]*u[<span class="number">0</span>] + x[<span class="number">1</span>]*u[<span class="number">1</span>]);</div><div class="line">  <span class="number">3</span>D: (x[<span class="number">0</span>]*u[<span class="number">0</span>] + x[<span class="number">1</span>]*u[<span class="number">1</span>] + x[<span class="number">2</span>]*u[<span class="number">2</span>]);</div><div class="line"> </div><div class="line">NVD_DOT(x, u, v, w);</div><div class="line">  <span class="number">2</span>D: (x[<span class="number">0</span>]*u + x[<span class="number">1</span>]*v);</div><div class="line">  <span class="number">3</span>D: (x[<span class="number">0</span>]*u + x[<span class="number">1</span>]*v + x[<span class="number">2</span>]*w);</div></pre></td></tr></table></figure>
+<h2 id="3-3-向量叉乘"><a href="#3-3-向量叉乘" class="headerlink" title="3.3 向量叉乘"></a>3.3 向量叉乘</h2><p>向量叉乘比较麻烦。如下示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">ND_CROSS_X(x0,x1,x2,y0,y1,y2)</div><div class="line">   <span class="number">2</span>D: <span class="number">0.0</span></div><div class="line">   <span class="number">3</span>D: (((x1)*(y2))-(y1)*(x2)))</div><div class="line"> </div><div class="line">ND_CROSS_Y(x0,x1,x2,y0,y1,y2)</div><div class="line">   <span class="number">2</span>D: <span class="number">0.0</span></div><div class="line">   <span class="number">3</span>D: (((x2)*(y0))-(y2)*(x0)))</div><div class="line"> </div><div class="line">ND_CROSS_Z(x0,x1,x2,y0,y1,y2)</div><div class="line">   <span class="number">2</span>D <span class="keyword">and</span> <span class="number">3</span>D: (((x0)*(y1))-(y0)*(x1)))</div><div class="line"> </div><div class="line">NV_CROSS_X(x,y)</div><div class="line">    ND_CROSS_X(x[<span class="number">0</span>],x[<span class="number">1</span>],x[<span class="number">2</span>],y[<span class="number">0</span>],y[<span class="number">1</span>],y[<span class="number">2</span>])</div><div class="line"> </div><div class="line">NV_CROSS_Y(x,y)</div><div class="line">    ND_CROSS_Y(x[<span class="number">0</span>],x[<span class="number">1</span>],x[<span class="number">2</span>],y[<span class="number">0</span>],y[<span class="number">1</span>],y[<span class="number">2</span>])</div><div class="line"> </div><div class="line">NV_CROSS_Z(x,y)</div><div class="line">    ND_CROSS_Z(x[<span class="number">0</span>],x[<span class="number">1</span>],x[<span class="number">2</span>],y[<span class="number">0</span>],y[<span class="number">1</span>],y[<span class="number">2</span>])</div><div class="line"> </div><div class="line">NV_CROSS(a,x,y)</div><div class="line">    a[<span class="number">0</span>] = NV_CROSS_X(x,y);</div><div class="line">    a[<span class="number">1</span>] = NV_CROSS_Y(x,y);</div><div class="line">    a[<span class="number">2</span>] = NV_CROSS_Z(x,y);</div></pre></td></tr></table></figure>
+<hr>
+<p>更多CFD资料可微信扫描下方二维码关注微信公众号。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/3577886-d669d698a12ddeea.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="微信扫码关注公众号"></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Fluent/" rel="tag"># Fluent</a>
+          
+            <a href="/tags/UDF/" rel="tag"># UDF</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/05/fluent udf/Fluent UDF【13】：循环操作宏/" rel="next" title="Fluent UDF【13】：循环操作宏">
+                <i class="fa fa-chevron-left"></i> Fluent UDF【13】：循环操作宏
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/06/07/fluent udf/Fluent UDF【15】：在Fluent外部编译UDF/" rel="prev" title="Fluent UDF【15】：在Fluent外部编译UDF">
+                Fluent UDF【15】：在Fluent外部编译UDF <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-ND操作宏"><span class="nav-number">1.</span> <span class="nav-text">1 ND操作宏</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-ND-ND宏"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 ND_ND宏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-ND-SUM宏"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 ND_SUM宏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-ND-SET宏"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 ND_SET宏</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-NV宏"><span class="nav-number">2.</span> <span class="nav-text">2 NV宏</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-NV-V宏"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 NV_V宏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-NV-VV宏"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 NV_VV宏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-NV-V-VS宏"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 NV_V_VS宏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-NV-VS-VS宏"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 NV_VS_VS宏</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-向量操作宏"><span class="nav-number">3.</span> <span class="nav-text">3 向量操作宏</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-NV-MAG及NV-MAG2"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 NV_MAG及NV_MAG2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-NV-DOT宏"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 NV_DOT宏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-向量叉乘"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 向量叉乘</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,924 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Fluent,UDF," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="有人留言说UDF专题好多内容是翻译自帮助文档，事实的确是这样的。UDF本没有太多需要介绍的内容，各位学习UDF的朋友们要养成查UDF文档的好习惯，没事儿多看看C语言，多动手练习。编程技能还是要靠不断地练习和总结，程序代码也要靠不断地修改和优化。从本期开始，UDF专题进入攻坚阶段。本期介绍UDF中的通用宏。 Fluent UDF提供了一些通用宏，用于控制Fluent在使用过程中的一些行为，一些比较常">
+<meta name="keywords" content="Fluent,UDF">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fluent UDF【16】：通用宏[1]">
+<meta property="og:url" content="bestcax.top/2017/06/08/fluent udf/Fluent UDF【16】：通用宏[1]/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="有人留言说UDF专题好多内容是翻译自帮助文档，事实的确是这样的。UDF本没有太多需要介绍的内容，各位学习UDF的朋友们要养成查UDF文档的好习惯，没事儿多看看C语言，多动手练习。编程技能还是要靠不断地练习和总结，程序代码也要靠不断地修改和优化。从本期开始，UDF专题进入攻坚阶段。本期介绍UDF中的通用宏。 Fluent UDF提供了一些通用宏，用于控制Fluent在使用过程中的一些行为，一些比较常">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/5944081d335c1.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/5944087dc6abb.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/594408c432db3.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/594409341a5c6.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/59440ae19c068.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/59440bb26cc49.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/59440c93d7b06.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/59440fe13a665.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/594410495a917.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/17/594412a4a84b2.jpg">
+<meta property="og:updated_time" content="2017-06-19T13:24:19.781Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Fluent UDF【16】：通用宏[1]">
+<meta name="twitter:description" content="有人留言说UDF专题好多内容是翻译自帮助文档，事实的确是这样的。UDF本没有太多需要介绍的内容，各位学习UDF的朋友们要养成查UDF文档的好习惯，没事儿多看看C语言，多动手练习。编程技能还是要靠不断地练习和总结，程序代码也要靠不断地修改和优化。从本期开始，UDF专题进入攻坚阶段。本期介绍UDF中的通用宏。 Fluent UDF提供了一些通用宏，用于控制Fluent在使用过程中的一些行为，一些比较常">
+<meta name="twitter:image" content="https://ooo.0o0.ooo/2017/06/17/5944081d335c1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2017/06/08/fluent udf/Fluent UDF【16】：通用宏[1]/"/>
+
+
+
+
+
+  <title>Fluent UDF【16】：通用宏[1] | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2017/06/08/fluent udf/Fluent UDF【16】：通用宏[1]/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Fluent UDF【16】：通用宏[1]</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-08T12:12:12+08:00">
+                2017-06-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Fluent-UDF/" itemprop="url" rel="index">
+                    <span itemprop="name">Fluent UDF</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>有人留言说UDF专题好多内容是翻译自帮助文档，事实的确是这样的。UDF本没有太多需要介绍的内容，各位学习UDF的朋友们要养成查UDF文档的好习惯，没事儿多看看C语言，多动手练习。编程技能还是要靠不断地练习和总结，程序代码也要靠不断地修改和优化。<br>从本期开始，UDF专题进入攻坚阶段。本期介绍UDF中的通用宏。</p>
+<p>Fluent UDF提供了一些通用宏，用于控制Fluent在使用过程中的一些行为，一些比较常用的通用宏包括：</p>
+<ul>
+<li><strong>DEFINE_ADJUST</strong>：用于操纵变量</li>
+<li><strong>DEFINE_DELTAT</strong>：用于调整时间步长</li>
+<li><strong>DEFINE_EXECUTE_AT_END</strong>：在迭代完成后执行操作</li>
+<li><strong>DEFINE_EXECUTE_AT_EXIT</strong>：在Fluent关闭时执行操作</li>
+<li><strong>DEFINE_EXECUTE_FROM_GUI</strong>：实现在用户自定义界面中执行操作</li>
+<li><strong>DEFINE_EXECUTE_ON_LOADING</strong>：加载UDF时执行一些操作</li>
+<li><strong>DEFINE_EXECUTE_AFTER_CASE/DATA</strong>：读取Case文件后执行操作</li>
+<li><strong>DEFINE_INIT</strong>：初始化</li>
+<li><strong>DEFINE_ON_DEMAND</strong>：异步执行一些操作</li>
+<li><strong>DEFINE_REPORT_DEFINITION_FN</strong>：为用户定义的报告返回值</li>
+<li><strong>DEFINE_RW_FILE</strong>：读写文件</li>
+<li><strong>DEFINE_RW_HDF_FILE</strong>：读写HDF文件</li>
+</ul>
+<h1 id="1-DEFINE-ADJUST宏"><a href="#1-DEFINE-ADJUST宏" class="headerlink" title="1 DEFINE_ADJUST宏"></a>1 DEFINE_ADJUST宏</h1><p>可以利用DEFINE_ADJUST宏调整或控制一些不作为调用参数的变量。例如用户可以使用DEFINE_ADJUST修改流动参数（如速度、压力等），也可以计算某些标量在全域的积分量，甚至可以基于计算结果调整边界条件。<strong>DEFINE_ADJUST宏在每一个迭代步被执行，并且在每一个迭代中传输方程求解之前被调用</strong>。</p>
+<ul>
+<li>宏形式：<strong>DEFINE_ADJUST(name , d)</strong></li>
+<li>宏参数：<strong>symbol name, Domain *d </strong></li>
+<li>返回值：<strong>无返回值</strong></li>
+<li>调用形式：<strong>解释或编译</strong><br>下面是一个简单的案例，其利用DEFINE_ADJUST宏在每一步迭代过程中计算区域内的湍流耗散率，计算结果显示在console中。<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"udf.h"</span></span></div><div class="line">DEFINE_ADJUST(my_adjust,d)</div><div class="line">&#123;</div><div class="line">    Thread *t;</div><div class="line">    <span class="comment">/* Integrate dissipation. */</span></div><div class="line">    real sum_diss=<span class="number">0.</span>;</div><div class="line">    <span class="keyword">cell_t</span> c;</div><div class="line">    thread_loop_c(t,d)</div><div class="line">    &#123;</div><div class="line">     begin_c_loop(c,t)</div><div class="line">     &#123;</div><div class="line">         sum_diss += C_D(c,t)* C_VOLUME(c,t);</div><div class="line">      &#125;</div><div class="line">     end_c_loop(c,t)</div><div class="line">    &#125;</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"总耗散率: %g\n"</span>, sum_diss);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>DEFINE_ADJUST宏编译或解释后，可以通过<strong>User Defined</strong>标签页下的<strong>Function Hooks…</strong>工具按钮来加载。如下图所示。</p>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/5944081d335c1.jpg" alt=""></p>
+<p>选择此工具按钮后弹出UDF加载对话框，如下图所示。</p>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/5944087dc6abb.jpg" alt=""></p>
+<p>选择<strong>Adjust</strong>后的<strong>Edit…</strong>按钮，弹出<strong>Adjust Functions</strong>对话框，如下图所示，选择列表框中的宏，选择<strong>Add</strong>按钮将其从左侧列表框中加载至右侧列表框，点击<strong>OK</strong>按钮确认操作并关闭对话框。</p>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/594408c432db3.jpg" alt=""></p>
+<p>这样，DEFINE_ADJUST宏就被被挂载到Fluent中，在每一次迭代时都会调用。</p>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/594409341a5c6.jpg" alt=""></p>
+<h1 id="2-DEFINE-DELTAT"><a href="#2-DEFINE-DELTAT" class="headerlink" title="2 DEFINE_DELTAT"></a>2 DEFINE_DELTAT</h1><p><strong>DEFINE_DELTAT宏主要用于在瞬态求解过程中控制时间步长。</strong>需要注意的是：<strong>此宏只能用于Time Stepping Method为Adaptive时。若为默认的Fixed，则会出错。</strong>如下图所示。</p>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/59440ae19c068.jpg" alt=""></p>
+<ul>
+<li>宏形式：<strong>DEFINE_DELTAT(name , d)</strong></li>
+<li>宏参数：<strong>symbol name, Domain *d </strong></li>
+<li>返回值：<strong>real</strong></li>
+<li>调用形式：<strong>解释或编译</strong></li>
+</ul>
+<p>如下例程为调整时间步长，当计算时间小于0.5s时，采用时间步长0.1s，其他时刻时间步长采用0.2。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"udf.h"</span></span></div><div class="line"> </div><div class="line">DEFINE_DELTAT(mydeltat,d)</div><div class="line">&#123;</div><div class="line">   real time_step;</div><div class="line">   real flow_time = CURRENT_TIME;</div><div class="line">   <span class="keyword">if</span> (flow_time &lt; <span class="number">0.5</span>)</div><div class="line">       time_step = <span class="number">0.1</span>;</div><div class="line">   <span class="keyword">else</span></div><div class="line">       time_step = <span class="number">0.2</span>;</div><div class="line">   <span class="keyword">return</span> time_step;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>解释或编译UDF后，此宏的加载方式为：</p>
+<ul>
+<li>选择Run Calculation树形节点后，选择Time Stepping Method为Adaptive。</li>
+<li>点选按钮<strong>Settings…</strong>，如下图所示。</li>
+</ul>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/59440bb26cc49.jpg" alt=""></p>
+<ul>
+<li>在弹出的设置对话框中，设置<strong>User-Defined Time Step</strong>为所编译的UDF，如下图所示。点击OK按钮挂载宏。</li>
+</ul>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/59440c93d7b06.jpg" alt=""></p>
+<h1 id="3-DEFINE-ON-DEMAND"><a href="#3-DEFINE-ON-DEMAND" class="headerlink" title="3 DEFINE_ON_DEMAND"></a>3 DEFINE_ON_DEMAND</h1><p>此宏由用户手动调用执行，而非Fluent自动调用。</p>
+<ul>
+<li>宏形式：<strong>DEFINE_ON_DEMAND(name )</strong></li>
+<li>宏参数：<strong>symbol name</strong></li>
+<li>返回值：<strong>没有任何返回值</strong></li>
+<li>调用形式：<strong>解释或编译</strong></li>
+</ul>
+<p>此宏的参数中并无任何Fluent传入的数据，因此如果是获取计算域中的数据，则需要利用Get_Domain先获取对应区域的Domain结构。</p>
+<p>例如下面的实例计算了一个温度函数：<br>$$<br>f(T)= \frac{T-T_{min}}{T_{max}-T_{min}}<br>$$<br>并将值赋给UDM。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"udf.h"</span></span></div><div class="line"> </div><div class="line">DEFINE_ON_DEMAND(on_demand_calc)</div><div class="line">&#123;</div><div class="line">   Domain *d;</div><div class="line">   real tavg = <span class="number">0.</span>;</div><div class="line">   real tmax = <span class="number">0.</span>;</div><div class="line">   real tmin = <span class="number">0.</span>;</div><div class="line">   real temp,volume,vol_tot;</div><div class="line">   Thread *t;</div><div class="line">   <span class="keyword">cell_t</span> c;</div><div class="line">   d = Get_Domain(<span class="number">1</span>); </div><div class="line">   thread_loop_c(t,d)</div><div class="line">      &#123;</div><div class="line">      begin_c_loop(c,t)</div><div class="line">        &#123;</div><div class="line">           volume = C_VOLUME(c,t);</div><div class="line">           temp = C_T(c,t);</div><div class="line"> </div><div class="line">           <span class="keyword">if</span> (temp &lt; tmin || tmin == <span class="number">0.</span>) tmin = temp;</div><div class="line">           <span class="keyword">if</span> (temp &gt; tmax || tmax == <span class="number">0.</span>) tmax = temp;</div><div class="line"> </div><div class="line">           vol_tot += volume;</div><div class="line">           tavg += temp*volume;</div><div class="line"> </div><div class="line">        &#125;</div><div class="line">    end_c_loop(c,t)</div><div class="line"> </div><div class="line">    tavg /= vol_tot;</div><div class="line"> </div><div class="line">    <span class="built_in">printf</span>(<span class="string">"\n Tmin = %g  Tmax = %g  Tavg = %g\n"</span>,tmin,tmax,tavg);</div><div class="line">    begin_c_loop(c,t)</div><div class="line">      &#123;</div><div class="line">         temp = C_T(c,t);</div><div class="line">         C_UDMI(c,t,<span class="number">0</span>) = (temp-tmin)/(tmax-tmin);</div><div class="line">      &#125;</div><div class="line">    end_c_loop(c,t)</div><div class="line"> </div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>此宏编译或解释后，可通过<strong>User Defined</strong>标签页下按钮<strong>Execute on Demand…</strong>加载，如下图所示。</p>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/59440fe13a665.jpg" alt=""></p>
+<p>加载UDF后如下图所示。</p>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/594410495a917.jpg" alt=""></p>
+<h1 id="4-DEFINE-RW-FILE"><a href="#4-DEFINE-RW-FILE" class="headerlink" title="4 DEFINE_RW_FILE"></a>4 DEFINE_RW_FILE</h1><p>利用DEFINE_RW_FILE宏可以向case或data文件写入信息，或者从case和data文件中读取信息。</p>
+<ul>
+<li>宏形式：<strong>DEFINE_RW_FILE(name,fp )</strong></li>
+<li>宏参数：<strong>symbol name， FILE fp</strong></li>
+<li>返回值：<strong>没有任何返回值</strong></li>
+<li>调用形式：<strong>解释或编译</strong></li>
+</ul>
+<p>在宏中可以利用fscanf函数读取文件中的信息，也可以利用fprintf函数向文件写入信息。</p>
+<p>如下例程可以向data文件中写入DEFINE_ADJUST宏调用的次数，同时从data文件中读取调用的次数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"udf.h"</span></span></div><div class="line"> </div><div class="line"><span class="keyword">int</span> kount = <span class="number">0</span>; <span class="comment">/* define global variable kount */</span></div><div class="line"> </div><div class="line">DEFINE_ADJUST(demo_calc,d)</div><div class="line">&#123;</div><div class="line">    kount++;</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"kount = %d\n"</span>,kount);</div><div class="line">&#125;</div><div class="line">DEFINE_RW_FILE(writer,fp)</div><div class="line">&#123;</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"Writing UDF data to data file...\n"</span>);</div><div class="line">    <span class="built_in">fprintf</span>(fp,<span class="string">"%d"</span>,kount); <span class="comment">/* write out kount to data file */</span></div><div class="line">&#125;</div><div class="line">DEFINE_RW_FILE(reader,fp)</div><div class="line">&#123;</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"Reading UDF data from data file...\n"</span>);</div><div class="line">    <span class="built_in">fscanf</span>(fp,<span class="string">"%d"</span>,&amp;kount); <span class="comment">/* read kount from data file */</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>此宏的加载与DEFINE_ADJUST宏相同，也在User-Defined Function Hooks对话框中。</p>
+<p><img src="https://ooo.0o0.ooo/2017/06/17/594412a4a84b2.jpg" alt=""></p>
+<p>其它的通用宏下期再见。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Fluent/" rel="tag"># Fluent</a>
+          
+            <a href="/tags/UDF/" rel="tag"># UDF</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/07/fluent udf/Fluent UDF【15】：在Fluent外部编译UDF/" rel="next" title="Fluent UDF【15】：在Fluent外部编译UDF">
+                <i class="fa fa-chevron-left"></i> Fluent UDF【15】：在Fluent外部编译UDF
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-DEFINE-ADJUST宏"><span class="nav-number">1.</span> <span class="nav-text">1 DEFINE_ADJUST宏</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-DEFINE-DELTAT"><span class="nav-number">2.</span> <span class="nav-text">2 DEFINE_DELTAT</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-DEFINE-ON-DEMAND"><span class="nav-number">3.</span> <span class="nav-text">3 DEFINE_ON_DEMAND</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-DEFINE-RW-FILE"><span class="nav-number">4.</span> <span class="nav-text">4 DEFINE_RW_FILE</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

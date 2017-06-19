@@ -1,0 +1,885 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="hexo博客," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="光有hexo肯定是不够的，我们写的文章还需要放在网络上才行，因此还需要找网络空间放置hexo，总不能放在硬盘里吧。网络空间很多，收费的不收费的都有。收费的像各种云空间，百度云、腾讯云神马的都可以。免费的也不少，比较出名的像github空间，大部分玩计算机程序的应该都听说过。不过很遗憾的是github是国外的服务器，在国内访问可能比较慢。好在国内也有替代的，比较出名的像coding。下面以codin">
+<meta name="keywords" content="hexo博客">
+<meta property="og:type" content="article">
+<meta property="og:title" content="hexo博客[2]：空间及环境配置">
+<meta property="og:url" content="bestcax.top/2017/01/02/hexo Blog/hexo博客-2-：空间及环境配置/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="光有hexo肯定是不够的，我们写的文章还需要放在网络上才行，因此还需要找网络空间放置hexo，总不能放在硬盘里吧。网络空间很多，收费的不收费的都有。收费的像各种云空间，百度云、腾讯云神马的都可以。免费的也不少，比较出名的像github空间，大部分玩计算机程序的应该都听说过。不过很遗憾的是github是国外的服务器，在国内访问可能比较慢。好在国内也有替代的，比较出名的像coding。下面以codin">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/16/5942b2ffe1ba8.jpg">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/16/5942b39112b00.jpg">
+<meta property="og:image" content="http://i2.muimg.com/1949/d5fa083f59894dac.png">
+<meta property="og:image" content="http://i2.muimg.com/1949/c29eb5d7e0f1a988.png">
+<meta property="og:image" content="http://i2.muimg.com/1949/eea2370a25cd4a0a.png">
+<meta property="og:image" content="http://i1.buimg.com/1949/b258d35dd110e081.png">
+<meta property="og:image" content="http://i1.buimg.com/1949/71a6aba20ac231a1.png">
+<meta property="og:image" content="http://i1.buimg.com/1949/9b469ddcab4b2ba5.png">
+<meta property="og:image" content="http://i1.buimg.com/1949/8667e229c075aa2e.png">
+<meta property="og:image" content="http://i1.buimg.com/1949/63f5d7baadc91f53.png">
+<meta property="og:image" content="http://i1.buimg.com/1949/4ea4803a48389dff.png">
+<meta property="og:image" content="https://ooo.0o0.ooo/2017/06/16/5942bfa35e748.jpg">
+<meta property="og:updated_time" content="2017-06-17T15:56:45.069Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="hexo博客[2]：空间及环境配置">
+<meta name="twitter:description" content="光有hexo肯定是不够的，我们写的文章还需要放在网络上才行，因此还需要找网络空间放置hexo，总不能放在硬盘里吧。网络空间很多，收费的不收费的都有。收费的像各种云空间，百度云、腾讯云神马的都可以。免费的也不少，比较出名的像github空间，大部分玩计算机程序的应该都听说过。不过很遗憾的是github是国外的服务器，在国内访问可能比较慢。好在国内也有替代的，比较出名的像coding。下面以codin">
+<meta name="twitter:image" content="https://ooo.0o0.ooo/2017/06/16/5942b2ffe1ba8.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2017/01/02/hexo Blog/hexo博客-2-：空间及环境配置/"/>
+
+
+
+
+
+  <title>hexo博客[2]：空间及环境配置 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2017/01/02/hexo Blog/hexo博客-2-：空间及环境配置/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">hexo博客[2]：空间及环境配置</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-01-02T12:41:28+08:00">
+                2017-01-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/博客配置/" itemprop="url" rel="index">
+                    <span itemprop="name">博客配置</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>光有hexo肯定是不够的，我们写的文章还需要放在网络上才行，因此还需要找网络空间放置hexo，总不能放在硬盘里吧。<br>网络空间很多，收费的不收费的都有。收费的像各种云空间，百度云、腾讯云神马的都可以。免费的也不少，比较出名的像github空间，大部分玩计算机程序的应该都听说过。不过很遗憾的是github是国外的服务器，在国内访问可能比较慢。好在国内也有替代的，比较出名的像coding。下面以coding为例，描述如何申请空间，并部署hexo到空间中，最终使我们写的博客文章能够在网络上显示。</p>
+<h1 id="申请空间"><a href="#申请空间" class="headerlink" title="申请空间"></a>申请空间</h1><p>进入coding网站（网址是<a href="https://coding.net/），选择左上角的**注册**按钮，在弹出的对话框中注册一个用户。如下图所示。注册完毕后系统会发送一封激活邮件，激活后就可以了。" target="_blank" rel="external">https://coding.net/），选择左上角的**注册**按钮，在弹出的对话框中注册一个用户。如下图所示。注册完毕后系统会发送一封激活邮件，激活后就可以了。</a><br><img src="https://ooo.0o0.ooo/2017/06/16/5942b2ffe1ba8.jpg" alt=""></p>
+<p>激活并登陆网站后，在首页选择<strong>创建新项目</strong>按钮，如下图所示。<br><img src="https://ooo.0o0.ooo/2017/06/16/5942b39112b00.jpg" alt=""></p>
+<p>如下图所示进行设置。注意选择<strong>公开</strong>，博客文件夹名称可以随便取，我这里取名blog。点击创建项目按钮。<br><img src="http://i2.muimg.com/1949/d5fa083f59894dac.png" alt=""></p>
+<p>在新的页面中选择<strong>Pages服务</strong>标签页，选择下方部署来源为<strong>master分支</strong>，点击<strong>保存</strong>按钮。<br><img src="http://i2.muimg.com/1949/c29eb5d7e0f1a988.png" alt=""></p>
+<p>如图所示，注意图中两个箭头位置，一个为本博客的访问地址，另一个箭头指向保存下来，后面配置hexo的时候要用。<br><img src="http://i2.muimg.com/1949/eea2370a25cd4a0a.png" alt=""><br>我们的博客访问地址是<a href="http://bestcfd.coding.me/blog，不过现在还无法访问，因为里头什么都没有。" target="_blank" rel="external">http://bestcfd.coding.me/blog，不过现在还无法访问，因为里头什么都没有。</a></p>
+<p>空间申请到此完毕。下一步配置hexo环境。</p>
+<h1 id="hexo环境配置"><a href="#hexo环境配置" class="headerlink" title="hexo环境配置"></a>hexo环境配置</h1><p>hexo环境配置主要针对_config.yml文件。该文件位于前面创建的blog文件夹中，可以用文本编辑器编辑此文件。建议用notepad++、sublime text等有高亮显示的文本编辑器查看此文件。<br>该文件中需要修改的内容并不多。我这里简单的配置一下。<br><figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># Hexo Configuration</span></div><div class="line"><span class="comment">## Docs: http://hexo.io/docs/configuration.html</span></div><div class="line"><span class="comment">## Source: https://github.com/hexojs/hexo/</span></div><div class="line"> </div><div class="line"><span class="comment"># Site</span></div><div class="line"><span class="attr">title:</span> <span class="string">CFD仿真之道</span> <span class="comment">##站点标题</span></div><div class="line"><span class="attr">subtitle:</span> <span class="string">一个讨论CFD仿真的博客##站点副标题</span></div><div class="line"><span class="attr">description:</span> <span class="comment">##站点描述</span></div><div class="line"><span class="attr">author:</span> <span class="string">胡坤</span> <span class="comment">##作者</span></div><div class="line"><span class="attr">language:</span> <span class="string">zh-CN</span> <span class="comment">##语言包，需要主题自带才可设置。设置简体中文填入 zh-CN</span></div><div class="line"><span class="attr">timezone:</span></div><div class="line"> </div><div class="line"><span class="comment"># URL</span></div><div class="line"><span class="comment">## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'</span></div><div class="line"><span class="attr">url:</span> <span class="attr">http://bestcfd.coding.me/blog</span> <span class="comment">##站点域名</span></div><div class="line"><span class="attr">root:</span> <span class="string">/blog/</span></div><div class="line"><span class="attr">permalink:</span> <span class="string">:year/:month/:day/:title/</span> <span class="comment">##文章永久链接格式，可添加.html后缀，如 :title.html</span></div><div class="line"><span class="attr">permalink_defaults:</span></div><div class="line"> </div><div class="line"><span class="comment"># Directory</span></div><div class="line"><span class="attr">source_dir:</span> <span class="string">source</span></div><div class="line"><span class="attr">public_dir:</span> <span class="string">public</span></div><div class="line"><span class="attr">tag_dir:</span> <span class="string">tags</span></div><div class="line"><span class="attr">archive_dir:</span> <span class="string">archives</span></div><div class="line"><span class="attr">category_dir:</span> <span class="string">categories</span></div><div class="line"><span class="attr">code_dir:</span> <span class="string">downloads/code</span></div><div class="line"><span class="attr">i18n_dir:</span> <span class="string">:lang</span></div><div class="line"><span class="attr">skip_render:</span></div><div class="line"> </div><div class="line"><span class="comment"># Writing</span></div><div class="line"><span class="attr">new_post_name:</span> <span class="string">:title.md</span> <span class="comment"># File name of new posts</span></div><div class="line"><span class="attr">default_layout:</span> <span class="string">post</span></div><div class="line"><span class="attr">titlecase:</span> <span class="literal">false</span> <span class="comment"># Transform title into titlecase</span></div><div class="line"><span class="attr">external_link:</span> <span class="literal">true</span> <span class="comment"># Open external links in new tab</span></div><div class="line"><span class="attr">filename_case:</span> <span class="number">0</span></div><div class="line"><span class="attr">render_drafts:</span> <span class="literal">false</span></div><div class="line"><span class="attr">post_asset_folder:</span> <span class="literal">false</span></div><div class="line"><span class="attr">relative_link:</span> <span class="literal">false</span></div><div class="line"><span class="attr">future:</span> <span class="literal">true</span></div><div class="line"><span class="attr">highlight:</span></div><div class="line"><span class="attr">  enable:</span> <span class="literal">true</span></div><div class="line"><span class="attr">  line_number:</span> <span class="literal">true</span></div><div class="line"><span class="attr">  tab_replace:</span></div><div class="line"> </div><div class="line"><span class="comment"># Category &amp; Tag</span></div><div class="line"><span class="attr">default_category:</span> <span class="string">uncategorized</span></div><div class="line"><span class="attr">category_map:</span></div><div class="line"><span class="attr">tag_map:</span></div><div class="line"> </div><div class="line"><span class="comment"># Date / Time format</span></div><div class="line"><span class="comment">## Hexo uses Moment.js to parse and display date</span></div><div class="line"><span class="comment">## You can customize the date format as defined in</span></div><div class="line"><span class="comment">## http://momentjs.com/docs/#/displaying/format/</span></div><div class="line"><span class="attr">date_format:</span> <span class="string">YYYY-MM-DD</span></div><div class="line"><span class="attr">time_format:</span> <span class="attr">HH:mm:ss</span></div><div class="line"> </div><div class="line"><span class="comment"># Pagination</span></div><div class="line"><span class="comment">## Set per_page to 0 to disable pagination</span></div><div class="line"><span class="attr">per_page:</span> <span class="number">10</span></div><div class="line"><span class="attr">pagination_dir:</span> <span class="string">page</span></div><div class="line"> </div><div class="line"><span class="comment"># Extensions</span></div><div class="line"><span class="comment">## Plugins: http://hexo.io/plugins/</span></div><div class="line"><span class="comment">## Themes: http://hexo.io/themes/</span></div><div class="line"><span class="attr">theme:</span> <span class="string">landscape</span> <span class="comment">##当前主题名称</span></div><div class="line"> </div><div class="line"><span class="comment"># Deployment</span></div><div class="line"><span class="comment">## Docs: http://hexo.io/docs/deployment.html</span></div><div class="line"><span class="attr">deploy:</span></div><div class="line"><span class="attr">  type:</span> <span class="string">git</span></div><div class="line"><span class="attr">  repo:</span> <span class="attr">https://git.coding.net/bestcfd/blog.git</span></div><div class="line"><span class="attr">  branch:</span> <span class="string">master</span></div></pre></td></tr></table></figure></p>
+<p>最为重要的配置为：<br><figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="attr">deploy:</span></div><div class="line"><span class="attr">  type:</span> <span class="string">git</span></div><div class="line"><span class="attr">  repo:</span> <span class="attr">https://git.coding.net/bestcfd/blog.git</span></div><div class="line"><span class="attr">  branch:</span> <span class="string">master</span></div></pre></td></tr></table></figure></p>
+<p>这里的repo就是前面提醒记住的箭头指向位置。</p>
+<h1 id="hexo的一些常用命令"><a href="#hexo的一些常用命令" class="headerlink" title="hexo的一些常用命令"></a>hexo的一些常用命令</h1><p>hexo的命令极简单，安装后只需要记住四个常用的即可。执行命令需要Git当前处于blog文件夹根目录下。</p>
+<ul>
+<li><p><strong>new</strong>创建新的博客文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo new &quot;第一篇文章&quot;</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>clean</strong> 清除缓存文件 (db.json) 和已生成的静态文件 (public)。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo clean</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>generate</strong> 生成静态文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo g</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>deploy</strong> 部署网站。部署网站前，需要预先生成静态文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo d</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>在使用hexo d命令之前，需要执行命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">npm install hexo-deployer-git --save</div></pre></td></tr></table></figure></p>
+<h1 id="测试一下"><a href="#测试一下" class="headerlink" title="测试一下"></a>测试一下</h1><ul>
+<li>在blog目录下启动git bash</li>
+<li>命令中输入<code>hexo new &quot;第一篇博客&quot;</code><br><img src="http://i1.buimg.com/1949/b258d35dd110e081.png" alt="Markdown"></li>
+<li>打开此文件（路径为E:\work\blog\source_posts\第一篇博客.md），随便编辑点儿内容，如下图所示。<br><img src="http://i1.buimg.com/1949/71a6aba20ac231a1.png" alt="Markdown"></li>
+<li>输入命令<code>hexo clean</code></li>
+<li>输入命令<code>hexo g</code></li>
+<li>输入命令<code>hexo d</code><br>在输入hexo d命令后，可能会出现如下图所示的错误提示。<br><img src="http://i1.buimg.com/1949/9b469ddcab4b2ba5.png" alt="Markdown"></li>
+<li>在命令行中输入如下图所示的命令。（引号中的内容可以随便输入）<br><img src="http://i1.buimg.com/1949/8667e229c075aa2e.png" alt="Markdown"></li>
+<li>继续输入<code>hexo d</code>，此时会弹出输入用户名和密码的对话框。将注册时所用的用户名和密码输入进去。<br><img src="http://i1.buimg.com/1949/63f5d7baadc91f53.png" alt="Markdown"><br>如下图所示，文件push成功。<br><img src="http://i1.buimg.com/1949/4ea4803a48389dff.png" alt="Markdown"><br>可以打开空间提供的网站查看（如我刚才申请的地址<a href="http://bestcfd.coding.me/blog/），如下图所示。" target="_blank" rel="external">http://bestcfd.coding.me/blog/），如下图所示。</a><br><img src="https://ooo.0o0.ooo/2017/06/16/5942bfa35e748.jpg" alt=""><br>博客框架已经基本成型。下一步是要进行美化。</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hexo博客/" rel="tag"># hexo博客</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/01/01/hexo Blog/hexo博客-1-：软件安装/" rel="next" title="hexo博客[1]：软件安装">
+                <i class="fa fa-chevron-left"></i> hexo博客[1]：软件安装
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/01/03/hexo Blog/hexo博客-3-：主题配置/" rel="prev" title="hexo博客[3]：主题配置">
+                hexo博客[3]：主题配置 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#申请空间"><span class="nav-number">1.</span> <span class="nav-text">申请空间</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#hexo环境配置"><span class="nav-number">2.</span> <span class="nav-text">hexo环境配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#hexo的一些常用命令"><span class="nav-number">3.</span> <span class="nav-text">hexo的一些常用命令</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#测试一下"><span class="nav-number">4.</span> <span class="nav-text">测试一下</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

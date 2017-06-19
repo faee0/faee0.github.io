@@ -1,0 +1,852 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CFD,小白CFD之旅," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="小白最近在练习案例的时候，对稳态和瞬态的问题，产生了一些疑问。譬如说，为什么有的案例用稳态，而有的案例用瞬态？有时候相同的案例既可以用稳态也可以用瞬态，而有的案例却只能用瞬态计算？小白决定找小牛师兄问一下。“师兄，稳态和瞬态到底有什么区别？在实际工程中应该怎么选择才好呢？ 区别“流动控制方程还记得不？”小牛师兄问。 “嗯，我记得有四项内容。”小白在纸上写出流动控制方程的通用形式。 $$\frac{">
+<meta name="keywords" content="CFD,小白CFD之旅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【小白的CFD之旅】24：稳态和瞬态">
+<meta property="og:url" content="bestcax.top/2016/04/24/xiaobai/【小白的CFD之旅】24：稳态和瞬态/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="小白最近在练习案例的时候，对稳态和瞬态的问题，产生了一些疑问。譬如说，为什么有的案例用稳态，而有的案例用瞬态？有时候相同的案例既可以用稳态也可以用瞬态，而有的案例却只能用瞬态计算？小白决定找小牛师兄问一下。“师兄，稳态和瞬态到底有什么区别？在实际工程中应该怎么选择才好呢？ 区别“流动控制方程还记得不？”小牛师兄问。 “嗯，我记得有四项内容。”小白在纸上写出流动控制方程的通用形式。 $$\frac{">
+<meta property="og:updated_time" content="2017-06-18T09:11:11.955Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【小白的CFD之旅】24：稳态和瞬态">
+<meta name="twitter:description" content="小白最近在练习案例的时候，对稳态和瞬态的问题，产生了一些疑问。譬如说，为什么有的案例用稳态，而有的案例用瞬态？有时候相同的案例既可以用稳态也可以用瞬态，而有的案例却只能用瞬态计算？小白决定找小牛师兄问一下。“师兄，稳态和瞬态到底有什么区别？在实际工程中应该怎么选择才好呢？ 区别“流动控制方程还记得不？”小牛师兄问。 “嗯，我记得有四项内容。”小白在纸上写出流动控制方程的通用形式。 $$\frac{">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2016/04/24/xiaobai/【小白的CFD之旅】24：稳态和瞬态/"/>
+
+
+
+
+
+  <title>【小白的CFD之旅】24：稳态和瞬态 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2016/04/24/xiaobai/【小白的CFD之旅】24：稳态和瞬态/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【小白的CFD之旅】24：稳态和瞬态</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-04-24T11:11:11+08:00">
+                2016-04-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/小白CFD之旅/" itemprop="url" rel="index">
+                    <span itemprop="name">小白CFD之旅</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>小白最近在练习案例的时候，对稳态和瞬态的问题，产生了一些疑问。譬如说，为什么有的案例用稳态，而有的案例用瞬态？有时候相同的案例既可以用稳态也可以用瞬态，而有的案例却只能用瞬态计算？小白决定找小牛师兄问一下。“师兄，稳态和瞬态到底有什么区别？在实际工程中应该怎么选择才好呢？</p>
+<h1 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h1><p>“流动控制方程还记得不？”小牛师兄问。</p>
+<p>“嗯，我记得有四项内容。”小白在纸上写出流动控制方程的通用形式。</p>
+<p>$$<br>\frac{\partial( \rho \phi)}{\partial t}+\nabla \cdot (\rho \textbf{u} \phi)=\nabla \cdot (\Gamma \nabla \phi )+S_{\phi}<br>$$</p>
+<p>“是的，控制方程有四项内容，其中第一项即瞬态项，稳态及瞬态的区別就在于控制方程中是否存在瞬态项。可以看出瞬态项是关于时间的偏导数，因此计算得到的结果也是与时间相关的。”小牛师兄说道。</p>
+<p>“这样说不太好理解，来举个简单的例子就好理解了。最近不是流行问雨从高空掉下来能否砸死人么，我们现在不讨论能否砸死人，这里只考虑水滴下落过程。地球人都知道，雨滴在下落过程中主要受到两种力，其一为重力，其二为阻力。假设雨滴在下落过程中质量及形状保持不变，根据流体力学理论可知，雨滴在下落过程中，其受到的阻力与其运动速度的平方成正比。定性分析雨滴在空中的下落形式为：在下落的起始一段时间内，由于其速度较小，因此其阻力较小，此时重力大于阻力，其速度不断增大，而随着速度不断增大，雨滴所受阻力不断增大，此时作用在雨滴上的合力在断减小，加速度减小，但雨滴速度依然在增加，当速增加到作用在雨滴上的阻力与其重力相平衡时，其速度达到稳定，之后其将一直保持该速度直至下落到地面。”“整个过程可以分为两个阶段，首先是加速阶段，之后以稳定速度下降。如果单纯考虑雨滴下落速度的话，第一个阶段是与时间密切相关的，速度随时间推移逐渐增大；而在第二阶段，下落速度与时间无关，任意时刻其都将保持相同的速度。因此，若考虑速度，则第一阶段为瞬态，第二阶段为稳态。”</p>
+<p>“然而，若将位移作为目标物理量，则整个过程都是瞬态的。因此，<strong>稳态还是瞬态，取决于所要考虑的物理量。</strong>”</p>
+<p>“我们一般说<strong>瞬态得到的是物理量随时间发展的过程，而稳态计算得到的是稳定时的状态。</strong>”“由于数值计算过程中时间项也要进行离散，因此瞬态计算得到的是一系列时间点上的状态量，至于时间点间隔，则取决于离散时所采用的时间步长。”小牛师兄最后说。</p>
+<h1 id="选择"><a href="#选择" class="headerlink" title="选择"></a>选择</h1><p>“前面说了那么多，那么在工程中选用瞬态还是稳态实际上就很清楚了。根据所要考虑的物理量是否能够达到稳定而进行选择。”“现实中的问题，有一些可以达到稳定，而有些问题实际上根本就不可能达到稳定。比如说前面例子中的雨滴，其速度就可以达到稳定。而如圆柱绕流中圆柱的升力和阻力，那是成周期性变化的物理量，不管你计算多久都是不可能达到稳定的。”“记住一点，<strong>所有的工程问题都可以计算瞬态，但未必都能计算稳态。</strong>稳态只是一种简化！”小牛师兄说道。</p>
+<p>“因此在实际应用中，到底是选择瞬态还是稳态，取决于你要观察的物理量。若只考虑系统稳定后的物理量状态，那么就选择使用稳态计算；若要考虑物理量的演化情况，则需要使用瞬态。”</p>
+<h1 id="时间"><a href="#时间" class="headerlink" title="时间"></a>时间</h1><p>“在瞬态计算时需要额外关注时间，在数值计算的过程中，时间被离散成不连续的时间点，时间点之间的间隔称之为时间步长（Time Step），在进行瞬态计算时，时间步长的大小会影响计算收敛性。”</p>
+<p>“说到收敛性，需要注意瞬态计算的收敛与稳态计算有些不同，<strong>稳态计算只需要最终迭代达到收敛即可，而瞬态计算则要求每个时间步内均达到收敛</strong>。”</p>
+<p>“时间步长的选择有时候需要满足CFL条件。可通过公式粗略的估计时间步长。”<br>$$<br>\Delta t = c\frac{\Delta x}{v}<br>$$<br>其中，$c$为库朗数，$\Delta x$为网格尺寸，$v$为局部速度。</p>
+<p>“可以看出，网格越细密，则要求计算时采用的时间步长越小；流场中流体速度越大，则计算时要求的时间步长也越小。小的时间步长会极大的增加计算时间。因此若对计算时间有要求的话，则在划分计算网格时可以将网格适当画粗一点，这样可以使用更大的时间步长进行计算，不过网格粗了又会对计算结果有影响。”</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CFD/" rel="tag"># CFD</a>
+          
+            <a href="/tags/小白CFD之旅/" rel="tag"># 小白CFD之旅</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/23/xiaobai/【小白的CFD之旅】23：串行与并行/" rel="next" title="【小白的CFD之旅】23：串行与并行">
+                <i class="fa fa-chevron-left"></i> 【小白的CFD之旅】23：串行与并行
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/25/xiaobai/【小白的CFD之旅】25：二维还是三维/" rel="prev" title="【小白的CFD之旅】25：二维还是三维">
+                【小白的CFD之旅】25：二维还是三维 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#区别"><span class="nav-number">1.</span> <span class="nav-text">区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#选择"><span class="nav-number">2.</span> <span class="nav-text">选择</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#时间"><span class="nav-number">3.</span> <span class="nav-text">时间</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

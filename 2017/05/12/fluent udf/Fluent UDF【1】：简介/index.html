@@ -1,0 +1,865 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Fluent,UDF," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="前面基本完成了动网格专题的发布，不过还是有一些内容并没有更新进去，比如说in-cylinder、接触检测、2.5D网格重构等。不过这些都是小技巧，写起来挺麻烦，以后有时间再通过案例视频的方式讲解好了。从今天开始最近一段时间准备发布Fluent UDF的一些内容。 关于UDFUDF并不是什么神秘的东西，然而在地球人的眼中，凡是与编程相关的工作，总是认为有点儿高大上罢了。其实UDF程序的编写绝对只是个">
+<meta name="keywords" content="Fluent,UDF">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fluent UDF【1】：简介">
+<meta property="og:url" content="bestcax.top/2017/05/12/fluent udf/Fluent UDF【1】：简介/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="前面基本完成了动网格专题的发布，不过还是有一些内容并没有更新进去，比如说in-cylinder、接触检测、2.5D网格重构等。不过这些都是小技巧，写起来挺麻烦，以后有时间再通过案例视频的方式讲解好了。从今天开始最近一段时间准备发布Fluent UDF的一些内容。 关于UDFUDF并不是什么神秘的东西，然而在地球人的眼中，凡是与编程相关的工作，总是认为有点儿高大上罢了。其实UDF程序的编写绝对只是个">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3577886-d669d698a12ddeea.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2017-06-19T13:24:23.561Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Fluent UDF【1】：简介">
+<meta name="twitter:description" content="前面基本完成了动网格专题的发布，不过还是有一些内容并没有更新进去，比如说in-cylinder、接触检测、2.5D网格重构等。不过这些都是小技巧，写起来挺麻烦，以后有时间再通过案例视频的方式讲解好了。从今天开始最近一段时间准备发布Fluent UDF的一些内容。 关于UDFUDF并不是什么神秘的东西，然而在地球人的眼中，凡是与编程相关的工作，总是认为有点儿高大上罢了。其实UDF程序的编写绝对只是个">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/3577886-d669d698a12ddeea.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2017/05/12/fluent udf/Fluent UDF【1】：简介/"/>
+
+
+
+
+
+  <title>Fluent UDF【1】：简介 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2017/05/12/fluent udf/Fluent UDF【1】：简介/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Fluent UDF【1】：简介</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-12T12:12:12+08:00">
+                2017-05-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Fluent-UDF/" itemprop="url" rel="index">
+                    <span itemprop="name">Fluent UDF</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>前面基本完成了动网格专题的发布，不过还是有一些内容并没有更新进去，比如说in-cylinder、接触检测、2.5D网格重构等。不过这些都是小技巧，写起来挺麻烦，以后有时间再通过案例视频的方式讲解好了。从今天开始最近一段时间准备发布Fluent UDF的一些内容。</p>
+<h1 id="关于UDF"><a href="#关于UDF" class="headerlink" title="关于UDF"></a>关于UDF</h1><p>UDF并不是什么神秘的东西，然而在地球人的眼中，凡是与编程相关的工作，总是认为有点儿高大上罢了。其实UDF程序的编写绝对只是个体力活儿。</p>
+<p>Fluent是一个通用软件。所谓的通用软件，意思就是说啥事儿都能做。能做流动，能做传热，能做化学反应，能做多相流，貌似与NS相关的内容都能做。然而，<strong>无所不能往往也意味着不甚精通</strong>。软件为了满足其通用性，无疑在各种参数的选取上偏于保守，比如说各种求解算法、各种模型参数，为了保证其收敛性和鲁棒性，必然会存在舍弃精度的做法。因此，通用的软件常常难以满足高级人士的计算需求。</p>
+<p>作为商用软件，Fluent自然不愿意损失这些高级用户，因此软件给高级用户开了一扇窗口，允许用户根据自己的需求对软件进行一定程度的定制。因此就有了我们这里所说的UDF。</p>
+<p>UDF（User Defined Functions，用户自定义功能），采用C语言进行编写，可以采用编译或解释的方式加载到Fluent中，利用UDF可以对Fluent计算过程中的一些模型参数或计算流程进行控制。</p>
+<h1 id="从哪儿开始？"><a href="#从哪儿开始？" class="headerlink" title="从哪儿开始？"></a>从哪儿开始？</h1><p>要使用UDF，该如何入手？</p>
+<p>Fluent帮助文档中提供了较为详尽的UDF使用方法，包含了绝大多数宏的使用描述（其实还有一部分宏并没有出现在文档中，亲们可以通过研读代码中的注释来使用这些用，见udf.h文件）。在编写UDF的过程中，UDF手册是必不可少的文档。</p>
+<p>实际上UDF的应用过程是这样的：</p>
+<ul>
+<li><strong>发现需要使用UDF</strong>。Fluent毕竟是一款成熟的商用软件，大多数情况下，利用GUI就能够满足我们的计算要求。只有当我们确信Fluent的GUI并不具备某项功能，而利用UDF可以满足此要求时，才开始着手编写UDF。记住：<strong>能用GUI实现的功能，就不要用UDF去做</strong>。人家Fluent说了，不对UDF的正确性负责，他们只负责UDF与Fluent的通讯功能。能不能用UDF实现某项功能，需要翻越Fluent帮助文档。</li>
+<li><strong>编写UDF文件</strong>。这部分工作应该是UDF的核心工作。作为一个计算机程序，UDF同样有输入和输出。在翻越UDF手册的时候，搞清楚宏文件中哪些参数是输入，哪些参数是输出。最简单的方式就是直接套用UDF手册中的示例程序，在其基础基础上进行修改。</li>
+<li><strong>配置UDF环境</strong>。这部分工作实际上相当的简单。只不过在windows环境下需要安装Visual Studio，在Linux环境下需要配置GCC。需要注意<strong>在安装Visual Studio的时候一定要选择安装C++</strong>，否则不会安装c编译器。</li>
+<li><strong>在Fluent中加载UDF</strong>。加载的方式可以是解释，也可以是编译。通常解释型的程序调用要比编译型的慢，因此一些计算密集的场合，建议使用编译型。</li>
+</ul>
+<h1 id="需要的C语言知识"><a href="#需要的C语言知识" class="headerlink" title="需要的C语言知识"></a>需要的C语言知识</h1><p>编写UDF使用的是C语言，我们是不是需要先学习C语言？</p>
+<p><strong>了解C语言是必要的，但并不需要非常精通C语言</strong>。UDF宏的编写实际上只是应用了C语言很少的一部分，但是对C语言的越熟悉，当然写起UDF来自然要更轻松一些。如果对C语言一无所知的话，至少需要看看以下的内容：</p>
+<ul>
+<li>C语言的语法结构。包括变量定义方式、条件结构、循环结构、函数定义等。</li>
+<li>C语言的数据结构。最需要了解是数组和指针。另外还需要了解函数参数传值与传址，否则很多的UDF宏你都搞不清楚数据怎么就能传递给Fluent。</li>
+</ul>
+<p>这些基础知识后面会介绍。</p>
+<p>要坚信<strong>UDF并没有想象中那么难，其实也没有想象中的那么高大上</strong>。</p>
+<hr>
+<p>更多CFD资料可微信扫描下方二维码关注微信公众号。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/3577886-d669d698a12ddeea.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="微信扫码关注公众号"></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Fluent/" rel="tag"># Fluent</a>
+          
+            <a href="/tags/UDF/" rel="tag"># UDF</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/05/11/Fluent DynamicMesh/Fluent动网格【18】：Overset实例/" rel="next" title="Fluent动网格【18】：Overset实例">
+                <i class="fa fa-chevron-left"></i> Fluent动网格【18】：Overset实例
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/05/13/fluent udf/Fluent UDF【2】：学习途径/" rel="prev" title="Fluent UDF【2】：学习途径">
+                Fluent UDF【2】：学习途径 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#关于UDF"><span class="nav-number">1.</span> <span class="nav-text">关于UDF</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#从哪儿开始？"><span class="nav-number">2.</span> <span class="nav-text">从哪儿开始？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#需要的C语言知识"><span class="nav-number">3.</span> <span class="nav-text">需要的C语言知识</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,879 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CFD,小白CFD之旅," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="主要内容：  接上文【小白的CFD之旅】10 敲门实例    [toc] ##2.4 Materials设置利用模型树节点Materials设置计算域中的介质属性。 如图所示，在创建任何材料之前，FLUENT已经默认添加了两种材料：流体材料为Air，固体材料为aluminum。本案例使用的介质材料为液态水，可以通过点击按钮Create/Edit…来实现。点击此按钮后：  在弹出的Create/Ed">
+<meta name="keywords" content="CFD,小白CFD之旅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【小白的CFD之旅】11：敲门实例【续】">
+<meta property="og:url" content="bestcax.top/2016/04/11/xiaobai/【小白的CFD之旅】11：敲门实例【续】/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="主要内容：  接上文【小白的CFD之旅】10 敲门实例    [toc] ##2.4 Materials设置利用模型树节点Materials设置计算域中的介质属性。 如图所示，在创建任何材料之前，FLUENT已经默认添加了两种材料：流体材料为Air，固体材料为aluminum。本案例使用的介质材料为液态水，可以通过点击按钮Create/Edit…来实现。点击此按钮后：  在弹出的Create/Ed">
+<meta property="og:updated_time" content="2017-06-18T09:03:03.563Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【小白的CFD之旅】11：敲门实例【续】">
+<meta name="twitter:description" content="主要内容：  接上文【小白的CFD之旅】10 敲门实例    [toc] ##2.4 Materials设置利用模型树节点Materials设置计算域中的介质属性。 如图所示，在创建任何材料之前，FLUENT已经默认添加了两种材料：流体材料为Air，固体材料为aluminum。本案例使用的介质材料为液态水，可以通过点击按钮Create/Edit…来实现。点击此按钮后：  在弹出的Create/Ed">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2016/04/11/xiaobai/【小白的CFD之旅】11：敲门实例【续】/"/>
+
+
+
+
+
+  <title>【小白的CFD之旅】11：敲门实例【续】 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2016/04/11/xiaobai/【小白的CFD之旅】11：敲门实例【续】/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【小白的CFD之旅】11：敲门实例【续】</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-04-11T11:11:11+08:00">
+                2016-04-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/小白CFD之旅/" itemprop="url" rel="index">
+                    <span itemprop="name">小白CFD之旅</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>主要内容：</p>
+<blockquote>
+<p>接上文<a href="http://www.cnblogs.com/LSCAX/p/5189404.html" target="_blank" rel="external">【小白的CFD之旅】10 敲门实例 </a> </p>
+</blockquote>
+<p>[toc]</p>
+<p>##2.4 Materials设置<br>利用模型树节点<strong>Materials</strong>设置计算域中的介质属性。</p>
+<p>如图所示，在创建任何材料之前，FLUENT已经默认添加了两种材料：流体材料为<strong>Air</strong>，固体材料为<strong>aluminum</strong>。本案例使用的介质材料为<strong>液态水</strong>，可以通过点击按钮<strong>Create/Edit…</strong>来实现。点击此按钮后：</p>
+<ul>
+<li>在弹出的<strong>Create/Edit Materials</strong>对话框中选择<strong>Fluent Database…</strong>按钮</li>
+<li>在弹出的对话框中，选择Fluent Fluid Materials列表框中的材料介质<strong>water-liquid(h2o<l>)</l></strong></li>
+<li>点击<strong>copy</strong>按钮选择材料<blockquote>
+<p>若要修改材料属性（如密度、粘度、比热、热传导系数等），可直接在参数设置框中修改。本案例采用Fluent材料库中的液态水，不进行材料修改。</p>
+</blockquote>
+</li>
+</ul>
+<p>##2.5 Cell Zone Conditions</p>
+<p>在此模型树节点中可以设置计算域属性，如计算域介质、计算域运动等。如图所示。</p>
+<p>图中按钮元素：</p>
+<ul>
+<li><strong>Zone</strong>列表：列出网格中所包含的计算区域。<strong>有些计算模型中包含多个计算区域</strong></li>
+<li><strong>Phase</strong>：当使用了多相流模型时，此选项能被激活，可以针对不同的相设置参数。本例为单相流，故该下拉框为不可用状态。</li>
+<li><strong>Type</strong>：设置计算域类型，包含<strong>Fluid</strong>、<strong>Solid</strong>两种类型</li>
+<li><strong>ID</strong>：显示选中的列表项中的区域ID，此ID编号在在UDF编程时有用</li>
+<li><strong>Edit…</strong>：设置区域属性</li>
+<li><strong>Copy</strong>：拷贝区域参数至其他区域</li>
+<li><strong>Profiles</strong>：profile管理窗口</li>
+<li><strong>Parameters</strong>：参数管理窗口</li>
+<li><strong>Display Mesh</strong>：显示网格</li>
+<li><strong>Operation Conditons…</strong>：设置操作条件</li>
+<li><strong>Porous Formulation</strong>：当设置区域为多孔介质区域时，此选项被激活。    </li>
+</ul>
+<p>选择<strong>Edit…</strong>按钮打开区域设置对话框，如图所示。</p>
+<ul>
+<li>设置<strong>Material Name</strong>为<strong>water-liquid</strong>。</li>
+<li>点击<strong>OK</strong>按钮确认操作</li>
+</ul>
+<p>##2.6 Boundary Conditons<br>在模型树节点<strong>Boundary Conditions</strong>中可以设置计算模型的边界条件。如图所示。</p>
+<p>界面元素与Cell Zone Conditions设置面板类似。<br>设置边界条件：</p>
+<ul>
+<li><strong>inlet-y</strong>边界设置<ul>
+<li>在<strong>Zone</strong>列表框中选择边界<strong>inlet-y</strong>，选择<strong>Type</strong>下拉框选项<strong>Velocity-inlet</strong>，鼠标点击面板按钮<strong>Edit…</strong></li>
+<li>弹出参数设置对话框，如图所示。在<strong>Momentum</strong>标签页下，设置<strong>Velocity Manitude</strong>参数值为<strong>0.3</strong>；  选择<strong>Specification Method</strong>为<strong>Intensity and Hydraulic Diameter</strong>，设置<strong>Tubulent Intensity</strong>为<strong>5</strong>，设置<strong>Hydraulic Diameter</strong>为<strong>0.15</strong>。</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>切换至<strong>Thermal</strong>面板，设置<strong>Temperature</strong>为<strong>15</strong>，如图所示。</li>
+</ul>
+<ul>
+<li><p><strong>inlet-z</strong>边界设置</p>
+<ul>
+<li>与<strong>inlet-y</strong>设置相类似，所不同的是 设置<strong>Velocity Manitude</strong>参数值为<strong>0.1</strong>； 设置<strong>Hydraulic Diameter</strong>为<strong>0.15</strong>； 设置<strong>Temperature</strong>为<strong>25</strong></li>
+</ul>
+</li>
+<li><strong>outlet</strong>边界设置<ul>
+<li>选择<strong>Type</strong>下拉框选项<strong>pressure-outlet</strong>，点击<strong>Edit…</strong>按钮</li>
+<li>在弹出的对话框<strong>Momentum</strong>标签页下，设置<strong>Gauge Pressure</strong>为<strong>0</strong>，设置<strong>Specification  Method</strong>为<strong>Intensity and Hydraulic Diameter</strong>，设置<strong>Backflow Turbulent Intensity</strong>为5，设置<strong>Backflow Hydraulic Diameter</strong>为<strong>0.15</strong></li>
+<li>切换至<strong>Thermal</strong>面板，设置<strong>Temperature</strong>为<strong>20</strong>。</li>
+</ul>
+</li>
+</ul>
+<p>##2.7 Dynamic Mesh<br>本案例不涉及动网格，因此不需要进行任何设置</p>
+<p>##2.8 Reference Values<br>参考值设置用于后处理中各种系数计算，本案例不涉及系数计算，因此可不设置此节点。</p>
+<blockquote>
+<p>注：由于案例较长，因此将其拆散为多篇</p>
+</blockquote>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CFD/" rel="tag"># CFD</a>
+          
+            <a href="/tags/小白CFD之旅/" rel="tag"># 小白CFD之旅</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/10/xiaobai/【小白的CFD之旅】10：敲门实例/" rel="next" title="【小白的CFD之旅】10：敲门实例">
+                <i class="fa fa-chevron-left"></i> 【小白的CFD之旅】10：敲门实例
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/12/xiaobai/【小白的CFD之旅】12：敲门实例【续2】/" rel="prev" title="【小白的CFD之旅】12：敲门实例【续2】">
+                【小白的CFD之旅】12：敲门实例【续2】 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

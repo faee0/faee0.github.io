@@ -1,0 +1,853 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CFD,小白CFD之旅," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="夏日的早晨，被酷热和蚊子骚扰了一夜的小白刚进入梦乡就被老蓝的电话给惊醒了。“8点开会！”老蓝说话永远那么简短有力，根本不给人请假的时间就挂了电话。小白一看时间，都7点半了，得，这懒觉睡不成了。小白跳下床，洗漱完毕往实验室奔去。到了实验室才发现大伙儿已经早就到齐了，小白找了张椅子挨着小牛师兄坐下，发现小牛师兄满眼血丝，还在打盹儿。“今天召集大家来呢，主要是因为负责项目的小秦毕业了，但这项目还没完成，">
+<meta name="keywords" content="CFD,小白CFD之旅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【小白的CFD之旅】23：串行与并行">
+<meta property="og:url" content="bestcax.top/2016/04/23/xiaobai/【小白的CFD之旅】23：串行与并行/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="夏日的早晨，被酷热和蚊子骚扰了一夜的小白刚进入梦乡就被老蓝的电话给惊醒了。“8点开会！”老蓝说话永远那么简短有力，根本不给人请假的时间就挂了电话。小白一看时间，都7点半了，得，这懒觉睡不成了。小白跳下床，洗漱完毕往实验室奔去。到了实验室才发现大伙儿已经早就到齐了，小白找了张椅子挨着小牛师兄坐下，发现小牛师兄满眼血丝，还在打盹儿。“今天召集大家来呢，主要是因为负责项目的小秦毕业了，但这项目还没完成，">
+<meta property="og:updated_time" content="2017-06-18T09:03:03.568Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【小白的CFD之旅】23：串行与并行">
+<meta name="twitter:description" content="夏日的早晨，被酷热和蚊子骚扰了一夜的小白刚进入梦乡就被老蓝的电话给惊醒了。“8点开会！”老蓝说话永远那么简短有力，根本不给人请假的时间就挂了电话。小白一看时间，都7点半了，得，这懒觉睡不成了。小白跳下床，洗漱完毕往实验室奔去。到了实验室才发现大伙儿已经早就到齐了，小白找了张椅子挨着小牛师兄坐下，发现小牛师兄满眼血丝，还在打盹儿。“今天召集大家来呢，主要是因为负责项目的小秦毕业了，但这项目还没完成，">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2016/04/23/xiaobai/【小白的CFD之旅】23：串行与并行/"/>
+
+
+
+
+
+  <title>【小白的CFD之旅】23：串行与并行 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2016/04/23/xiaobai/【小白的CFD之旅】23：串行与并行/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【小白的CFD之旅】23：串行与并行</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-04-23T11:11:11+08:00">
+                2016-04-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/小白CFD之旅/" itemprop="url" rel="index">
+                    <span itemprop="name">小白CFD之旅</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>夏日的早晨，被酷热和蚊子骚扰了一夜的小白刚进入梦乡就被老蓝的电话给惊醒了。<br>“8点开会！”老蓝说话永远那么简短有力，根本不给人请假的时间就挂了电话。<br>小白一看时间，都7点半了，得，这懒觉睡不成了。小白跳下床，洗漱完毕往实验室奔去。<br>到了实验室才发现大伙儿已经早就到齐了，小白找了张椅子挨着小牛师兄坐下，发现小牛师兄满眼血丝，还在打盹儿。<br>“今天召集大家来呢，主要是因为负责项目的小秦毕业了，但这项目还没完成，需要安排一下人手，小牛是总负责，你来讲一下。”老蓝扫了众人一眼后说道。<br>小牛师兄站起身，走到投影仪前将要做的项目内容详细的介绍了一遍，小白第一次参加这种会议，只感觉小牛师兄的逻辑很清晰。<br>“现在这项目需要补充两个人，我觉得小白不错，这阵子学得挺快。还需要再找个人，小陈要不要参加？”小牛师兄说。<br>小陈名字叫陈曦，和小白同一年进入实验室，是个很有意思的小女生，长得很萌，之前一直在学习有限元仿真计算。<br>“嗯，可以啊，不过我学的是固体计算，不知道后面用不用得上。”陈曦说。<br>“后面肯定要用到的，你和小白合作，争取尽快把项目接过来，趁那帮研三的还没离校尽快上手”小牛师兄说道。<br>“还有个问题，咱们实验室的工作站需要升级了，需要加CPU和内存，后期我们采用并行计算加快进度。”小牛师兄对老蓝说。<br>“嗯，这个我来解决，你回头把型号和数量统计给我就行。没其他问题的话我们就到这里吧。”老蓝说道。</p>
+<h1 id="并行效率"><a href="#并行效率" class="headerlink" title="并行效率"></a>并行效率</h1><p>会很快开完了，小白与众人一起返回实验室。<br>”师兄，前两天在网上看到个消息，说世界排名第一的超级计算机在中国，拥有几百万个CPU呢。“小白碰到小牛师兄说。<br>“没错，的确是在中国，咱们国家的超级计算机还是比较强的，不过俺们老百姓用不起啊。”小牛师兄说。<br>“CPU越多算的越快么？”小白问道。<br>“我们可以把CPU看做是一个个的人，那你觉得相同的一件事情，是人越多做得越快么？”小牛师兄反问道。<br>“这肯定不是噢，有的时候人多反而效率越低，比如说一个和尚跳水吃，两个和尚抬水吃，三个和尚没水吃。”小白说。<br>“就是这个理啊，CPU多了也是这样，并非CPU越多计算速度和效率越高，有时候反而下降。”小牛师兄说。</p>
+<h1 id="并行机制"><a href="#并行机制" class="headerlink" title="并行机制"></a>并行机制</h1><p>“多个CPU到底如何同时工作的呢？”小白问。<br>“呃，这事情说起来其实有点儿复杂，如果你有兴趣的话，可以找一本并行程序设计的书看看。不过我们可以简单的八一八。”小牛师兄说。<br>“前面说过，我们可以将CPU比作一个个干活儿的人。如果你是任务发布者，你会怎么做呢？“小牛师兄问。<br>“直接把任务分解后分发给每一个人？”小白说。<br>“NO，你这样做的话会很麻烦。如果任务比较简单的话倒是可以，但是如果很复杂的短期内无法完成的任务就很麻烦。最常见的做法是：先给这个团队找个队长，然后将任务下发给队长，队长再将任务一层层的下发下去，这样在一个周期结束后，队长将队员的结果收集起来进行汇总，层层汇总上来，最终交到你的手里。对于庞大的工作任务，这种管理机制是经常使用的。“小牛师兄说。<br>“并行计算也是这样，通常在众多CPU中会有一个队长，专门负责在每一个周期内任务的下发与汇总。“<br>“并行计算通常这样运作：任务提交后，作为队长的CPU接受任务，并将任务分解后下发给各成员CPU，成员CPU接到自己的任务后进行计算求解，完毕后将结果上传给队长CPU，队长CPU收集所有的队员结果进行检查和汇总，之后进入下一个循环周期。”</p>
+<h1 id="并行劣势"><a href="#并行劣势" class="headerlink" title="并行劣势"></a>并行劣势</h1><p>“并行计算其实也有很多的麻烦事情要解决。最常见的就是CPU间的通讯。就像一群人合力办一件事，甲说要这么做，乙说要那么做，丙说不按他的方案的话就罢工，这可怎么办？本来一件事情两天就能做完，结果花三天时间进行沟通，事情还没开始干。并行计算也是这样，CPU队长收集队员的数据并进行数据汇总需要花费时间。“</p>
+<p>“还有一些情况并不适合并行计算。比如说具有明显流程性的操作，一个任务的开始必须建立在另一个任务结束的基础上，对于此类工作则不适合并行计算。“</p>
+<p>“正因为有诸多问题，因此利用N个CPU并不能获得N倍计算速度的提升，一般情况下1+1都小于2。”小牛师兄最后说。</p>
+<h1 id="单机多核与多机单核"><a href="#单机多核与多机单核" class="headerlink" title="单机多核与多机单核"></a>单机多核与多机单核</h1><p>“并行计算涉及到多个CPU，这些CPU可能位于一台或多台计算机上。现在单CPU拥有多个核心的情况已经非常普遍，而一台计算机上拥有几个CPU的情况在工作站上也很常见，这些有什么不一样么？”小白问。</p>
+<p>“在本质上并没有什么不同，但是由于物理结构的不一样，计算效率相差比较大。通常CPU内部核心间带宽最大，通讯速度最快。而多路CPU间通讯次之，多机器互联的CPU通讯受限于网络传输速度，速度最慢。”小牛师兄解释道。</p>
+<hr>
+<p>####<font color="#FF0000"><center>郑重申明</center></font></p>
+<ul>
+<li><strong>本系列根据真实经历改编，如有雷同实属巧合，请勿人肉</strong></li>
+<li><strong>转载请务必保证文字完整</strong></li>
+</ul>
+<p>对系列感兴趣的朋友可微信扫描下方二维码，关注微信公众号第一时间接收文章更新。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CFD/" rel="tag"># CFD</a>
+          
+            <a href="/tags/小白CFD之旅/" rel="tag"># 小白CFD之旅</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/22/xiaobai/【小白的CFD之旅】22：好网格与坏网格/" rel="next" title="【小白的CFD之旅】22：好网格与坏网格">
+                <i class="fa fa-chevron-left"></i> 【小白的CFD之旅】22：好网格与坏网格
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/24/xiaobai/【小白的CFD之旅】24：稳态和瞬态/" rel="prev" title="【小白的CFD之旅】24：稳态和瞬态">
+                【小白的CFD之旅】24：稳态和瞬态 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#并行效率"><span class="nav-number">1.</span> <span class="nav-text">并行效率</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#并行机制"><span class="nav-number">2.</span> <span class="nav-text">并行机制</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#并行劣势"><span class="nav-number">3.</span> <span class="nav-text">并行劣势</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#单机多核与多机单核"><span class="nav-number">4.</span> <span class="nav-text">单机多核与多机单核</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,956 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CFD,小白CFD之旅," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="按黄师姐的说法，做好第一个案例很重要。 第一个案例既可以帮助理解CFD的工作流程，还可以帮助熟悉软件的操作界面。黄师姐推荐的入门案例来自于ANSYS官方提供的培训教程，是一个关于交叉管内流动混合的案例，涉及到流动及传热。[toc] #1.问题描述两个异径管道相交，分别流入不同温度的介质，利用FLUENT求解介质混合后的状态。 #2.案例目的案例包含了利用FLUENT进行仿真计算的基本步骤。通过本案">
+<meta name="keywords" content="CFD,小白CFD之旅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【小白的CFD之旅】10：敲门实例">
+<meta property="og:url" content="bestcax.top/2016/04/10/xiaobai/【小白的CFD之旅】10：敲门实例/index.html">
+<meta property="og:site_name" content="CFD仿真之道">
+<meta property="og:description" content="按黄师姐的说法，做好第一个案例很重要。 第一个案例既可以帮助理解CFD的工作流程，还可以帮助熟悉软件的操作界面。黄师姐推荐的入门案例来自于ANSYS官方提供的培训教程，是一个关于交叉管内流动混合的案例，涉及到流动及传热。[toc] #1.问题描述两个异径管道相交，分别流入不同温度的介质，利用FLUENT求解介质混合后的状态。 #2.案例目的案例包含了利用FLUENT进行仿真计算的基本步骤。通过本案">
+<meta property="og:updated_time" content="2017-06-18T09:03:03.562Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【小白的CFD之旅】10：敲门实例">
+<meta name="twitter:description" content="按黄师姐的说法，做好第一个案例很重要。 第一个案例既可以帮助理解CFD的工作流程，还可以帮助熟悉软件的操作界面。黄师姐推荐的入门案例来自于ANSYS官方提供的培训教程，是一个关于交叉管内流动混合的案例，涉及到流动及传热。[toc] #1.问题描述两个异径管道相交，分别流入不同温度的介质，利用FLUENT求解介质混合后的状态。 #2.案例目的案例包含了利用FLUENT进行仿真计算的基本步骤。通过本案">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="bestcax.top/2016/04/10/xiaobai/【小白的CFD之旅】10：敲门实例/"/>
+
+
+
+
+
+  <title>【小白的CFD之旅】10：敲门实例 | CFD仿真之道</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CFD仿真之道</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个关于CFD仿真的博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="bestcax.top/2016/04/10/xiaobai/【小白的CFD之旅】10：敲门实例/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="胡坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CFD仿真之道">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【小白的CFD之旅】10：敲门实例</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-04-10T11:11:11+08:00">
+                2016-04-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/小白CFD之旅/" itemprop="url" rel="index">
+                    <span itemprop="name">小白CFD之旅</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>按黄师姐的说法，做好第一个案例很重要。 第一个案例既可以帮助理解CFD的工作流程，还可以帮助熟悉软件的操作界面。<br>黄师姐推荐的入门案例来自于ANSYS官方提供的培训教程，是一个关于交叉管内流动混合的案例，涉及到流动及传热。<br>[toc]</p>
+<p>#1.问题描述<br>两个异径管道相交，分别流入不同温度的介质，利用FLUENT求解介质混合后的状态。</p>
+<p>#2.案例目的<br>案例包含了利用FLUENT进行仿真计算的基本步骤。通过本案例可以学习的内容包括：</p>
+<ul>
+<li>读入计算网格</li>
+<li>选择并设置流体介质属性</li>
+<li>定义计算边界条件</li>
+<li>设置计算监测</li>
+<li>进行仿真计算</li>
+<li>计算后处理</li>
+</ul>
+<p>#2.FLUENT设置</p>
+<p>##2.1 导入网格<br>案例中并没有包括几何模型创建及网格划分过程，因此案例从网格导入开始。</p>
+<ul>
+<li>启动FLUENT，启动面板中进行如图所示设置。<ul>
+<li><strong>Dimension</strong>：选择<strong>3D</strong></li>
+<li><strong>Working Directory</strong>：选择设置案例工作路径</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Fluent启动后，导入网格文件<ul>
+<li>利用菜单<strong>File|Read|Mesh…</strong>，在弹出的文件选择对话框中选择网格文件<strong>Mixing_tee.msh</strong>，选择<strong>OK</strong>按钮确认选择</li>
+</ul>
+</li>
+</ul>
+<p>##2.2 General设置<br>选择模型树节点<strong>General</strong>后，在其右侧会显示出General节点的设置面板，如图所示。</p>
+<hr>
+<p>图中包含的按钮及选项：</p>
+<ul>
+<li><strong>Scale</strong>：缩放网格尺寸</li>
+<li><strong>Check</strong>：检查网格</li>
+<li><strong>Report Quality</strong>：报告网格质量</li>
+<li><strong>Diaplay</strong>：显示网格</li>
+<li><strong>Type</strong><ul>
+<li><strong>Pressure-Based</strong>：采用压力基求解器</li>
+<li><strong>Density-Based</strong>：采用密度基求解器</li>
+</ul>
+</li>
+<li><strong>Velocity Formulation</strong><ul>
+<li><strong>Absolute</strong>：绝对速度</li>
+<li><strong>Relative</strong>：相对速度</li>
+</ul>
+</li>
+<li><strong>Time</strong><ul>
+<li><strong>Steady</strong>：采用稳态计算</li>
+<li><strong>Transient</strong>：采用瞬态计算</li>
+</ul>
+</li>
+<li><strong>Gravity</strong>：设置重力加速度</li>
+<li><strong>Units</strong>：设置单位</li>
+</ul>
+<hr>
+<ul>
+<li>1.Display</li>
+</ul>
+<p>导入网格后网格并不直接显示在图形窗口中，此时<strong>可通过树形节点General中的设置面板中Dispaly按钮</strong>显示计算网格</p>
+<ul>
+<li>2.模型Scale<br>选择模型树节点<strong>General</strong>，之后选择参数面板中的<strong>Scale…</strong>按钮，在弹出的对话框中检查计算域尺寸。如图所示。<blockquote>
+<font color="#0000FF">查看图中的<strong>Domain Extents</strong>，观察计算域尺寸与要模拟的计算空间尺寸是否吻合，若不吻合的话，需要通过设置缩放因子对网格进行缩放。</font>
+
+
+
+
+</blockquote>
+</li>
+</ul>
+<ul>
+<li>3.Check网格<br>点击<strong>Check</strong>按钮，软件自动检查网格并在文本窗口中显示网格信息，包含计算域尺寸、网格体积统计、网格面统计等。如图所示。<blockquote>
+<font color="#0000FF">比较重要的参数为<strong>minimum Volume</strong>，确保该参数值为正值。建议在读入网格之后及网格缩放之后进行网格检查工作</font>
+
+
+
+
+</blockquote>
+</li>
+</ul>
+<ul>
+<li>4.Report Quality<br>点击此按钮输出网格质量信息。如图所示。根据网格形状的不同，FLUENT输出的网格质量评价指标也不相同。对于本案例，FLUENT输出了三个参数：<ul>
+<li><strong>Minimum Orthogonal Quality</strong>：最小正交质量</li>
+<li><strong>Max Ortho Skew</strong>：最大正交歪斜率</li>
+<li><strong>Maximum Aspect Ratio</strong>：最大长宽比</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<font color="#0000FF">最小正交质量值范围为0~1，最差为0，最好为1，一般情况下要求网格最小正交质量大于0.2；最大歪斜率取值0~1，越小越好。</font>
+
+
+
+</blockquote>
+<ul>
+<li>5.采用<strong>Pressure-Based</strong>求解器</li>
+<li>6.使用<strong>Absolute</strong>速度格式</li>
+<li>7.采用<strong>Steady</strong>稳态计算</li>
+<li>8.设置Units<br>默认温度单位为K，这里为方便起见设置温度单位为℃。选择按钮<strong>Units..</strong>打开单位设置面板。如图所示，选择<strong>Quantities</strong>列表项<strong>temperature</strong>，在右侧列表框中选择单位为<strong>c</strong>。完毕后点击<strong>Close</strong>关闭对话框。</li>
+</ul>
+<blockquote>
+<font color="#0000FF">不管使用何种单位，FLUENT在求解时始终使用国际单位制，这里设置单位只是为了前处理设置方便。</font>
+
+
+
+
+
+
+
+</blockquote>
+<hr>
+<p>##2.3 Models设置</p>
+<p>模型树节点<strong>Models</strong>用于选择并设置计算过程中所涉及的物理模型。如图所示。</p>
+<hr>
+<p>FLUENT提供的计算模型包括：</p>
+<ul>
+<li><strong>Multiphase</strong>：多相流模型，用于模拟多相流现象。</li>
+<li><strong>Energy</strong>：能量模型。当计算涉及到传热时需要激活能量模型。</li>
+<li><strong>Viscous</strong>：粘性模型。如考虑湍流时需要在粘性模型中进行设置</li>
+<li><strong>Radiation</strong>：辐射模型。当计算域中存在大的温差需要考虑辐射效应时需要激活此模型</li>
+<li><strong>Heat Exchanger</strong>：热交换器。在计算域中构造换热器模型</li>
+<li><strong>Species</strong>：组分模型。当需要模拟组分扩散或化学反应时需要设置此模型</li>
+<li><strong>Discrete Phase</strong>：离散相模型。模拟计算域中的稀薄颗粒运动轨迹</li>
+<li><strong>Solidification &amp; Melting</strong>：凝固融化模型，模拟材料固液相变</li>
+<li><strong>Acoustics</strong>：气动声学计算</li>
+<li><strong>Eulerian Wall Film</strong>：欧拉液膜模型</li>
+<li><strong>Electric Potential</strong>：电势模型</li>
+</ul>
+<hr>
+<p>本案例中涉及到传热及湍流，因此需要激活<strong>Energy</strong>及<strong>Viscous</strong>模型。</p>
+<ul>
+<li><strong>Energy</strong>模型设置<br><strong>Energy</strong>模型不需要设置任何参数，只需要激活即可。</li>
+</ul>
+<ul>
+<li><strong>Viscous</strong>模型设置<br>激活Viscous后，选择<strong>k-epsilon</strong>模型，在子模型选项中选择<strong>Realizable</strong>，如图所示。</li>
+</ul>
+<blockquote>
+<p>注：由于案例较长，因此将其拆散为多篇</p>
+</blockquote>
+<hr>
+<p>#<font color="#FF0000">郑重申明</font></p>
+<ul>
+<li><strong>本系列根据真实经历改编，如有雷同实属巧合，请勿人肉</strong></li>
+<li><strong>转载请务必保证文字完整</strong></li>
+</ul>
+<hr>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn1gn1ctkj2076076wey.jpg" alt="胡坤 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>微信扫一扫，获取更多...</div>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="https://ws1.sinaimg.cn/large/599d8faagy1fgn2ggyte6j20d50d7wf6.jpg" alt="胡坤 WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="https://ws1.sinaimg.cn/large/599d8faaly1fgn2joln0wj20df0dd3zs.jpg" alt="胡坤 Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CFD/" rel="tag"># CFD</a>
+          
+            <a href="/tags/小白CFD之旅/" rel="tag"># 小白CFD之旅</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/09/xiaobai/【小白的CFD之旅】09：初识FLUENT/" rel="next" title="【小白的CFD之旅】09：初识FLUENT">
+                <i class="fa fa-chevron-left"></i> 【小白的CFD之旅】09：初识FLUENT
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/11/xiaobai/【小白的CFD之旅】11：敲门实例【续】/" rel="prev" title="【小白的CFD之旅】11：敲门实例【续】">
+                【小白的CFD之旅】11：敲门实例【续】 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+<div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script>
+  var cloudTieConfig = {
+    url: document.location.href, 
+    sourceId: "",
+    productKey: "c164a093d134476aa10fae88205e5bd4",
+    target: "cloud-tie-wrapper"
+  };
+</script>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="胡坤" />
+          <p class="site-author-name" itemprop="name">胡坤</p>
+           
+              <p class="site-description motion-element" itemprop="description">描述CFD仿真的里里外外</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/209555760" target="_blank" title="新浪微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  新浪微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.cnblogs.com/lscax" title="博客园[CFD仿真]" target="_blank">博客园[CFD仿真]</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.sina.com.cn/faee0" title="新浪博客[流沙CAE]" target="_blank">新浪博客[流沙CAE]</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">胡坤</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<div class="theme-info">
+<span id="busuanzi_container_site_uv">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
